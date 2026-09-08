@@ -1,0 +1,89 @@
+<section class="relative isolate min-h-[78vh] overflow-hidden">
+  <img
+    ngSrc="https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=2000&q=80"
+    alt="Sand dunes near Huacachina at late afternoon"
+    fill
+    priority
+    class="object-cover"
+    sizes="100vw"
+  />
+  <div class="absolute inset-0 bg-linear-to-t from-black/75 via-black/40 to-black/25"></div>
+  <div class="relative mx-auto flex min-h-[78vh] max-w-6xl items-end px-4 pb-16 sm:px-6 sm:pb-24">
+    <div class="hero-copy max-w-2xl text-white">
+      <p class="text-sm tracking-[0.2em] uppercase">Ica, Peru</p>
+      <h1 class="font-heading mt-3 text-4xl leading-tight sm:text-6xl">
+        Desert days around the Huacachina oasis
+      </h1>
+      <p class="mt-4 max-w-xl text-base text-white/85 sm:text-lg">
+        Buggy runs, vineyard sunsets, overnight camps, and quiet sunrise walks — booked with a small
+        desert operator in Ica.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a hlmBtn routerLink="/" fragment="experiences">See experiences</a>
+        <a hlmBtn variant="secondary" routerLink="/reservations">Reserve a date</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+  <div class="max-w-2xl">
+    <h2 class="font-heading text-3xl">Why this stretch of desert</h2>
+    <p class="text-muted-foreground mt-4 text-base leading-relaxed">
+      Huacachina sits in a bowl of dunes a few minutes from Ica. The oasis is busy at midday; the
+      better light is early and late, and the quieter routes sit a ridge or two beyond the village.
+      Desertica runs small groups on those hours.
+    </p>
+  </div>
+</section>
+
+<section id="experiences" class="bg-muted/30 border-border border-y py-16 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2 class="font-heading text-3xl">Experiences</h2>
+        <p class="text-muted-foreground mt-2 max-w-xl">
+          Four desert days with live availability on the detail page. Reservations stay in the
+          browser.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      @for (experience of experiences; track experience.slug) {
+        <article hlmCard class="experience-card overflow-hidden pt-0">
+          <div class="relative h-56">
+            <img
+              [ngSrc]="experience.imageUrl"
+              [alt]="experience.imageAlt"
+              fill
+              class="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+          <div hlmCardHeader>
+            <span hlmBadge variant="outline">{{ experience.location }}</span>
+            <h3 hlmCardTitle class="font-heading text-xl">{{ experience.name }}</h3>
+            <p hlmCardDescription>{{ experience.tagline }}</p>
+          </div>
+          <div hlmCardContent class="text-muted-foreground flex gap-4 text-sm">
+            <span>{{ experience.duration }}</span>
+            <span>From {{ experience.currency }} {{ experience.priceFrom }}</span>
+          </div>
+          <div hlmCardFooter>
+            <a hlmBtn variant="outline" [routerLink]="['/experiences', experience.slug]">
+              View details
+            </a>
+            <a
+              hlmBtn
+              [routerLink]="['/reservations']"
+              [queryParams]="{ experience: experience.slug }"
+            >
+              Book
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+</section>

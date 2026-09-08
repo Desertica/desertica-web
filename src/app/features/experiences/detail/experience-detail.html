@@ -1,0 +1,65 @@
+@if (experience(); as item) {
+  <article>
+    <section class="relative isolate h-[48vh] min-h-80 overflow-hidden">
+      <img
+        [ngSrc]="item.imageUrl"
+        [alt]="item.imageAlt"
+        fill
+        priority
+        class="object-cover"
+        sizes="100vw"
+      />
+      <div class="absolute inset-0 bg-black/45"></div>
+      <div class="relative mx-auto flex h-full max-w-6xl items-end px-4 pb-10 sm:px-6">
+        <div class="text-white">
+          <span hlmBadge variant="secondary">{{ item.location }}</span>
+          <h1 class="font-heading mt-3 text-4xl sm:text-5xl">{{ item.name }}</h1>
+          <p class="mt-2 max-w-2xl text-white/85">{{ item.tagline }}</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_0.8fr]">
+      <div class="space-y-6">
+        <p class="text-lg leading-relaxed">{{ item.summary }}</p>
+        <p class="text-muted-foreground leading-relaxed">{{ item.description }}</p>
+        <hlm-separator />
+        <h2 class="font-heading text-2xl">On the day</h2>
+        <ul class="list-disc space-y-2 ps-5">
+          @for (highlight of item.highlights; track highlight) {
+            <li>{{ highlight }}</li>
+          }
+        </ul>
+      </div>
+
+      <aside hlmCard class="h-fit p-6 ring-1 ring-foreground/10">
+        <p class="text-muted-foreground text-sm">From</p>
+        <p class="font-heading text-3xl">{{ item.currency }} {{ item.priceFrom }}</p>
+        <dl class="mt-6 space-y-3 text-sm">
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted-foreground">Duration</dt>
+            <dd>{{ item.duration }}</dd>
+          </div>
+          <div class="flex justify-between gap-4">
+            <dt class="text-muted-foreground">Group</dt>
+            <dd>{{ item.groupSize }}</dd>
+          </div>
+        </dl>
+        <a
+          class="mt-6 inline-flex"
+          hlmBtn
+          [routerLink]="['/reservations']"
+          [queryParams]="{ experience: item.slug }"
+        >
+          Reserve this experience
+        </a>
+      </aside>
+    </div>
+  </article>
+} @else {
+  <section class="mx-auto max-w-xl px-4 py-24 text-center">
+    <h1 class="font-heading text-3xl">Experience not found</h1>
+    <p class="text-muted-foreground mt-3">That slug is not in the current desert catalog.</p>
+    <a class="mt-6 inline-flex" hlmBtn routerLink="/">Back to the landing</a>
+  </section>
+}

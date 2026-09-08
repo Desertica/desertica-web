@@ -1,0 +1,76 @@
+<section class="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+  <div class="mb-10 max-w-2xl">
+    <p class="text-muted-foreground text-sm tracking-[0.2em] uppercase">Client-side booking</p>
+    <h1 class="font-heading mt-2 text-4xl">Reserve an experience</h1>
+    <p class="text-muted-foreground mt-3">
+      Dates and guest counts stay in the browser. We will connect a real inventory API later.
+    </p>
+  </div>
+
+  <div class="grid gap-8 lg:grid-cols-[1fr_auto]">
+    <form hlmCard class="space-y-6 p-6" [formGroup]="form" (ngSubmit)="submit()">
+      <hlm-field>
+        <label hlmFieldLabel>Experience</label>
+        <hlm-select formControlName="experienceSlug">
+          <hlm-select-trigger class="w-full">
+            <hlm-select-placeholder>Choose an experience</hlm-select-placeholder>
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal class="max-h-80">
+            <hlm-select-group>
+              @for (item of catalog; track item.slug) {
+                <hlm-select-item [value]="item.slug">{{ item.name }}</hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+        <hlm-field-error validator="required">Pick an experience.</hlm-field-error>
+      </hlm-field>
+
+      <hlm-field>
+        <label hlmFieldLabel>Guests</label>
+        <hlm-select formControlName="guests">
+          <hlm-select-trigger class="w-full">
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            <hlm-select-group>
+              @for (count of guestOptions; track count) {
+                <hlm-select-item [value]="count">
+                  {{ count }} {{ count === 1 ? 'guest' : 'guests' }}
+                </hlm-select-item>
+              }
+            </hlm-select-group>
+          </hlm-select-content>
+        </hlm-select>
+      </hlm-field>
+
+      <hlm-field>
+        <label hlmFieldLabel for="name">Full name</label>
+        <input hlmInput id="name" type="text" autocomplete="name" formControlName="name" />
+        <hlm-field-error validator="required">Name is required.</hlm-field-error>
+      </hlm-field>
+
+      <hlm-field>
+        <label hlmFieldLabel for="email">Email</label>
+        <input hlmInput id="email" type="email" autocomplete="email" formControlName="email" />
+        <hlm-field-error validator="required">Email is required.</hlm-field-error>
+        <hlm-field-error validator="email">Enter a valid email.</hlm-field-error>
+      </hlm-field>
+
+      <button hlmBtn type="submit">Send reservation request</button>
+    </form>
+
+    <aside class="lg:w-80">
+      <p class="mb-3 text-sm font-medium">Preferred date</p>
+      <hlm-calendar
+        [min]="minDate"
+        [date]="form.controls.date.value"
+        (dateChange)="onDateChange($event)"
+      />
+      @if (form.controls.date.touched && form.controls.date.invalid) {
+        <p class="text-destructive mt-2 text-sm">Choose a date.</p>
+      }
+    </aside>
+  </div>
+</section>
