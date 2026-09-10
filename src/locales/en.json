@@ -1,0 +1,56 @@
+{
+  "skip": "Skip to content",
+  "nav": {
+    "primary": "Primary",
+    "footer": "Footer",
+    "tours": "Tours",
+    "packages": "Packages",
+    "about": "About",
+    "contact": "Contact",
+    "planTrip": "Plan your trip",
+    "toursAll": "All tours",
+    "toursAllDesc": "Dune days, oasis walks, and desert sunsets.",
+    "duneBuggy": "Dune buggy",
+    "duneBuggyDesc": "Ride the Huacachina sand dunes.",
+    "vineyardSunset": "Vineyard sunset",
+    "vineyardSunsetDesc": "Ica vineyards at golden hour.",
+    "oasisCamp": "Oasis camp",
+    "oasisCampDesc": "Night under the desert sky.",
+    "packagesAll": "All packages",
+    "packagesAllDesc": "Multi-day stays and combined experiences.",
+    "huacachinaWeekend": "Huacachina weekend",
+    "huacachinaWeekendDesc": "Dunes, oasis, and a slow morning.",
+    "sunsetWine": "Sunset and wine",
+    "sunsetWineDesc": "A vineyard evening with dinner.",
+    "oasisOvernight": "Oasis overnight",
+    "oasisOvernightDesc": "Camp, sunrise walk, and breakfast."
+  },
+  "a11y": {
+    "toggleTheme": "Toggle color theme",
+    "openMenu": "Open menu",
+    "chooseLanguage": "Language"
+  },
+  "menu": {
+    "title": "Menu",
+    "description": "Primary navigation"
+  },
+  "lang": {
+    "en": "English",
+    "es": "Español"
+  },
+  "pages": {
+    "landingLead": "Landing (SSG). Experiences and reservations come next.",
+    "mappedRoutes": "Mapped routes",
+    "toursLead": "Tours (SSG). Catalog later.",
+    "packagesLead": "Packages (SSG). Catalog later.",
+    "aboutLead": "About (SSG). Story later.",
+    "contactLead": "Contact (SSG). Form later.",
+    "reservationsTitle": "Reservations",
+    "reservationsLead": "Reservations (CSR). Form later.",
+    "experienceLead": "SSR placeholder. Catalog later."
+  },
+  "meta": {
+    "title": "Desértica | Tours and experiences in Ica",
+    "description": "Book dune buggies, vineyard sunsets, oasis camps, and sunrise walks in Ica and Huacachina."
+  }
+}

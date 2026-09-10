@@ -1,46 +1,205 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
+import { HlmSheetImports } from '@spartan-ng/helm/sheet';
+import { PlanTripHover } from '../animation/plan-trip-hover';
+import { I18nService } from '../i18n/i18n';
+import { TranslatePipe } from '../i18n/translate-pipe';
+import { ThemeService } from '../theme/theme';
+import { LocaleSwitcher } from './locale-switcher';
+import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
 
 @Component({
   selector: 'app-site-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    HlmButton,
+    NgIcon,
+    HlmNavigationMenuImports,
+    HlmSheetImports,
+    LocaleSwitcher,
+    TranslatePipe,
+    PlanTripHover,
+  ],
+  providers: [provideIcons({ lucideMenu, lucideMoon, lucideSun })],
   template: `
     <header class="border-border/60 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
-      <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div
+        class="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6"
+      >
         <a
           routerLink="/"
-          class="text-foreground flex items-center gap-2.5 font-heading text-lg tracking-tight"
+          class="text-foreground flex min-w-0 items-center gap-2 font-heading text-base tracking-tight sm:gap-2.5 sm:text-lg"
         >
-          <img src="logo.svg" width="40" height="40" alt="" class="size-10 shrink-0 rounded-md" />
+          <img
+            src="logo.svg"
+            width="40"
+            height="40"
+            alt=""
+            class="size-8 shrink-0 rounded-md sm:size-10"
+          />
           Desértica
         </a>
 
-        <nav class="flex items-center gap-6 text-sm font-medium" aria-label="Primary">
-          <a
-            routerLink="/"
-            routerLinkActive="text-foreground"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="text-muted-foreground hover:text-foreground transition-colors"
+        <div class="flex min-w-0 items-center gap-1.5 sm:gap-4">
+          <nav
+            hlmNavigationMenu
+            class="hidden md:flex"
+            [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
           >
-            Home
-          </a>
+            <ul hlmNavigationMenuList>
+              @for (item of navLinks; track item.path) {
+                <li hlmNavigationMenuItem>
+                  @if (isGroup(item)) {
+                    <button type="button" hlmNavigationMenuTrigger align="start">
+                      {{ item.labelKey | translate: i18n.locale() }}
+                    </button>
+                    <hlm-navigation-menu-content *hlmNavigationMenuPortal>
+                      <ul class="w-80">
+                        @for (child of item.children; track child.path) {
+                          <li>
+                            <a hlmNavigationMenuLink [routerLink]="child.path">
+                              <div class="flex flex-col gap-1 text-sm">
+                                <div class="leading-none font-medium">
+                                  {{ child.labelKey | translate: i18n.locale() }}
+                                </div>
+                                @if (child.descriptionKey) {
+                                  <div class="text-muted-foreground line-clamp-2">
+                                    {{ child.descriptionKey | translate: i18n.locale() }}
+                                  </div>
+                                }
+                              </div>
+                            </a>
+                          </li>
+                        }
+                      </ul>
+                    </hlm-navigation-menu-content>
+                  } @else {
+                    <a
+                      hlmNavigationMenuLink
+                      [routerLink]="item.path"
+                      routerLinkActive
+                      #rla="routerLinkActive"
+                      [active]="rla.isActive"
+                      [attr.aria-current]="rla.isActive ? 'page' : null"
+                    >
+                      {{ item.labelKey | translate: i18n.locale() }}
+                    </a>
+                  }
+                </li>
+              }
+            </ul>
+          </nav>
+
           <a
-            routerLink="/experiences/placeholder"
-            class="text-muted-foreground hover:text-foreground transition-colors"
+            hlmBtn
+            appPlanTripHover
+            class="hidden shrink-0 transition-none md:inline-flex"
+            [routerLink]="planTrip.path"
           >
-            Experiences
+            {{ planTrip.labelKey | translate: i18n.locale() }}
           </a>
-          <a
-            routerLink="/reservations"
-            routerLinkActive="text-foreground"
-            class="text-muted-foreground hover:text-foreground transition-colors"
+
+          <hlm-sheet #mobileNav="hlmSheet" side="right">
+            <button
+              hlmBtn
+              hlmSheetTrigger
+              type="button"
+              variant="ghost"
+              size="icon"
+              side="right"
+              class="shrink-0 md:hidden"
+              [attr.aria-label]="'a11y.openMenu' | translate: i18n.locale()"
+            >
+              <ng-icon name="lucideMenu" />
+            </button>
+            <hlm-sheet-content *hlmSheetPortal>
+              <hlm-sheet-header>
+                <h2 hlmSheetTitle>{{ 'menu.title' | translate: i18n.locale() }}</h2>
+                <p hlmSheetDescription class="sr-only">
+                  {{ 'menu.description' | translate: i18n.locale() }}
+                </p>
+              </hlm-sheet-header>
+              <nav
+                class="flex flex-col gap-1 px-4 pb-6"
+                [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
+              >
+                @for (item of navLinks; track item.path) {
+                  @if (isGroup(item)) {
+                    <p
+                      class="text-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase"
+                    >
+                      {{ item.labelKey | translate: i18n.locale() }}
+                    </p>
+                    @for (child of item.children; track child.path) {
+                      <a
+                        [routerLink]="child.path"
+                        routerLinkActive="bg-muted text-foreground"
+                        class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                        (click)="mobileNav.close()"
+                      >
+                        {{ child.labelKey | translate: i18n.locale() }}
+                      </a>
+                    }
+                  } @else {
+                    <a
+                      [routerLink]="item.path"
+                      routerLinkActive="bg-muted text-foreground"
+                      class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                      (click)="mobileNav.close()"
+                    >
+                      {{ item.labelKey | translate: i18n.locale() }}
+                    </a>
+                  }
+                }
+                <a
+                  hlmBtn
+                  appPlanTripHover
+                  class="mt-2 transition-none"
+                  [routerLink]="planTrip.path"
+                  (click)="mobileNav.close()"
+                >
+                  {{ planTrip.labelKey | translate: i18n.locale() }}
+                </a>
+                <div class="mt-4">
+                  <app-locale-switcher />
+                </div>
+              </nav>
+            </hlm-sheet-content>
+          </hlm-sheet>
+
+          <app-locale-switcher />
+
+          <button
+            hlmBtn
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="shrink-0"
+            [attr.aria-label]="'a11y.toggleTheme' | translate: i18n.locale()"
+            (click)="theme.toggle()"
           >
-            Reservations
-          </a>
-        </nav>
+            <span class="inline-flex dark:hidden" aria-hidden="true">
+              <ng-icon name="lucideMoon" />
+            </span>
+            <span class="hidden dark:inline-flex" aria-hidden="true">
+              <ng-icon name="lucideSun" />
+            </span>
+          </button>
+        </div>
       </div>
     </header>
   `,
 })
-export class SiteHeader {}
+export class SiteHeader {
+  protected readonly theme = inject(ThemeService);
+  protected readonly i18n = inject(I18nService);
+  protected readonly navLinks = primaryNavLinks;
+  protected readonly planTrip = planTripLink;
+  protected readonly isGroup = isNavGroup;
+}

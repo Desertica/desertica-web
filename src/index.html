@@ -17,6 +17,30 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var theme =
+            stored === 'dark' || stored === 'light'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+          document.documentElement.style.colorScheme = theme;
+
+          var locale = localStorage.getItem('locale');
+          if (locale !== 'en' && locale !== 'es') {
+            var match = document.cookie.match(/(?:^|; )locale=(en|es)(?:;|$)/);
+            locale = match ? match[1] : null;
+          }
+          if (locale === 'en' || locale === 'es') {
+            document.documentElement.lang = locale;
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

@@ -4,25 +4,69 @@ import {
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
+import cookieParser from 'cookie-parser';
 import express from 'express';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
+import {
+  catalogs,
+  DEFAULT_LOCALE,
+  LOCALES,
+  LOCALE_COOKIE,
+  LOCALE_QUERY,
+  resolveLocale,
+} from './app/core/i18n/catalogs';
+
+const nodeRequire = createRequire(import.meta.url);
+const { I18n } = nodeRequire('i18n') as {
+  I18n: new (options: {
+    locales: readonly string[];
+    defaultLocale: string;
+    cookie: string;
+    queryParameter: string;
+    objectNotation: boolean;
+    updateFiles: boolean;
+    staticCatalog: typeof catalogs;
+  }) => { init: express.RequestHandler };
+};
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+const i18n = new I18n({
+  locales: LOCALES,
+  defaultLocale: DEFAULT_LOCALE,
+  cookie: LOCALE_COOKIE,
+  queryParameter: LOCALE_QUERY,
+  objectNotation: true,
+  updateFiles: false,
+  staticCatalog: catalogs,
+});
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+app.use(cookieParser());
+app.use((req, res, next) => {
+  i18n.init(req, res, () => {
+    const queryValue = req.query[LOCALE_QUERY];
+    const locale = resolveLocale({
+      cookie: typeof req.cookies[LOCALE_COOKIE] === 'string' ? req.cookies[LOCALE_COOKIE] : undefined,
+      query: typeof queryValue === 'string' ? queryValue : undefined,
+      acceptLanguage: req.headers['accept-language'],
+    });
+
+    (req as express.Request & { setLocale?: (locale: string) => void }).setLocale?.(locale);
+
+    if (!req.cookies[LOCALE_COOKIE]) {
+      res.cookie(LOCALE_COOKIE, locale, {
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+        sameSite: 'lax',
+        path: '/',
+      });
+    }
+
+    next();
+  });
+});
 
 /**
  * Serve static files from /browser

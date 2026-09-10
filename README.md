@@ -6,14 +6,14 @@ This repository is an **Angular 21** map: routes, render modes, and folders are 
 
 ## Stack
 
-| Piece | Role |
-| --- | --- |
-| Angular 21 (standalone, zoneless, 2025 file naming) | Application framework |
-| `@angular/ssr` | Hybrid SSG / SSR / CSR |
-| Tailwind CSS v4 | Utility styling |
-| Spartan/ui (`@spartan-ng/brain` + helm in `libs/ui`) | Installed; not used on placeholders yet |
-| GSAP 3 | Installed; helper in `core/animation`, unused |
-| Vitest | Unit tests |
+| Piece                                                | Role                                          |
+| ---------------------------------------------------- | --------------------------------------------- |
+| Angular 21 (standalone, zoneless, 2025 file naming)  | Application framework                         |
+| `@angular/ssr`                                       | Hybrid SSG / SSR / CSR                        |
+| Tailwind CSS v4                                      | Utility styling                               |
+| Spartan/ui (`@spartan-ng/brain` + helm in `libs/ui`) | Installed; not used on placeholders yet       |
+| GSAP 3                                               | Installed; helper in `core/animation`, unused |
+| Vitest                                               | Unit tests                                    |
 
 ## Requirements
 
@@ -34,11 +34,15 @@ npm run serve:ssr:desertica-web
 
 Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.server.ts). `outputMode` stays `server` in `angular.json`.
 
-| Route | Mode | Status |
-| --- | --- | --- |
-| `/` | **SSG** (`RenderMode.Prerender`) | Landing placeholder |
-| `/experiences/:slug` | **SSR** (`RenderMode.Server`) | Detail placeholder (`slug` from the URL) |
-| `/reservations` | **CSR** (`RenderMode.Client`) | Reservations placeholder |
+| Route                | Mode                             | Status                                    |
+| -------------------- | -------------------------------- | ----------------------------------------- |
+| `/`                  | **SSG** (`RenderMode.Prerender`) | Landing placeholder                       |
+| `/tours`             | **SSG** (`RenderMode.Prerender`) | Tours placeholder                         |
+| `/packages`          | **SSG** (`RenderMode.Prerender`) | Packages placeholder                      |
+| `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
+| `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
+| `/experiences/:slug` | **SSR** (`RenderMode.Server`)    | Detail placeholder (`slug` from the URL)  |
+| `/reservations`      | **CSR** (`RenderMode.Client`)    | Plan your trip / reservations placeholder |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
 
@@ -50,14 +54,18 @@ src/app/
   app.routes.ts
   app.routes.server.ts
   core/
-    animation/gsap.ts          # unused SSR-safe helper
+    animation/gsap.ts          # SSR-safe GSAP helpers (footer bounce, hover)
     images/remote-image-loader.ts
-    layout/                    # header + footer (nav only)
+    layout/                    # header (Navigation Menu + Sheet) + footer
     models/experience.ts
     models/reservation.ts
     services/experiences.ts    # empty list / getBySlug
   features/
     landing/                   # SSG placeholder
+    tours/                     # SSG placeholder
+    packages/                  # SSG placeholder
+    about/                     # SSG placeholder
+    contact/                   # SSG placeholder
     experiences/detail/        # SSR placeholder
     reservations/              # CSR placeholder
 libs/ui/                       # Spartan helm copies
@@ -74,7 +82,7 @@ npx ng g @spartan-ng/cli:ui tooltip --defaults --interactive=false --directory=l
 
 ## GSAP
 
-[`afterNextGsap()`](src/app/core/animation/gsap.ts) is ready for later. Do not register ScrollTrigger at module top level.
+[`afterNextGsap()`](src/app/core/animation/gsap.ts) loads ScrollTrigger and MorphSVGPlugin on the client for the footer bounce. Do not register those plugins at module top level.
 
 ## MCP servers
 
@@ -82,9 +90,9 @@ npx ng g @spartan-ng/cli:ui tooltip --defaults --interactive=false --directory=l
 
 ## Scripts
 
-| Script | Description |
-| --- | --- |
-| `npm start` | Dev server with hybrid rendering |
-| `npm run build` | Production build + prerender |
-| `npm run serve:ssr:desertica-web` | Serve the Node SSR bundle |
-| `npm test` | Vitest |
+| Script                            | Description                      |
+| --------------------------------- | -------------------------------- |
+| `npm start`                       | Dev server with hybrid rendering |
+| `npm run build`                   | Production build + prerender     |
+| `npm run serve:ssr:desertica-web` | Serve the Node SSR bundle        |
+| `npm test`                        | Vitest                           |

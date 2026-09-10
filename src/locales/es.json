@@ -1,0 +1,56 @@
+{
+  "skip": "Saltar al contenido",
+  "nav": {
+    "primary": "Principal",
+    "footer": "Pie de página",
+    "tours": "Tours",
+    "packages": "Paquetes",
+    "about": "Nosotros",
+    "contact": "Contacto",
+    "planTrip": "Planifica tu viaje",
+    "toursAll": "Todos los tours",
+    "toursAllDesc": "Dunas, caminatas en el oasis y atardeceres.",
+    "duneBuggy": "Tubulares",
+    "duneBuggyDesc": "Recorre las dunas de Huacachina.",
+    "vineyardSunset": "Atardecer en viñedo",
+    "vineyardSunsetDesc": "Viñedos de Ica a la hora dorada.",
+    "oasisCamp": "Campamento en el oasis",
+    "oasisCampDesc": "Noche bajo el cielo del desierto.",
+    "packagesAll": "Todos los paquetes",
+    "packagesAllDesc": "Estancias de varios días y experiencias combinadas.",
+    "huacachinaWeekend": "Fin de semana en Huacachina",
+    "huacachinaWeekendDesc": "Dunas, oasis y una mañana lenta.",
+    "sunsetWine": "Atardecer y vino",
+    "sunsetWineDesc": "Una tarde de viñedo con cena.",
+    "oasisOvernight": "Noche en el oasis",
+    "oasisOvernightDesc": "Campamento, caminata al amanecer y desayuno."
+  },
+  "a11y": {
+    "toggleTheme": "Cambiar tema de color",
+    "openMenu": "Abrir menú",
+    "chooseLanguage": "Idioma"
+  },
+  "menu": {
+    "title": "Menú",
+    "description": "Navegación principal"
+  },
+  "lang": {
+    "en": "English",
+    "es": "Español"
+  },
+  "pages": {
+    "landingLead": "Landing (SSG). Experiencias y reservas vienen después.",
+    "mappedRoutes": "Rutas mapeadas",
+    "toursLead": "Tours (SSG). Catálogo más adelante.",
+    "packagesLead": "Paquetes (SSG). Catálogo más adelante.",
+    "aboutLead": "Nosotros (SSG). Historia más adelante.",
+    "contactLead": "Contacto (SSG). Formulario más adelante.",
+    "reservationsTitle": "Reservas",
+    "reservationsLead": "Reservas (CSR). Formulario más adelante.",
+    "experienceLead": "Placeholder SSR. Catálogo más adelante."
+  },
+  "meta": {
+    "title": "Desértica | Tours y experiencias en Ica",
+    "description": "Reserva tubulares, atardeceres en viñedos, campamentos en el oasis y caminatas al amanecer en Ica y Huacachina."
+  }
+}
