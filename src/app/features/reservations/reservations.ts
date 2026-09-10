@@ -9,6 +9,7 @@ import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { ExperiencesService } from '../../core/services/experiences';
+import { Reservation } from '../../core/models/reservation';
 
 @Component({
   selector: 'app-reservations',
@@ -60,11 +61,17 @@ export class Reservations implements OnInit {
       return;
     }
 
-    const value = this.form.getRawValue();
+    const value: Reservation = this.form.getRawValue();
     const experience = this.experiences.getBySlug(value.experienceSlug);
     toast.success(`Request received for ${experience?.name ?? 'your experience'}.`, {
       description: 'This is a client-side demo — no payment is collected yet.',
     });
-    this.form.reset({ guests: 2, experienceSlug: value.experienceSlug });
+    this.form.reset({
+      experienceSlug: value.experienceSlug,
+      date: null,
+      guests: 2,
+      name: '',
+      email: '',
+    } satisfies Reservation);
   }
 }

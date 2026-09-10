@@ -58,6 +58,7 @@ src/app/
     images/remote-image-loader.ts
     layout/                    # header + footer
     models/experience.ts
+    models/reservation.ts
     services/experiences.ts    # mock catalog
   features/
     landing/                   # SSG
