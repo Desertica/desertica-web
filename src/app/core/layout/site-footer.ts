@@ -12,10 +12,7 @@ import { RouterLink } from '@angular/router';
       >
         <p class="flex items-center gap-2.5">
           <img src="logo.svg" width="32" height="32" alt="" class="size-8 shrink-0 rounded-md" />
-          <span>
-            <span class="text-foreground font-heading">Desértica</span>
-            — tours and experiences in Ica and Huacachina.
-          </span>
+          <span class="text-foreground font-heading">Desértica</span>
         </p>
         <nav class="flex gap-4" aria-label="Footer">
           <a routerLink="/" class="hover:text-foreground">Home</a>

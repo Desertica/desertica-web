@@ -4,8 +4,8 @@ type GsapCore = typeof import('gsap').default;
 type GsapContext = { revert: () => void };
 
 /**
- * Runs GSAP only after the first browser render. Dynamic imports keep ScrollTrigger
- * off the server bundle path so SSR and prerender never touch `window`.
+ * SSR-safe GSAP entry. Unused until a feature adds motion.
+ * Dynamic imports keep ScrollTrigger off the server bundle path.
  */
 export function afterNextGsap(create: (gsap: GsapCore) => GsapContext | void): void {
   const destroyRef = inject(DestroyRef);
