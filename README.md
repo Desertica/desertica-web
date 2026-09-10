@@ -2,7 +2,7 @@
 
 Tourism booking frontend for desert experiences in Ica and Huacachina, Peru.
 
-This repository is an **Angular 21** map: routes, render modes, and folders are in place. Feature pages are placeholders. Product copy, catalog, booking, and motion come later. Place names (Desertica, Ica, Huacachina) stay as proper nouns.
+This repository is an **Angular 21** map: routes, render modes, and folders are in place. The home narrative (wordmark intro, Why, gallery) is GSAP. Catalog and booking stay placeholders. Place names (Desertica, Ica, Huacachina) stay as proper nouns.
 
 ## Stack
 
@@ -11,8 +11,8 @@ This repository is an **Angular 21** map: routes, render modes, and folders are 
 | Angular 21 (standalone, zoneless, 2025 file naming)  | Application framework                         |
 | `@angular/ssr`                                       | Hybrid SSG / SSR / CSR                        |
 | Tailwind CSS v4                                      | Utility styling                               |
-| Spartan/ui (`@spartan-ng/brain` + helm in `libs/ui`) | Installed; not used on placeholders yet       |
-| GSAP 3                                               | Installed; helper in `core/animation`, unused |
+| Spartan/ui (`@spartan-ng/brain` + helm in `libs/ui`) | Helm copies in `libs/ui`                      |
+| GSAP 3                                               | ScrollSmoother, DrawSVG, SplitText, MorphSVG  |
 | Vitest                                               | Unit tests                                    |
 
 ## Requirements
@@ -36,9 +36,9 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 
 | Route                | Mode                             | Status                                    |
 | -------------------- | -------------------------------- | ----------------------------------------- |
-| `/`                  | **SSG** (`RenderMode.Prerender`) | Landing placeholder                       |
+| `/`                  | **SSG** (`RenderMode.Prerender`) | Wordmark intro → Why → featured gallery   |
 | `/tours`             | **SSG** (`RenderMode.Prerender`) | Tours placeholder                         |
-| `/packages`          | **SSG** (`RenderMode.Prerender`) | Packages placeholder                      |
+| `/packages`          | **SSG** (`RenderMode.Prerender`) | Full horizontal gallery                   |
 | `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
 | `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
 | `/experiences/:slug` | **SSR** (`RenderMode.Server`)    | Detail placeholder (`slug` from the URL)  |
@@ -54,16 +54,18 @@ src/app/
   app.routes.ts
   app.routes.server.ts
   core/
-    animation/gsap.ts          # SSR-safe GSAP helpers (footer bounce, hover)
+    animation/gsap.ts          # SSR-safe GSAP + plugin flags
+    animation/smooth-scroll.ts # ScrollSmoother on the app shell
+    animation/gsap-ui.ts       # hover timelines (no ScrollTrigger)
     images/remote-image-loader.ts
-    layout/                    # header (Navigation Menu + Sheet) + footer
+    layout/                    # header, footer bounce, horiz gallery
     models/experience.ts
     models/reservation.ts
     services/experiences.ts    # empty list / getBySlug
   features/
-    landing/                   # SSG placeholder
+    landing/                   # SSG home (DrawSVG hero, Why, gallery)
     tours/                     # SSG placeholder
-    packages/                  # SSG placeholder
+    packages/                  # SSG full gallery
     about/                     # SSG placeholder
     contact/                   # SSG placeholder
     experiences/detail/        # SSR placeholder
@@ -82,7 +84,14 @@ npx ng g @spartan-ng/cli:ui tooltip --defaults --interactive=false --directory=l
 
 ## GSAP
 
-[`afterNextGsap()`](src/app/core/animation/gsap.ts) loads ScrollTrigger and MorphSVGPlugin on the client for the footer bounce. Do not register those plugins at module top level.
+Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client through [`afterNextGsap()`](src/app/core/animation/gsap.ts) (`morphSvg`, `drawSvg`, `splitText`, `scrollSmoother`). Do not register them at module top level.
+
+- [`SmoothScroll`](src/app/core/animation/smooth-scroll.ts) creates `ScrollSmoother` on `#smooth-wrapper` / `#smooth-content` in the app shell. It is skipped for `prefers-reduced-motion`, jsdom, and coarse+narrow viewports. The header is pinned while the smoother is active because `position: sticky` does not hold inside transformed content.
+- Home: the wordmark SVG is the hero. DrawSVG plays once per tab (`sessionStorage` `desertica-intro`), then the same mark settles. Why Desértica uses SplitText. Featured packages use a pin+scrub gallery.
+- `/packages` reuses the same gallery with every package placeholder.
+- Footer bounce (MorphSVG) waits for the smoother proxy via `whenReady()`.
+
+[`public/splashes/`](public/splashes/) are looping HTML pages and are not routed.
 
 ## MCP servers
 

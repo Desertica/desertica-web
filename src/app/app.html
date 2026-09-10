@@ -4,9 +4,13 @@
 >
   {{ 'skip' | translate: i18n.locale() }}
 </a>
-<app-site-header />
-<main id="main-content" class="flex-1">
-  <router-outlet />
-</main>
-<app-site-footer />
+<div id="smooth-wrapper">
+  <div id="smooth-content">
+    <app-site-header />
+    <main id="main-content" class="flex-1">
+      <router-outlet />
+    </main>
+    <app-site-footer />
+  </div>
+</div>
 <hlm-toaster [theme]="theme()" />

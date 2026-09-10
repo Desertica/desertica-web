@@ -49,6 +49,30 @@
     "reservationsLead": "Reservas (CSR). Formulario más adelante.",
     "experienceLead": "Placeholder SSR. Catálogo más adelante."
   },
+  "home": {
+    "heroTitle": "Días de desierto en Ica",
+    "heroLead": "Tubulares, atardeceres en viñedo y noches en el oasis, al ritmo que elijas.",
+    "whyKicker": "{ Por qué Desértica }",
+    "whyHeadline": "Ica no es una parada entre ciudades. Es la razón de bajar al sur.",
+    "whySupport": "Quédate por las dunas, el vino y la mañana lenta del día siguiente.",
+    "featuredTitle": "Estancias destacadas",
+    "featuredLead": "Tres formas de quedarte en Huacachina e Ica."
+  },
+  "gallery": {
+    "from": "DESDE",
+    "hours": "HORAS",
+    "currency": "$USD",
+    "slides": {
+      "quadSunset": "Cuatrimoto en Paracas y Huacachina al atardecer",
+      "huacachinaWeekend": "Fin de semana en Huacachina entre dunas",
+      "vineyardSunset": "Atardecer y vino en los viñedos de Ica",
+      "oasisOvernight": "Noche en el oasis bajo el cielo del desierto",
+      "duneBuggy": "Tubulares por las arenas de Ica",
+      "sunriseWalk": "Caminata al amanecer alrededor del oasis",
+      "goldenHour": "Hora dorada entre viñedos",
+      "campfireNight": "Noche de fogata junto a Huacachina"
+    }
+  },
   "meta": {
     "title": "Desértica | Tours y experiencias en Ica",
     "description": "Reserva tubulares, atardeceres en viñedos, campamentos en el oasis y caminatas al amanecer en Ica y Huacachina."

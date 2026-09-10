@@ -1,15 +1,47 @@
-<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-  <h1 class="font-heading text-4xl">Desértica</h1>
-  <p class="text-muted-foreground mt-4">{{ 'pages.landingLead' | translate: i18n.locale() }}</p>
-  <nav
-    class="mt-8 flex flex-wrap gap-4 text-sm"
-    [attr.aria-label]="'pages.mappedRoutes' | translate: i18n.locale()"
-  >
-    <a routerLink="/tours" class="underline">/tours</a>
-    <a routerLink="/packages" class="underline">/packages</a>
-    <a routerLink="/about" class="underline">/about</a>
-    <a routerLink="/contact" class="underline">/contact</a>
-    <a routerLink="/experiences/placeholder" class="underline">/experiences/:slug</a>
-    <a routerLink="/reservations" class="underline">/reservations</a>
-  </nav>
+<section
+  data-hero
+  class="hero relative flex min-h-dvh flex-col justify-center px-4 py-24 sm:px-6"
+>
+
+  <div class="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 text-center">
+    <div class="wordmark-stage w-full max-w-3xl origin-center">
+      <app-wordmark-svg />
+    </div>
+    <div data-hero-copy class="flex max-w-xl flex-col items-center gap-4">
+      <h1 class="font-heading text-4xl tracking-tight sm:text-5xl">
+        {{ 'home.heroTitle' | translate: i18n.locale() }}
+      </h1>
+      <p class="text-muted-foreground text-base sm:text-lg">
+        {{ 'home.heroLead' | translate: i18n.locale() }}
+      </p>
+      <div class="mt-2 flex flex-wrap items-center justify-center gap-3">
+        <a hlmBtn [routerLink]="planTrip.path">{{ planTrip.labelKey | translate: i18n.locale() }}</a>
+        <a hlmBtn variant="outline" routerLink="/tours">{{ 'nav.tours' | translate: i18n.locale() }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+  <p class="text-muted-foreground text-sm font-medium tracking-wide">
+    {{ 'home.whyKicker' | translate: i18n.locale() }}
+  </p>
+  <h2 data-why-headline class="font-heading mt-4 max-w-4xl text-3xl text-balance sm:text-5xl">
+    {{ 'home.whyHeadline' | translate: i18n.locale() }}
+  </h2>
+  <p class="text-muted-foreground mt-6 max-w-2xl text-base sm:text-lg">
+    {{ 'home.whySupport' | translate: i18n.locale() }}
+  </p>
+</section>
+
+<section class="py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <h2 class="font-heading text-3xl">{{ 'home.featuredTitle' | translate: i18n.locale() }}</h2>
+    <p class="text-muted-foreground mt-3 max-w-2xl">
+      {{ 'home.featuredLead' | translate: i18n.locale() }}
+    </p>
+  </div>
+  <div class="mt-10">
+    <app-horiz-gallery />
+  </div>
 </section>

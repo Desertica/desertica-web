@@ -28,5 +28,11 @@ describe('i18n catalogs', () => {
   it('looks up nested keys with object notation', () => {
     expect(translate('nav.tours', 'en')).toBe('Tours');
     expect(translate('nav.planTrip', 'es')).toBe('Planifica tu viaje');
+    expect(translate('home.whyHeadline', 'en')).toContain("Ica isn't a stop");
+    expect(translate('home.whyHeadline', 'es')).toContain('Ica no es una parada');
+    expect(translate('gallery.from', 'en')).toBe('FROM');
+    expect(translate('gallery.from', 'es')).toBe('DESDE');
+    expect(translate('gallery.hours', 'en')).toBe('HOURS');
+    expect(translate('gallery.hours', 'es')).toBe('HORAS');
   });
 });

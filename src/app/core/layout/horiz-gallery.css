@@ -1,0 +1,19 @@
+.horiz-gallery-item [data-slot='card'] {
+  padding-block: 0;
+}
+
+.horiz-gallery-overlay {
+  color: #fff;
+  background-image: linear-gradient(to right, rgb(0 0 0 / 0.5), transparent 72%);
+}
+
+.horiz-gallery-overlay [data-slot='card-title'] {
+  color: inherit;
+  font-family: var(--font-heading);
+  font-size: clamp(1.15rem, 2.2vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}

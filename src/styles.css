@@ -101,3 +101,44 @@
     @apply bg-background text-foreground;
   }
 }
+
+html[data-intro='pending'],
+html[data-intro='playing'],
+html[data-intro='pending'] body,
+html[data-intro='playing'] body {
+  background: #5a6b3e;
+}
+
+html[data-intro='pending'] [data-hero],
+html[data-intro='playing'] [data-hero] {
+  background: #5a6b3e;
+  color: #ffffff;
+}
+
+html[data-intro='pending'] [data-hero] .text-muted-foreground,
+html[data-intro='playing'] [data-hero] .text-muted-foreground {
+  color: rgb(255 255 255 / 0.78);
+}
+
+html[data-intro='pending']:has([data-hero]) app-site-header,
+html[data-intro='pending'] [data-hero-copy],
+html[data-intro='pending'] .wordmark-stage {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html[data-intro='done'] [data-hero],
+html[data-intro='done'] [data-hero].hero-intro {
+  background: transparent;
+  color: inherit;
+}
+
+html[data-intro='done'] [data-hero].hero-intro .text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+html[data-intro='done'] .wordmark-stage {
+  transform: scale(0.72);
+  transform-origin: center center;
+}

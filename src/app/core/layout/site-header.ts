@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
+import { afterNextGsap } from '../animation/gsap';
 import { PlanTripHover } from '../animation/plan-trip-hover';
+import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
+import { BrandMark } from './brand-mark';
 import { LocaleSwitcher } from './locale-switcher';
 import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
 
@@ -25,6 +28,7 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
     LocaleSwitcher,
     TranslatePipe,
     PlanTripHover,
+    BrandMark,
   ],
   providers: [provideIcons({ lucideMenu, lucideMoon, lucideSun })],
   template: `
@@ -36,13 +40,7 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
           routerLink="/"
           class="text-foreground flex min-w-0 items-center gap-2 font-heading text-base tracking-tight sm:gap-2.5 sm:text-lg"
         >
-          <img
-            src="logo.svg"
-            width="40"
-            height="40"
-            alt=""
-            class="size-8 shrink-0 rounded-md sm:size-10"
-          />
+          <app-brand-mark />
           Desértica
         </a>
 
@@ -197,9 +195,52 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
   `,
 })
 export class SiteHeader {
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly smooth = inject(SmoothScroll);
+  private readonly destroyRef = inject(DestroyRef);
+
   protected readonly theme = inject(ThemeService);
   protected readonly i18n = inject(I18nService);
   protected readonly navLinks = primaryNavLinks;
   protected readonly planTrip = planTripLink;
   protected readonly isGroup = isNavGroup;
+
+  constructor() {
+    let cancelled = false;
+    this.destroyRef.onDestroy(() => {
+      cancelled = true;
+    });
+
+    afterNextGsap(
+      (gsap, { ScrollTrigger }) => {
+        const header = this.host.nativeElement.querySelector('header');
+        if (!(header instanceof HTMLElement)) {
+          return;
+        }
+
+        let inner: { revert: () => void } | undefined;
+        void this.smooth.whenReady().then(() => {
+          if (cancelled || !this.smooth.active()) {
+            return;
+          }
+
+          inner = gsap.context(() => {
+            ScrollTrigger.create({
+              trigger: header,
+              start: 'top top',
+              end: 'max',
+              pin: true,
+              pinSpacing: false,
+            });
+            ScrollTrigger.refresh();
+          }, header);
+        });
+
+        return {
+          revert: () => inner?.revert(),
+        };
+      },
+      { morphSvg: false },
+    );
+  }
 }

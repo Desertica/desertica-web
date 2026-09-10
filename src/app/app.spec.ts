@@ -62,6 +62,9 @@ describe('App', () => {
     expect(compiled.textContent).toContain('Desértica');
     expect(compiled.textContent).toContain('Tours');
     expect(compiled.textContent).toContain('Plan your trip');
+    expect(compiled.querySelector('#smooth-wrapper')).not.toBeNull();
+    expect(compiled.querySelector('#smooth-content')).not.toBeNull();
+    expect(compiled.querySelector('a[href="#main-content"]')).not.toBeNull();
   });
 
   it('should toggle and persist the color theme', async () => {

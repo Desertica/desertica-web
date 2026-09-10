@@ -49,6 +49,30 @@
     "reservationsLead": "Reservations (CSR). Form later.",
     "experienceLead": "SSR placeholder. Catalog later."
   },
+  "home": {
+    "heroTitle": "Desert days in Ica",
+    "heroLead": "Dune buggies, vineyard sunsets, and nights by the oasis — planned around your pace.",
+    "whyKicker": "{ Why Desértica }",
+    "whyHeadline": "Ica isn't a stop between cities. It's the reason you came south.",
+    "whySupport": "Stay for the dunes, the wine, and the slow morning after.",
+    "featuredTitle": "Featured stays",
+    "featuredLead": "Three ways to linger in Huacachina and Ica."
+  },
+  "gallery": {
+    "from": "FROM",
+    "hours": "HOURS",
+    "currency": "$USD",
+    "slides": {
+      "quadSunset": "Quad bike in Paracas and Huacachina at sunset",
+      "huacachinaWeekend": "Huacachina weekend among the dunes",
+      "vineyardSunset": "Vineyard sunset and wine in Ica",
+      "oasisOvernight": "Oasis overnight under the desert sky",
+      "duneBuggy": "Dune buggy across the Ica sands",
+      "sunriseWalk": "Sunrise walk around the oasis",
+      "goldenHour": "Golden hour among the vineyards",
+      "campfireNight": "Campfire night by Huacachina"
+    }
+  },
   "meta": {
     "title": "Desértica | Tours and experiences in Ica",
     "description": "Book dune buggies, vineyard sunsets, oasis camps, and sunrise walks in Ica and Huacachina."

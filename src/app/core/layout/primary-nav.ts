@@ -77,3 +77,16 @@ export const planTripLink = {
   labelKey: 'nav.planTrip',
   path: '/reservations',
 } as const;
+
+export function packageChildren(): readonly NavLink[] {
+  const group = primaryNavLinks.find((item) => isNavGroup(item) && item.path === '/packages');
+  if (!group || !isNavGroup(group)) {
+    return [];
+  }
+
+  return group.children;
+}
+
+export function packageGalleryItems(): readonly NavLink[] {
+  return packageChildren().filter((child) => child.path !== '/packages');
+}

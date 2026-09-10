@@ -1,0 +1,12 @@
+.hero-intro {
+  background: #5a6b3e;
+  color: #ffffff;
+}
+
+.hero-intro .text-muted-foreground {
+  color: rgb(255 255 255 / 0.78);
+}
+
+.wordmark-stage {
+  transform-origin: center center;
+}
