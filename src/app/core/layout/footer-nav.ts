@@ -69,13 +69,41 @@ export const footerDestinations: readonly FooterDestination[] = [
 ];
 
 export const footerSocials: readonly FooterSocial[] = [
-  { labelKey: 'footer.social.instagram', href: 'https://www.instagram.com/desertica', svg: simpleInstagram },
-  { labelKey: 'footer.social.facebook', href: 'https://www.facebook.com/desertica', svg: simpleFacebook },
-  { labelKey: 'footer.social.tiktok', href: 'https://www.tiktok.com/@desertica', svg: simpleTiktok },
-  { labelKey: 'footer.social.youtube', href: 'https://www.youtube.com/@desertica', svg: simpleYoutube },
-  { labelKey: 'footer.social.linkedin', href: 'https://www.linkedin.com/company/desertica', svg: simpleLinkedin },
-  { labelKey: 'footer.social.google', href: 'https://maps.google.com/?q=Desertica', svg: simpleGoogle },
-  { labelKey: 'footer.social.tripadvisor', href: 'https://www.tripadvisor.com/desertica', svg: simpleTripadvisor },
+  {
+    labelKey: 'footer.social.instagram',
+    href: 'https://www.instagram.com/desertica',
+    svg: simpleInstagram,
+  },
+  {
+    labelKey: 'footer.social.facebook',
+    href: 'https://www.facebook.com/desertica',
+    svg: simpleFacebook,
+  },
+  {
+    labelKey: 'footer.social.tiktok',
+    href: 'https://www.tiktok.com/@desertica',
+    svg: simpleTiktok,
+  },
+  {
+    labelKey: 'footer.social.youtube',
+    href: 'https://www.youtube.com/@desertica',
+    svg: simpleYoutube,
+  },
+  {
+    labelKey: 'footer.social.linkedin',
+    href: 'https://www.linkedin.com/company/desertica',
+    svg: simpleLinkedin,
+  },
+  {
+    labelKey: 'footer.social.google',
+    href: 'https://maps.google.com/?q=Desertica',
+    svg: simpleGoogle,
+  },
+  {
+    labelKey: 'footer.social.tripadvisor',
+    href: 'https://www.tripadvisor.com/desertica',
+    svg: simpleTripadvisor,
+  },
 ];
 
 export const footerContact = {
@@ -83,6 +111,7 @@ export const footerContact = {
   phone: '+51 9XX XXX XXX',
   mailto: 'mailto:xxxxxx@desertica.pe',
   tel: 'tel:+519XXXXXXXX',
+  whatsapp: 'https://wa.me/519XXXXXXXX',
 } as const;
 
 export const footerLegalEntity = {

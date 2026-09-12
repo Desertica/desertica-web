@@ -1,4 +1,11 @@
-import { footerDestinations, footerLegalEntity, footerSocials, footerStamps } from './footer-nav';
+import {
+  footerContact,
+  footerDestinations,
+  footerLegalEntity,
+  footerSocials,
+  footerStamps,
+} from './footer-nav';
+import { simpleWhatsapp } from './footer-social-icons';
 
 describe('footer nav', () => {
   it('maps destination hubs and product placeholders', () => {
@@ -23,6 +30,11 @@ describe('footer nav', () => {
     expect(footerStamps.map((item) => item.path)).toEqual(['/legal/mincetur', '/complaints']);
     expect(footerStamps.every((item) => item.optimized)).toBe(true);
     expect(footerStamps[1]?.src).toBe('/legal/libro-reclamaciones.png');
+  });
+
+  it('exposes a WhatsApp deep link and official mark', () => {
+    expect(footerContact.whatsapp).toBe('https://wa.me/519XXXXXXXX');
+    expect(simpleWhatsapp).toContain('<title>WhatsApp</title>');
   });
 
   it('uses official brand marks for socials', () => {

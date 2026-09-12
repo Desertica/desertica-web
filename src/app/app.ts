@@ -1,4 +1,10 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HlmToaster } from '@spartan-ng/helm/sonner';
 import { SmoothScroll } from './core/animation/smooth-scroll';
@@ -6,12 +12,13 @@ import { I18nService } from './core/i18n/i18n';
 import { TranslatePipe } from './core/i18n/translate-pipe';
 import { SiteFooter } from './core/layout/site-footer';
 import { SiteHeader } from './core/layout/site-header';
+import { WhatsappFab } from './core/layout/whatsapp-fab';
 import { ThemeService } from './core/theme/theme';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SiteHeader, SiteFooter, HlmToaster, TranslatePipe],
+  imports: [RouterOutlet, SiteHeader, SiteFooter, WhatsappFab, HlmToaster, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

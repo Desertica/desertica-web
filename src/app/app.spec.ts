@@ -68,6 +68,11 @@ describe('App', () => {
     expect(compiled.querySelector('#smooth-wrapper')).not.toBeNull();
     expect(compiled.querySelector('#smooth-content')).not.toBeNull();
     expect(compiled.querySelector('a[href="#main-content"]')).not.toBeNull();
+    expect(compiled.querySelector('app-whatsapp-fab')).not.toBeNull();
+    expect(compiled.querySelector('#smooth-content app-whatsapp-fab')).toBeNull();
+    expect(compiled.querySelector('app-whatsapp-fab a')?.getAttribute('href')).toBe(
+      'https://wa.me/519XXXXXXXX',
+    );
   });
 
   it('should toggle and persist the color theme', async () => {

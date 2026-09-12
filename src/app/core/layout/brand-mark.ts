@@ -4,14 +4,14 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-brand-mark',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'text-foreground inline-block h-8 w-auto shrink-0',
+    class: 'text-foreground inline-block h-9 w-auto shrink-0 sm:h-10 lg:h-12',
     'aria-hidden': 'true',
   },
   template: `
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="117.052 -0.615 385.970 223.724"
-      class="block h-8 w-auto"
+      class="block h-full w-auto"
     >
       <g fill="currentColor">
         <path

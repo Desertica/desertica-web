@@ -22,7 +22,7 @@ import { WordmarkSvg } from './wordmark-svg';
 const INTRO_KEY = 'desertica-intro';
 const OLIVE = '#5a6b3e';
 const WHITE = '#ffffff';
-const REST_SCALE = 0.72;
+const REST_SCALE = 0.85;
 
 @Component({
   selector: 'app-landing',

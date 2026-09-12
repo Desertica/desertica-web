@@ -5,7 +5,12 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
+/* Swap later: change these two families and the Google Fonts <link> in index.html. */
 @theme {
+  --font-sans:
+    'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
   --font-heading: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
 }
 
@@ -13,11 +18,6 @@
 
 :root {
   color-scheme: light;
-
-  --font-sans:
-    'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -96,9 +96,15 @@
   }
   html {
     scroll-behavior: smooth;
+    font-size: 106.25%;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 112.5%;
+    }
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-base text-foreground;
   }
 }
 
@@ -139,6 +145,6 @@ html[data-intro='done'] [data-hero].hero-intro .text-muted-foreground {
 }
 
 html[data-intro='done'] .wordmark-stage {
-  transform: scale(0.72);
+  transform: scale(0.85);
   transform-origin: center center;
 }

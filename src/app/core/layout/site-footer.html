@@ -1,29 +1,32 @@
-<footer class="relative z-10 mt-auto min-h-[28rem] overflow-visible sm:min-h-[36rem]">
+<footer class="bg-muted relative z-10 mt-auto min-h-[22rem] overflow-hidden sm:min-h-[26rem] lg:min-h-[28rem]">
   <svg
     class="pointer-events-none absolute inset-0 block h-full w-full overflow-visible"
     viewBox="0 0 2278 683"
     preserveAspectRatio="none"
     aria-hidden="true"
   >
+    <rect width="2278" height="683" class="fill-muted" />
     <path class="fill-muted" [attr.d]="bounceCenter" />
   </svg>
 
-  <div class="relative z-10 mx-auto max-w-6xl px-4 pt-20 pb-10 sm:px-6">
+  <div class="relative z-10 mx-auto max-w-7xl px-4 pt-14 pb-10 sm:px-6 lg:px-10 lg:pt-16 lg:pb-12">
     <nav
-      class="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4"
+      class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
       [attr.aria-label]="'footer.sitemap' | translate: i18n.locale()"
     >
       <div class="flex flex-col gap-4">
         <p class="flex items-center gap-2.5">
           <app-brand-mark />
-          <span class="text-foreground font-heading">Desértica</span>
+          <span class="text-foreground font-heading text-xl tracking-tight">Desértica</span>
         </p>
-        <ul class="flex flex-col gap-2 text-sm">
+        <ul class="flex flex-col gap-2 text-base">
           @for (link of brandLinks; track link.path) {
             <li>
-              <a [routerLink]="link.path" class="text-muted-foreground hover:text-foreground">{{
-                link.labelKey | translate: i18n.locale()
-              }}</a>
+              <a
+                [routerLink]="link.path"
+                class="text-muted-foreground hover:text-foreground inline-block py-0.5"
+                >{{ link.labelKey | translate: i18n.locale() }}</a
+              >
             </li>
           }
         </ul>
@@ -34,7 +37,7 @@
                 [href]="social.href"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-muted-foreground hover:text-foreground focus-visible:text-foreground inline-flex size-8 items-center justify-center"
+                class="text-muted-foreground hover:text-foreground focus-visible:text-foreground inline-flex size-9 items-center justify-center"
                 [attr.aria-label]="social.labelKey | translate: i18n.locale()"
               >
                 <ng-icon [svg]="social.svg" class="size-5" />
@@ -46,22 +49,24 @@
 
       @for (destination of destinations; track destination.all.path) {
         <div class="flex flex-col gap-3">
-          <p class="text-foreground text-xs font-medium tracking-wide uppercase">
+          <p class="text-foreground text-sm font-medium tracking-wide uppercase">
             {{ destination.titleKey | translate: i18n.locale() }}
           </p>
-          <ul class="flex flex-col gap-2 text-sm">
+          <ul class="flex flex-col gap-2 text-base">
             <li>
               <a
                 [routerLink]="destination.all.path"
-                class="text-muted-foreground hover:text-foreground"
+                class="text-muted-foreground hover:text-foreground inline-block py-0.5"
                 >{{ destination.all.labelKey | translate: i18n.locale() }}</a
               >
             </li>
             @for (link of destination.children; track link.path) {
               <li>
-                <a [routerLink]="link.path" class="text-muted-foreground hover:text-foreground">{{
-                  link.labelKey | translate: i18n.locale()
-                }}</a>
+                <a
+                  [routerLink]="link.path"
+                  class="text-muted-foreground hover:text-foreground inline-block py-0.5"
+                  >{{ link.labelKey | translate: i18n.locale() }}</a
+                >
               </li>
             }
           </ul>
@@ -69,14 +74,14 @@
       }
     </nav>
 
-    <hlm-separator class="my-10" />
+    <hlm-separator class="my-8 lg:my-10" />
 
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-3 md:items-start">
-      <form class="order-2 flex flex-col gap-3 md:order-1" novalidate (submit)="subscribe($event)">
-        <p class="text-foreground text-xs font-medium tracking-wide uppercase">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">
+      <form class="order-2 flex flex-col gap-3 lg:order-1" novalidate (submit)="subscribe($event)">
+        <p class="text-foreground text-sm font-medium tracking-wide uppercase">
           {{ 'footer.newsletter' | translate: i18n.locale() }}
         </p>
-        <div class="flex items-start gap-2">
+        <div class="flex items-center gap-3">
           <div hlmField class="min-w-0 w-auto flex-1">
             <label class="sr-only" hlmFieldLabel for="footer-newsletter">{{
               'footer.newsletterPlaceholder' | translate: i18n.locale()
@@ -93,38 +98,35 @@
               <hlm-field-error>{{ 'footer.newsletterError' | translate: i18n.locale() }}</hlm-field-error>
             }
           </div>
-          <button hlmBtn type="submit" size="sm">
+          <button hlmBtn type="submit">
             {{ 'footer.newsletterSubmit' | translate: i18n.locale() }}
           </button>
         </div>
       </form>
 
-      <div class="order-1 flex flex-col gap-2 text-sm md:order-2 md:text-center">
-        <p class="text-foreground text-xs font-medium tracking-wide uppercase">
+      <div class="order-1 flex flex-col gap-2 text-base lg:order-2 lg:text-center">
+        <p class="text-foreground text-sm font-medium tracking-wide uppercase">
           {{ 'footer.contact' | translate: i18n.locale() }}
         </p>
-        <a class="text-muted-foreground hover:text-foreground" [href]="contact.mailto">{{
+        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact.mailto">{{
           contact.email
         }}</a>
-        <a class="text-muted-foreground hover:text-foreground" [href]="contact.tel">{{
+        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact.tel">{{
           contact.phone
         }}</a>
       </div>
 
-      <div class="order-3 flex flex-col gap-3 md:items-end">
-        <div class="flex flex-wrap items-center gap-3 md:justify-end">
+      <div class="order-3 flex flex-col gap-3 lg:items-end">
+        <div class="flex flex-wrap items-center gap-3 lg:justify-end">
           @for (stamp of stamps; track stamp.path) {
-            <a
-              [routerLink]="stamp.path"
-              class="bg-background block overflow-hidden rounded-md ring-1 ring-foreground/10"
-            >
+            <a [routerLink]="stamp.path" class="bg-background block overflow-hidden rounded-md">
               @if (stamp.optimized) {
                 <img
                   [ngSrc]="stamp.src"
                   [width]="stamp.width"
                   [height]="stamp.height"
                   [alt]="stamp.altKey | translate: i18n.locale()"
-                  class="h-16 w-auto"
+                  class="h-24 w-auto object-contain sm:h-28 lg:h-32"
                   disableOptimizedSrcset
                 />
               } @else {
@@ -133,7 +135,7 @@
                   [width]="stamp.width"
                   [height]="stamp.height"
                   [alt]="stamp.altKey | translate: i18n.locale()"
-                  class="h-16 w-auto"
+                  class="h-24 w-auto object-contain sm:h-28 lg:h-32"
                 />
               }
             </a>
@@ -143,11 +145,11 @@
     </div>
 
     <div
-      class="text-muted-foreground mt-8 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between"
+      class="text-muted-foreground mt-8 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between lg:mt-10"
     >
-      <nav class="flex flex-wrap gap-4" [attr.aria-label]="'nav.footer' | translate: i18n.locale()">
+      <nav class="flex flex-wrap gap-5" [attr.aria-label]="'nav.footer' | translate: i18n.locale()">
         @for (link of legalLinks; track link.path) {
-          <a [routerLink]="link.path" class="hover:text-foreground">{{
+          <a [routerLink]="link.path" class="hover:text-foreground py-0.5">{{
             link.labelKey | translate: i18n.locale()
           }}</a>
         }

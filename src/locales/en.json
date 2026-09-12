@@ -29,7 +29,11 @@
   "a11y": {
     "toggleTheme": "Toggle color theme",
     "openMenu": "Open menu",
-    "chooseLanguage": "Language"
+    "chooseLanguage": "Language",
+    "whatsapp": "WhatsApp"
+  },
+  "whatsapp": {
+    "tooltip": "Message us"
   },
   "menu": {
     "title": "Menu",

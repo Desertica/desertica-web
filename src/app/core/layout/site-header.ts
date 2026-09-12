@@ -34,11 +34,11 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
   template: `
     <header class="border-border/60 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
       <div
-        class="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6"
+        class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-10"
       >
         <a
           routerLink="/"
-          class="text-foreground flex min-w-0 items-center gap-2 font-heading text-base tracking-tight sm:gap-2.5 sm:text-lg"
+          class="text-foreground flex min-w-0 items-center gap-2 font-heading text-lg tracking-tight sm:gap-2.5 sm:text-xl"
         >
           <app-brand-mark />
           Desértica
@@ -47,7 +47,7 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
         <div class="flex min-w-0 items-center gap-1.5 sm:gap-4">
           <nav
             hlmNavigationMenu
-            class="hidden md:flex"
+            class="hidden lg:flex"
             [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
           >
             <ul hlmNavigationMenuList>
@@ -97,7 +97,8 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
           <a
             hlmBtn
             appPlanTripHover
-            class="hidden shrink-0 transition-none md:inline-flex"
+            size="lg"
+            class="hidden shrink-0 transition-none lg:inline-flex"
             [routerLink]="planTrip.path"
           >
             {{ planTrip.labelKey | translate: i18n.locale() }}
@@ -111,7 +112,7 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
               variant="ghost"
               size="icon"
               side="right"
-              class="shrink-0 md:hidden"
+              class="shrink-0 lg:hidden"
               [attr.aria-label]="'a11y.openMenu' | translate: i18n.locale()"
             >
               <ng-icon name="lucideMenu" />
