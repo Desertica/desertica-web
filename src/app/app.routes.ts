@@ -1,5 +1,12 @@
 import { Routes } from '@angular/router';
 
+const placeholder = (path: string, titleKey: string, leadKey: string) => ({
+  path,
+  loadComponent: () =>
+    import('./features/placeholder/placeholder-page').then((m) => m.PlaceholderPage),
+  data: { titleKey, leadKey },
+});
+
 export const routes: Routes = [
   {
     path: '',
@@ -21,6 +28,15 @@ export const routes: Routes = [
     path: 'contact',
     loadComponent: () => import('./features/contact/contact').then((m) => m.Contact),
   },
+  placeholder('blog', 'nav.blog', 'pages.blogLead'),
+  placeholder('nazca', 'footer.nazca', 'pages.nazcaLead'),
+  placeholder('huacachina', 'footer.huacachina', 'pages.huacachinaLead'),
+  placeholder('paracas', 'footer.paracas', 'pages.paracasLead'),
+  placeholder('terms', 'footer.terms', 'pages.termsLead'),
+  placeholder('privacy', 'footer.privacy', 'pages.privacyLead'),
+  placeholder('complaints', 'footer.complaints', 'pages.complaintsLead'),
+  placeholder('conduct', 'footer.conduct', 'pages.conductLead'),
+  placeholder('legal/mincetur', 'footer.mincetur', 'pages.minceturLead'),
   {
     path: 'experiences/:slug',
     loadComponent: () =>

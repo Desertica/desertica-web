@@ -34,5 +34,11 @@ describe('i18n catalogs', () => {
     expect(translate('gallery.from', 'es')).toBe('DESDE');
     expect(translate('gallery.hours', 'en')).toBe('HOURS');
     expect(translate('gallery.hours', 'es')).toBe('HORAS');
+    expect(translate('nav.blog', 'en')).toBe('Blog');
+    expect(translate('footer.conduct', 'es')).toContain('ESNNA');
+    expect(translate('footer.newsletterSubmit', 'es')).toBe('Suscribirme');
+    expect(translate('footer.nazcaFlight', 'es')).toBe('Sobrevuelo Nazca');
+    expect(translate('pages.blogLead', 'en')).toBe('Stories from Ica and Huacachina.');
+    expect(translate('pages.minceturLead', 'es')).toContain('MINCETUR');
   });
 });

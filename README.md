@@ -41,6 +41,15 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/packages`          | **SSG** (`RenderMode.Prerender`) | Full horizontal gallery                   |
 | `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
 | `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
+| `/blog`              | **SSG** (`RenderMode.Prerender`) | Blog placeholder                          |
+| `/nazca`             | **SSG** (`RenderMode.Prerender`) | Nazca hub placeholder                     |
+| `/huacachina`        | **SSG** (`RenderMode.Prerender`) | Huacachina hub placeholder                |
+| `/paracas`           | **SSG** (`RenderMode.Prerender`) | Paracas hub placeholder                   |
+| `/terms`             | **SSG** (`RenderMode.Prerender`) | Terms placeholder                         |
+| `/privacy`           | **SSG** (`RenderMode.Prerender`) | Privacy placeholder                       |
+| `/complaints`        | **SSG** (`RenderMode.Prerender`) | Complaints book placeholder               |
+| `/conduct`           | **SSG** (`RenderMode.Prerender`) | ESNNA code of conduct placeholder         |
+| `/legal/mincetur`    | **SSG** (`RenderMode.Prerender`) | MINCETUR registration placeholder         |
 | `/experiences/:slug` | **SSR** (`RenderMode.Server`)    | Detail placeholder (`slug` from the URL)  |
 | `/reservations`      | **CSR** (`RenderMode.Client`)    | Plan your trip / reservations placeholder |
 
@@ -68,9 +77,12 @@ src/app/
     packages/                  # SSG full gallery
     about/                     # SSG placeholder
     contact/                   # SSG placeholder
+    placeholder/               # SSG empty pages (blog, destinos, legal)
     experiences/detail/        # SSR placeholder
     reservations/              # CSR placeholder
 libs/ui/                       # Spartan helm copies
+public/brand/                  # mark and lockup
+public/legal/                  # MINCETUR distintivo + INDECOPI AvisoVirtual
 public/splashes/               # looping DrawSVG pages (not wired into Angular routes)
 ```
 

@@ -62,6 +62,9 @@ describe('App', () => {
     expect(compiled.textContent).toContain('Desértica');
     expect(compiled.textContent).toContain('Tours');
     expect(compiled.textContent).toContain('Plan your trip');
+    expect(compiled.textContent).toContain('Newsletter');
+    expect(compiled.textContent).toContain('Nazca');
+    expect(compiled.textContent).toContain('XXXXXXXXXXX');
     expect(compiled.querySelector('#smooth-wrapper')).not.toBeNull();
     expect(compiled.querySelector('#smooth-content')).not.toBeNull();
     expect(compiled.querySelector('a[href="#main-content"]')).not.toBeNull();
@@ -96,6 +99,7 @@ describe('App', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Planifica tu viaje');
+    expect(compiled.textContent).toContain('Suscribirme');
     expect(compiled.textContent).toContain('Paquetes');
     expect(
       compiled.querySelector<HTMLButtonElement>('button[aria-label="Cambiar tema de color"]'),

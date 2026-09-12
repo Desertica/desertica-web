@@ -1,0 +1,158 @@
+<footer class="relative z-10 mt-auto min-h-[28rem] overflow-visible sm:min-h-[36rem]">
+  <svg
+    class="pointer-events-none absolute inset-0 block h-full w-full overflow-visible"
+    viewBox="0 0 2278 683"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+  >
+    <path class="fill-muted" [attr.d]="bounceCenter" />
+  </svg>
+
+  <div class="relative z-10 mx-auto max-w-6xl px-4 pt-20 pb-10 sm:px-6">
+    <nav
+      class="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4"
+      [attr.aria-label]="'footer.sitemap' | translate: i18n.locale()"
+    >
+      <div class="flex flex-col gap-4">
+        <p class="flex items-center gap-2.5">
+          <app-brand-mark />
+          <span class="text-foreground font-heading">Desértica</span>
+        </p>
+        <ul class="flex flex-col gap-2 text-sm">
+          @for (link of brandLinks; track link.path) {
+            <li>
+              <a [routerLink]="link.path" class="text-muted-foreground hover:text-foreground">{{
+                link.labelKey | translate: i18n.locale()
+              }}</a>
+            </li>
+          }
+        </ul>
+        <ul class="flex flex-wrap items-center gap-3">
+          @for (social of socials; track social.href) {
+            <li>
+              <a
+                [href]="social.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-muted-foreground hover:text-foreground focus-visible:text-foreground inline-flex size-8 items-center justify-center"
+                [attr.aria-label]="social.labelKey | translate: i18n.locale()"
+              >
+                <ng-icon [svg]="social.svg" class="size-5" />
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      @for (destination of destinations; track destination.all.path) {
+        <div class="flex flex-col gap-3">
+          <p class="text-foreground text-xs font-medium tracking-wide uppercase">
+            {{ destination.titleKey | translate: i18n.locale() }}
+          </p>
+          <ul class="flex flex-col gap-2 text-sm">
+            <li>
+              <a
+                [routerLink]="destination.all.path"
+                class="text-muted-foreground hover:text-foreground"
+                >{{ destination.all.labelKey | translate: i18n.locale() }}</a
+              >
+            </li>
+            @for (link of destination.children; track link.path) {
+              <li>
+                <a [routerLink]="link.path" class="text-muted-foreground hover:text-foreground">{{
+                  link.labelKey | translate: i18n.locale()
+                }}</a>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </nav>
+
+    <hlm-separator class="my-10" />
+
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-3 md:items-start">
+      <form class="order-2 flex flex-col gap-3 md:order-1" novalidate (submit)="subscribe($event)">
+        <p class="text-foreground text-xs font-medium tracking-wide uppercase">
+          {{ 'footer.newsletter' | translate: i18n.locale() }}
+        </p>
+        <div class="flex items-start gap-2">
+          <div hlmField class="min-w-0 w-auto flex-1">
+            <label class="sr-only" hlmFieldLabel for="footer-newsletter">{{
+              'footer.newsletterPlaceholder' | translate: i18n.locale()
+            }}</label>
+            <input
+              hlmInput
+              id="footer-newsletter"
+              type="email"
+              autocomplete="email"
+              [formControl]="email"
+              [placeholder]="'footer.newsletterPlaceholder' | translate: i18n.locale()"
+            />
+            @if (email.invalid && email.touched) {
+              <hlm-field-error>{{ 'footer.newsletterError' | translate: i18n.locale() }}</hlm-field-error>
+            }
+          </div>
+          <button hlmBtn type="submit" size="sm">
+            {{ 'footer.newsletterSubmit' | translate: i18n.locale() }}
+          </button>
+        </div>
+      </form>
+
+      <div class="order-1 flex flex-col gap-2 text-sm md:order-2 md:text-center">
+        <p class="text-foreground text-xs font-medium tracking-wide uppercase">
+          {{ 'footer.contact' | translate: i18n.locale() }}
+        </p>
+        <a class="text-muted-foreground hover:text-foreground" [href]="contact.mailto">{{
+          contact.email
+        }}</a>
+        <a class="text-muted-foreground hover:text-foreground" [href]="contact.tel">{{
+          contact.phone
+        }}</a>
+      </div>
+
+      <div class="order-3 flex flex-col gap-3 md:items-end">
+        <div class="flex flex-wrap items-center gap-3 md:justify-end">
+          @for (stamp of stamps; track stamp.path) {
+            <a
+              [routerLink]="stamp.path"
+              class="bg-background block overflow-hidden rounded-md ring-1 ring-foreground/10"
+            >
+              @if (stamp.optimized) {
+                <img
+                  [ngSrc]="stamp.src"
+                  [width]="stamp.width"
+                  [height]="stamp.height"
+                  [alt]="stamp.altKey | translate: i18n.locale()"
+                  class="h-16 w-auto"
+                  disableOptimizedSrcset
+                />
+              } @else {
+                <img
+                  [src]="stamp.src"
+                  [width]="stamp.width"
+                  [height]="stamp.height"
+                  [alt]="stamp.altKey | translate: i18n.locale()"
+                  class="h-16 w-auto"
+                />
+              }
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="text-muted-foreground mt-8 flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between"
+    >
+      <nav class="flex flex-wrap gap-4" [attr.aria-label]="'nav.footer' | translate: i18n.locale()">
+        @for (link of legalLinks; track link.path) {
+          <a [routerLink]="link.path" class="hover:text-foreground">{{
+            link.labelKey | translate: i18n.locale()
+          }}</a>
+        }
+      </nav>
+      <p>© {{ legal.year }} {{ legal.name }} · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal.ruc }}</p>
+    </div>
+  </div>
+</footer>
