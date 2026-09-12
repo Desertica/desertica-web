@@ -30,7 +30,8 @@
       "@spartan-ng/helm/sonner": ["./libs/ui/sonner/src/index.ts"],
       "@spartan-ng/helm/utils": ["./libs/ui/utils/src/index.ts"],
       "@spartan-ng/helm/navigation-menu": ["./libs/ui/navigation-menu/src/index.ts"],
-      "@spartan-ng/helm/dropdown-menu": ["./libs/ui/dropdown-menu/src/index.ts"]
+      "@spartan-ng/helm/dropdown-menu": ["./libs/ui/dropdown-menu/src/index.ts"],
+      "@spartan-ng/helm/aspect-ratio": ["./libs/ui/aspect-ratio/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

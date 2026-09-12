@@ -107,10 +107,11 @@
     "whySupport": "Quédate por las dunas, el vino y la mañana lenta del día siguiente.",
     "featuredTitle": "Tours",
     "featuredLead": "Huacachina, Paracas y Nazca, en un mismo recorrido.",
-    "destinationsTitle": "Tres destinos",
-    "destinationsLead": "El oasis, la reserva y las líneas. Elige desde dónde empezar.",
-    "closeHeadline": "Armamos el día a tu ritmo.",
-    "closeLead": "Dunas, viñedo o una noche en el oasis. Tú eliges el ritmo; nosotros el traslado y la hora."
+    "pitchKicker": "{ Cómo viajamos }",
+    "pitchHeadline": "Un día en Ica no se improvisa. Se arma contigo.",
+    "pitchBeat1": "Traslados y horarios al ritmo del grupo, sin cola ni paquete rígido.",
+    "pitchBeat2": "Oasis, reserva o líneas: eliges el eje; nosotros el resto del día.",
+    "pitchBeat3": "Un hilo para reservar. Confirmación clara. El desierto, a tu hora."
   },
   "gallery": {
     "from": "DESDE",

@@ -40,6 +40,15 @@ describe('i18n catalogs', () => {
     expect(translate('footer.newsletterSubmit', 'es')).toBe('Suscribirme');
     expect(translate('footer.nazcaFlight', 'es')).toBe('Sobrevuelo Nazca');
     expect(translate('pages.blogLead', 'en')).toBe('Stories from Ica and Huacachina.');
-    expect(translate('pages.minceturLead', 'es')).toContain('MINCETUR');
+    expect(translate('home.pitchKicker', 'es')).toBe('{ Cómo viajamos }');
+    expect(translate('home.pitchKicker', 'en')).toBe('{ How we travel }');
+    expect(translate('home.pitchHeadline', 'es')).toContain('no se improvisa');
+    expect(translate('home.pitchHeadline', 'en')).toContain("isn't improvised");
+    expect(translate('home.pitchBeat1', 'es')).toContain('Traslados y horarios');
+    expect(translate('home.pitchBeat1', 'en')).toContain('Transfers and timing');
+    expect(translate('home.pitchBeat2', 'es')).toContain('Oasis, reserva o líneas');
+    expect(translate('home.pitchBeat2', 'en')).toContain('Oasis, reserve, or lines');
+    expect(translate('home.pitchBeat3', 'es')).toContain('Un hilo para reservar');
+    expect(translate('home.pitchBeat3', 'en')).toContain('One thread to book');
   });
 });

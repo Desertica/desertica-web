@@ -71,12 +71,12 @@ describe('App', () => {
     expect(compiled.querySelector('a[href="#main-content"]')).not.toBeNull();
     expect(compiled.querySelector('app-whatsapp-fab')).not.toBeNull();
     expect(compiled.querySelector('#smooth-content app-whatsapp-fab')).toBeNull();
+    expect(compiled.querySelector('#smooth-content app-site-header')).toBeNull();
     expect(compiled.querySelector('app-whatsapp-fab a')?.getAttribute('href')).toBe(
       'https://wa.me/519XXXXXXXX',
     );
-    expect(compiled.querySelector('app-whatsapp-fab img')?.getAttribute('src')).toBe(
-      '/brand/whatsapp-glyph.png',
-    );
+    expect(compiled.querySelector('app-whatsapp-fab img')).toBeNull();
+    expect(compiled.querySelector('app-whatsapp-fab svg')?.getAttribute('viewBox')).toBe('0 0 720 720');
     expect(compiled.querySelector('app-whatsapp-fab ng-icon')).toBeNull();
   });
 

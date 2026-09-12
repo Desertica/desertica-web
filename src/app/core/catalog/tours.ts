@@ -22,8 +22,11 @@ export type CatalogDestination = {
   tours: readonly CatalogTour[];
 };
 
-const unsplash = (photo: string): string =>
-  `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=1200&h=1200&q=80`;
+const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string => {
+  const width = size.w ?? 1200;
+  const height = size.h ?? 1200;
+  return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
+};
 
 export const tourDestinations: readonly CatalogDestination[] = [
   {
@@ -32,7 +35,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
     allLabelKey: 'footer.huacachinaAll',
     hubPath: '/huacachina',
     leadKey: 'pages.huacachinaLead',
-    image: unsplash('photo-1473580044384-7ba9967e16a0'),
+    image: unsplash('photo-1473580044384-7ba9967e16a0', { w: 1200, h: 1500 }),
     tours: [
       {
         id: 'dune-buggy',
@@ -69,7 +72,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
     allLabelKey: 'footer.paracasAll',
     hubPath: '/paracas',
     leadKey: 'pages.paracasLead',
-    image: unsplash('photo-1547234935-80c7145ec969'),
+    image: unsplash('photo-1547234935-80c7145ec969', { w: 1200, h: 1500 }),
     tours: [
       {
         id: 'paracas-buggy',
@@ -106,7 +109,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
     allLabelKey: 'footer.nazcaAll',
     hubPath: '/nazca',
     leadKey: 'pages.nazcaLead',
-    image: unsplash('photo-1469854523086-cc02fe5d8800'),
+    image: unsplash('photo-1469854523086-cc02fe5d8800', { w: 1200, h: 1500 }),
     tours: [
       {
         id: 'nazca-lines',

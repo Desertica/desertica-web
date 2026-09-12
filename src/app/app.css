@@ -13,4 +13,17 @@
   width: 100%;
   flex-direction: column;
   overflow: visible;
+  padding-top: 3.5rem;
+}
+
+@media (min-width: 640px) {
+  #smooth-content {
+    padding-top: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  #smooth-content {
+    padding-top: 5rem;
+  }
 }

@@ -107,10 +107,11 @@
     "whySupport": "Stay for the dunes, the wine, and the slow morning after.",
     "featuredTitle": "Tours",
     "featuredLead": "Huacachina, Paracas, and Nazca — one catalog.",
-    "destinationsTitle": "Three destinations",
-    "destinationsLead": "The oasis, the reserve, and the lines. Pick where to start.",
-    "closeHeadline": "We shape the day around your pace.",
-    "closeLead": "Dunes, a vineyard, or a night by the oasis. You set the rhythm; we handle the rest."
+    "pitchKicker": "{ How we travel }",
+    "pitchHeadline": "A day in Ica isn't improvised. It's built with you.",
+    "pitchBeat1": "Transfers and timing at the group's pace — no queue, no rigid package.",
+    "pitchBeat2": "Oasis, reserve, or lines: you pick the axis; we handle the rest of the day.",
+    "pitchBeat3": "One thread to book. A clear confirmation. The desert, on your hour."
   },
   "gallery": {
     "from": "FROM",

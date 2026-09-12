@@ -1,13 +1,11 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
-import { afterNextGsap } from '../animation/gsap';
 import { PlanTripHover } from '../animation/plan-trip-hover';
-import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
@@ -32,7 +30,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
   ],
   providers: [provideIcons({ lucideMenu, lucideMoon, lucideSun })],
   template: `
-    <header class="border-border/60 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
+    <header class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md">
       <div
         class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-10"
       >
@@ -54,14 +52,18 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
               @for (item of navLinks; track item.path) {
                 <li hlmNavigationMenuItem>
                   @if (isGroup(item)) {
-                    <button type="button" hlmNavigationMenuTrigger align="start">
+                    <button type="button" hlmNavigationMenuTrigger align="center">
                       {{ item.labelKey | translate: i18n.locale() }}
                     </button>
-                    <hlm-navigation-menu-content *hlmNavigationMenuPortal>
+                    <hlm-navigation-menu-content
+                      *hlmNavigationMenuPortal
+                      [navOffset]="0"
+                      class="max-w-[min(36rem,calc(100vw-2rem))]"
+                    >
                       @if (item.columns?.length) {
-                        <ul class="grid w-[min(100vw-4rem,52rem)] gap-3 lg:grid-cols-3">
+                        <ul class="grid w-full min-w-0 gap-2 lg:grid-cols-3">
                           @for (child of item.children; track navTrack(child)) {
-                            <li class="lg:col-span-3">
+                            <li class="min-w-0 lg:col-span-3">
                               <a
                                 hlmNavigationMenuLink
                                 [routerLink]="child.path"
@@ -81,7 +83,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
                             </li>
                           }
                           @for (column of item.columns; track column.fragment) {
-                            <li class="flex flex-col gap-1">
+                            <li class="flex min-w-0 flex-col gap-1">
                               <a
                                 hlmNavigationMenuLink
                                 [routerLink]="column.path"
@@ -278,53 +280,10 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
   `,
 })
 export class SiteHeader {
-  private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly smooth = inject(SmoothScroll);
-  private readonly destroyRef = inject(DestroyRef);
-
   protected readonly theme = inject(ThemeService);
   protected readonly i18n = inject(I18nService);
   protected readonly navLinks = primaryNavLinks;
   protected readonly planTrip = planTripLink;
   protected readonly isGroup = isNavGroup;
   protected readonly navTrack = navItemTrack;
-
-  constructor() {
-    let cancelled = false;
-    this.destroyRef.onDestroy(() => {
-      cancelled = true;
-    });
-
-    afterNextGsap(
-      (gsap, { ScrollTrigger }) => {
-        const header = this.host.nativeElement.querySelector('header');
-        if (!(header instanceof HTMLElement)) {
-          return;
-        }
-
-        let inner: { revert: () => void } | undefined;
-        void this.smooth.whenReady().then(() => {
-          if (cancelled || !this.smooth.active()) {
-            return;
-          }
-
-          inner = gsap.context(() => {
-            ScrollTrigger.create({
-              trigger: header,
-              start: 'top top',
-              end: 'max',
-              pin: true,
-              pinSpacing: false,
-            });
-            ScrollTrigger.refresh();
-          }, header);
-        });
-
-        return {
-          revert: () => inner?.revert(),
-        };
-      },
-      { morphSvg: false },
-    );
-  }
 }

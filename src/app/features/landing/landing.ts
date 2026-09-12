@@ -10,7 +10,8 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmAspectRatioImports } from '@spartan-ng/helm/aspect-ratio';
+import { HlmButton, buttonVariants } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { afterNextGsap } from '../../core/animation/gsap';
 import { PlanTripHover } from '../../core/animation/plan-trip-hover';
@@ -35,6 +36,7 @@ const REST_SCALE = 0.85;
     TranslatePipe,
     HlmButton,
     HlmCardImports,
+    HlmAspectRatioImports,
     NgOptimizedImage,
     WordmarkSvg,
     HorizGallery,
@@ -55,6 +57,13 @@ export class Landing {
   protected readonly i18n = inject(I18nService);
   protected readonly planTrip = planTripLink;
   protected readonly destinations = tourDestinations;
+  protected readonly destRatio = 4 / 5;
+  protected readonly reserveBtnClass = buttonVariants({ size: 'lg' });
+  protected readonly pitchBeats = [
+    'home.pitchBeat1',
+    'home.pitchBeat2',
+    'home.pitchBeat3',
+  ] as const;
 
   constructor() {
     let cancelled = false;
@@ -156,29 +165,45 @@ export class Landing {
           closeSplit = undefined;
           closeTween = undefined;
 
-          const closeHeadline = this.host.nativeElement.querySelector('[data-close-headline]');
-          if (!(closeHeadline instanceof HTMLElement) || !SplitText) {
+          const pitch = this.host.nativeElement.querySelector('[data-pitch]');
+          const headline = this.host.nativeElement.querySelector('[data-pitch-headline]');
+          const beats = this.host.nativeElement.querySelectorAll('[data-pitch-beat]');
+          if (!(pitch instanceof HTMLElement) || !(headline instanceof HTMLElement) || !SplitText) {
             return;
           }
 
-          closeHeadline.textContent = this.i18n.t('home.closeHeadline');
+          headline.textContent = this.i18n.t('home.pitchHeadline');
           if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             return;
           }
 
-          closeSplit = new SplitText(closeHeadline, { type: 'words,lines' });
-          closeTween = gsap.from(closeSplit.words, {
-            y: 24,
-            autoAlpha: 0,
-            duration: 0.7,
-            stagger: 0.04,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: closeHeadline,
-              start: 'top 80%',
-              toggleActions: 'play none none reverse',
-            },
-          });
+          closeSplit = new SplitText(headline, { type: 'words,lines' });
+          closeTween = gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: pitch,
+                start: 'top 80%',
+                toggleActions: 'play none none reverse',
+              },
+            })
+            .from(closeSplit.words, {
+              y: 24,
+              autoAlpha: 0,
+              duration: 0.7,
+              stagger: 0.04,
+              ease: 'power3.out',
+            })
+            .from(
+              beats,
+              {
+                y: 20,
+                autoAlpha: 0,
+                duration: 0.65,
+                stagger: 0.1,
+                ease: 'power3.out',
+              },
+              '-=0.35',
+            );
         };
 
         return gsap.context(() => {
