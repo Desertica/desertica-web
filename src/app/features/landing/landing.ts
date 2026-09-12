@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { NgOptimizedImage, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,8 +11,11 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
 import { afterNextGsap } from '../../core/animation/gsap';
+import { PlanTripHover } from '../../core/animation/plan-trip-hover';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
+import { tourDestinations } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { HorizGallery } from '../../core/layout/horiz-gallery';
@@ -27,7 +30,16 @@ const REST_SCALE = 0.85;
 @Component({
   selector: 'app-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe, HlmButton, WordmarkSvg, HorizGallery],
+  imports: [
+    RouterLink,
+    TranslatePipe,
+    HlmButton,
+    HlmCardImports,
+    NgOptimizedImage,
+    WordmarkSvg,
+    HorizGallery,
+    PlanTripHover,
+  ],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })
@@ -38,9 +50,11 @@ export class Landing {
   private readonly destroyRef = inject(DestroyRef);
   private readonly motionReady = signal(false);
   private bindWhy: (() => void) | undefined;
+  private bindClose: (() => void) | undefined;
 
   protected readonly i18n = inject(I18nService);
   protected readonly planTrip = planTripLink;
+  protected readonly destinations = tourDestinations;
 
   constructor() {
     let cancelled = false;
@@ -54,7 +68,10 @@ export class Landing {
         return;
       }
 
-      requestAnimationFrame(() => this.bindWhy?.());
+      requestAnimationFrame(() => {
+        this.bindWhy?.();
+        this.bindClose?.();
+      });
     });
 
     afterNextGsap(
@@ -123,6 +140,41 @@ export class Landing {
             ease: 'power3.out',
             scrollTrigger: {
               trigger: whyHeadline,
+              start: 'top 80%',
+              toggleActions: 'play none none reverse',
+            },
+          });
+        };
+
+        let closeSplit: { revert: () => void; words: Element[] } | undefined;
+        let closeTween: { kill: () => void; scrollTrigger?: { kill: () => void } } | undefined;
+
+        this.bindClose = () => {
+          closeTween?.scrollTrigger?.kill();
+          closeTween?.kill();
+          closeSplit?.revert();
+          closeSplit = undefined;
+          closeTween = undefined;
+
+          const closeHeadline = this.host.nativeElement.querySelector('[data-close-headline]');
+          if (!(closeHeadline instanceof HTMLElement) || !SplitText) {
+            return;
+          }
+
+          closeHeadline.textContent = this.i18n.t('home.closeHeadline');
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+          }
+
+          closeSplit = new SplitText(closeHeadline, { type: 'words,lines' });
+          closeTween = gsap.from(closeSplit.words, {
+            y: 24,
+            autoAlpha: 0,
+            duration: 0.7,
+            stagger: 0.04,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: closeHeadline,
               start: 'top 80%',
               toggleActions: 'play none none reverse',
             },

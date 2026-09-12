@@ -14,11 +14,12 @@ describe('footer nav', () => {
       '/huacachina',
       '/paracas',
     ]);
-    expect(footerDestinations[1]?.children.map((item) => item.path)).toEqual([
-      '/experiences/dune-buggy',
-      '/experiences/oasis-camp',
-      '/experiences/huacachina-weekend',
+    expect(footerDestinations[1]?.children.map((item) => item.fragment)).toEqual([
+      'dune-buggy',
+      'oasis-overnight',
+      'huacachina-weekend',
     ]);
+    expect(footerDestinations[1]?.children.every((item) => item.path === '/tours')).toBe(true);
   });
 
   it('keeps legal placeholders in RUC and company length', () => {
@@ -35,6 +36,7 @@ describe('footer nav', () => {
   it('exposes a WhatsApp deep link and official mark', () => {
     expect(footerContact.whatsapp).toBe('https://wa.me/519XXXXXXXX');
     expect(simpleWhatsapp).toContain('<title>WhatsApp</title>');
+    expect(simpleWhatsapp).toContain('viewBox="0 0 24 24"');
   });
 
   it('uses official brand marks for socials', () => {

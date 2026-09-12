@@ -4,90 +4,9 @@ import { RouterLink } from '@angular/router';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { afterNextGsap } from '../animation/gsap';
 import { SmoothScroll } from '../animation/smooth-scroll';
+import { catalogTours, TOURS_PATH } from '../catalog/tours';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
-
-type GallerySlide = {
-  path: string;
-  image: string;
-  titleKey: string;
-  durationHours: number;
-  priceFrom: number;
-};
-
-const PACKAGE_PATHS = [
-  '/packages',
-  '/experiences/huacachina-weekend',
-  '/experiences/sunset-wine',
-  '/experiences/oasis-overnight',
-] as const;
-
-const GALLERY_SLIDES: readonly GallerySlide[] = [
-  {
-    path: PACKAGE_PATHS[0],
-    image:
-      'https://images.unsplash.com/photo-1547234935-80c7145ec969?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.quadSunset',
-    durationHours: 17,
-    priceFrom: 145,
-  },
-  {
-    path: PACKAGE_PATHS[1],
-    image:
-      'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.huacachinaWeekend',
-    durationHours: 48,
-    priceFrom: 289,
-  },
-  {
-    path: PACKAGE_PATHS[2],
-    image:
-      'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.vineyardSunset',
-    durationHours: 8,
-    priceFrom: 95,
-  },
-  {
-    path: PACKAGE_PATHS[3],
-    image:
-      'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.oasisOvernight',
-    durationHours: 24,
-    priceFrom: 210,
-  },
-  {
-    path: PACKAGE_PATHS[0],
-    image:
-      'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.duneBuggy',
-    durationHours: 4,
-    priceFrom: 79,
-  },
-  {
-    path: PACKAGE_PATHS[1],
-    image:
-      'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.sunriseWalk',
-    durationHours: 3,
-    priceFrom: 65,
-  },
-  {
-    path: PACKAGE_PATHS[2],
-    image:
-      'https://images.unsplash.com/photo-1509316785289-025f5b846b35?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.goldenHour',
-    durationHours: 6,
-    priceFrom: 88,
-  },
-  {
-    path: PACKAGE_PATHS[3],
-    image:
-      'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?auto=format&fit=crop&w=1200&h=1200&q=80',
-    titleKey: 'gallery.slides.campfireNight',
-    durationHours: 12,
-    priceFrom: 175,
-  },
-];
 
 @Component({
   selector: 'app-horiz-gallery',
@@ -101,9 +20,10 @@ const GALLERY_SLIDES: readonly GallerySlide[] = [
       <div
         class="horiz-gallery-strip flex will-change-transform max-md:flex-col max-md:gap-4 md:flex-nowrap"
       >
-        @for (slide of slides; track $index) {
+        @for (slide of slides; track slide.id) {
           <a
-            [routerLink]="slide.path"
+            [routerLink]="toursPath"
+            [fragment]="slide.id"
             class="horiz-gallery-item box-content shrink-0 md:w-[33vw] md:p-8 max-md:box-border max-md:w-full max-md:p-0"
           >
             <section hlmCard class="relative">
@@ -148,7 +68,8 @@ export class HorizGallery {
   private readonly smooth = inject(SmoothScroll);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly i18n = inject(I18nService);
-  protected readonly slides = GALLERY_SLIDES;
+  protected readonly slides = catalogTours;
+  protected readonly toursPath = TOURS_PATH;
 
   constructor() {
     let cancelled = false;

@@ -1,0 +1,48 @@
+<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+  <h1 class="font-heading text-4xl">{{ 'nav.tours' | translate: i18n.locale() }}</h1>
+  <p class="text-muted-foreground mt-4 max-w-2xl">{{ 'pages.toursLead' | translate: i18n.locale() }}</p>
+</section>
+
+@for (destination of destinations; track destination.id; let last = $last) {
+  <section [id]="destination.id" class="scroll-mt-24">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <h2 class="font-heading text-3xl">{{ destination.titleKey | translate: i18n.locale() }}</h2>
+      <p class="text-muted-foreground mt-3 max-w-2xl">
+        {{ destination.leadKey | translate: i18n.locale() }}
+      </p>
+      <div class="mt-10 grid gap-6 md:grid-cols-3">
+        @for (tour of destination.tours; track tour.id) {
+          <article hlmCard [id]="tour.id" class="scroll-mt-24">
+            <img
+              [ngSrc]="tour.image"
+              width="1200"
+              height="1200"
+              sizes="(min-width: 768px) 33vw, 100vw"
+              alt=""
+              class="aspect-square w-full object-cover"
+            />
+            <div hlmCardHeader>
+              <h3 hlmCardTitle>{{ tour.titleKey | translate: i18n.locale() }}</h3>
+              <p hlmCardDescription>{{ tour.descriptionKey | translate: i18n.locale() }}</p>
+            </div>
+            <div hlmCardContent>
+              <p>
+                {{ tour.durationHours }} {{ 'gallery.hours' | translate: i18n.locale() }}
+              </p>
+              <p class="font-heading mt-1 text-lg">
+                {{ 'gallery.from' | translate: i18n.locale() }}
+                {{ 'gallery.currency' | translate: i18n.locale() }}
+                {{ tour.priceFrom }}
+              </p>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+  @if (!last) {
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <hlm-separator />
+    </div>
+  }
+}

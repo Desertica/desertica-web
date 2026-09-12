@@ -32,7 +32,7 @@ describe('I18nService', () => {
     expect(service.locale()).toBe('es');
     expect(service.t('nav.tours')).toBe('Tours');
     expect(service.t('nav.planTrip')).toBe('Planifica tu viaje');
-    expect(service.t('nav.packages')).toBe('Paquetes');
+    expect(service.t('nav.products')).toBe('Productos');
     expect(document.documentElement.lang).toBe('es');
     expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('es');
   });

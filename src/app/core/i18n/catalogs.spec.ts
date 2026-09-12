@@ -27,6 +27,7 @@ describe('i18n catalogs', () => {
 
   it('looks up nested keys with object notation', () => {
     expect(translate('nav.tours', 'en')).toBe('Tours');
+    expect(translate('nav.products', 'es')).toBe('Productos');
     expect(translate('nav.planTrip', 'es')).toBe('Planifica tu viaje');
     expect(translate('home.whyHeadline', 'en')).toContain("Ica isn't a stop");
     expect(translate('home.whyHeadline', 'es')).toContain('Ica no es una parada');

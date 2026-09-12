@@ -16,10 +16,7 @@ export const routes: Routes = [
     path: 'tours',
     loadComponent: () => import('./features/tours/tours').then((m) => m.Tours),
   },
-  {
-    path: 'packages',
-    loadComponent: () => import('./features/packages/packages').then((m) => m.Packages),
-  },
+  placeholder('products', 'nav.products', 'pages.productsLead'),
   {
     path: 'about',
     loadComponent: () => import('./features/about/about').then((m) => m.About),

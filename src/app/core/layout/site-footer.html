@@ -60,10 +60,11 @@
                 >{{ destination.all.labelKey | translate: i18n.locale() }}</a
               >
             </li>
-            @for (link of destination.children; track link.path) {
+            @for (link of destination.children; track link.fragment ?? link.path) {
               <li>
                 <a
                   [routerLink]="link.path"
+                  [fragment]="link.fragment"
                   class="text-muted-foreground hover:text-foreground inline-block py-0.5"
                   >{{ link.labelKey | translate: i18n.locale() }}</a
                 >

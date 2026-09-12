@@ -45,3 +45,53 @@
     <app-horiz-gallery />
   </div>
 </section>
+
+<section class="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+  <h2 class="font-heading text-3xl">{{ 'home.destinationsTitle' | translate: i18n.locale() }}</h2>
+  <p class="text-muted-foreground mt-3 max-w-2xl">
+    {{ 'home.destinationsLead' | translate: i18n.locale() }}
+  </p>
+  <div class="mt-10 grid gap-6 md:grid-cols-3">
+    @for (destination of destinations; track destination.id) {
+      <a
+        appPlanTripHover
+        class="transition-none"
+        [routerLink]="destination.hubPath"
+      >
+        <hlm-card>
+          <img
+            [ngSrc]="destination.image"
+            width="1200"
+            height="1200"
+            sizes="(min-width: 768px) 33vw, 100vw"
+            alt=""
+            class="aspect-[3/2] w-full object-cover"
+          />
+          <hlm-card-header>
+            <h3 hlmCardTitle>{{ destination.titleKey | translate: i18n.locale() }}</h3>
+            <p hlmCardDescription>{{ destination.leadKey | translate: i18n.locale() }}</p>
+          </hlm-card-header>
+        </hlm-card>
+      </a>
+    }
+  </div>
+</section>
+
+<section class="bg-background px-4 py-24 sm:px-6">
+  <div class="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+    <h2 data-close-headline class="font-heading text-3xl text-balance sm:text-5xl">
+      {{ 'home.closeHeadline' | translate: i18n.locale() }}
+    </h2>
+    <p class="text-muted-foreground max-w-2xl text-base sm:text-lg">
+      {{ 'home.closeLead' | translate: i18n.locale() }}
+    </p>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <a hlmBtn appPlanTripHover class="transition-none" [routerLink]="planTrip.path">
+        {{ planTrip.labelKey | translate: i18n.locale() }}
+      </a>
+      <a hlmBtn variant="link" routerLink="/contact">
+        {{ 'nav.contact' | translate: i18n.locale() }}
+      </a>
+    </div>
+  </div>
+</section>

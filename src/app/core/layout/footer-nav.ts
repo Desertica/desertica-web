@@ -1,4 +1,9 @@
 import {
+  destinationById,
+  FOOTER_DESTINATION_IDS,
+  TOURS_PATH,
+} from '../catalog/tours';
+import {
   simpleFacebook,
   simpleGoogle,
   simpleInstagram,
@@ -11,6 +16,7 @@ import {
 export type FooterLink = {
   labelKey: string;
   path: string;
+  fragment?: string;
 };
 
 export type FooterSocial = {
@@ -40,33 +46,20 @@ export const footerBrandLinks: readonly FooterLink[] = [
   { labelKey: 'nav.contact', path: '/contact' },
 ];
 
-export const footerDestinations: readonly FooterDestination[] = [
-  {
-    titleKey: 'footer.nazca',
-    all: { labelKey: 'footer.nazcaAll', path: '/nazca' },
-    children: [
-      { labelKey: 'footer.nazcaLines', path: '/experiences/nazca-lines' },
-      { labelKey: 'footer.nazcaFlight', path: '/experiences/nazca-flight' },
-    ],
+export const footerDestinations: readonly FooterDestination[] = FOOTER_DESTINATION_IDS.map(
+  (id) => {
+    const destination = destinationById(id);
+    return {
+      titleKey: destination.titleKey,
+      all: { labelKey: destination.allLabelKey, path: destination.hubPath },
+      children: destination.tours.map((tour) => ({
+        labelKey: tour.titleKey,
+        path: TOURS_PATH,
+        fragment: tour.id,
+      })),
+    };
   },
-  {
-    titleKey: 'footer.huacachina',
-    all: { labelKey: 'footer.huacachinaAll', path: '/huacachina' },
-    children: [
-      { labelKey: 'nav.duneBuggy', path: '/experiences/dune-buggy' },
-      { labelKey: 'nav.oasisCamp', path: '/experiences/oasis-camp' },
-      { labelKey: 'nav.huacachinaWeekend', path: '/experiences/huacachina-weekend' },
-    ],
-  },
-  {
-    titleKey: 'footer.paracas',
-    all: { labelKey: 'footer.paracasAll', path: '/paracas' },
-    children: [
-      { labelKey: 'footer.paracasBuggy', path: '/experiences/paracas-buggy' },
-      { labelKey: 'footer.ballestas', path: '/experiences/ballestas' },
-    ],
-  },
-];
+);
 
 export const footerSocials: readonly FooterSocial[] = [
   {

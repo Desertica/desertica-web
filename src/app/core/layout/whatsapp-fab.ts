@@ -1,10 +1,9 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
-import { NgIcon } from '@ng-icons/core';
 import { afterNextGsapUi } from '../animation/gsap-ui';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { footerContact } from './footer-nav';
-import { simpleWhatsapp } from './footer-social-icons';
 
 type TipTimeline = {
   timeScale: (value: number) => TipTimeline;
@@ -15,7 +14,7 @@ type TipTimeline = {
 @Component({
   selector: 'app-whatsapp-fab',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIcon, TranslatePipe],
+  imports: [NgOptimizedImage, TranslatePipe],
   host: {
     class: 'fixed right-6 bottom-6 z-50 inline-flex',
   },
@@ -32,12 +31,16 @@ type TipTimeline = {
       (focusin)="play()"
       (focusout)="reverse()"
     >
-      <span
-        class="whatsapp-target inline-flex size-16 origin-center items-center justify-center rounded-full text-white shadow-lg"
-        style="background-color: #25d366"
-        aria-hidden="true"
-      >
-        <ng-icon [svg]="icon" size="2rem" />
+      <span class="whatsapp-target inline-flex size-16 origin-center drop-shadow-lg" aria-hidden="true">
+        <img
+          ngSrc="/brand/whatsapp-glyph.png"
+          width="64"
+          height="64"
+          alt=""
+          class="size-16"
+          priority
+          disableOptimizedSrcset
+        />
       </span>
       <span
         [id]="tooltipId"
@@ -56,7 +59,6 @@ export class WhatsappFab {
 
   protected readonly i18n = inject(I18nService);
   protected readonly href = footerContact.whatsapp;
-  protected readonly icon = simpleWhatsapp;
   protected readonly tooltipId = 'whatsapp-fab-tooltip';
 
   constructor() {

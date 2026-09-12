@@ -36,9 +36,9 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 
 | Route                | Mode                             | Status                                    |
 | -------------------- | -------------------------------- | ----------------------------------------- |
-| `/`                  | **SSG** (`RenderMode.Prerender`) | Wordmark intro → Why → featured gallery   |
-| `/tours`             | **SSG** (`RenderMode.Prerender`) | Tours placeholder                         |
-| `/packages`          | **SSG** (`RenderMode.Prerender`) | Full horizontal gallery                   |
+| `/`                  | **SSG** (`RenderMode.Prerender`) | Wordmark, Why, tour gallery, destinos, CTA |
+| `/tours`             | **SSG** (`RenderMode.Prerender`) | Catalog by Huacachina, Paracas, Nazca     |
+| `/products`          | **SSG** (`RenderMode.Prerender`) | Products hub placeholder                  |
 | `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
 | `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
 | `/blog`              | **SSG** (`RenderMode.Prerender`) | Blog placeholder                          |
@@ -67,14 +67,14 @@ src/app/
     animation/smooth-scroll.ts # ScrollSmoother on the app shell
     animation/gsap-ui.ts       # hover timelines (no ScrollTrigger)
     images/remote-image-loader.ts
+    catalog/tours.ts           # Huacachina / Paracas / Nazca catalog
     layout/                    # header, footer bounce, horiz gallery
     models/experience.ts
     models/reservation.ts
     services/experiences.ts    # empty list / getBySlug
   features/
-    landing/                   # SSG home (DrawSVG hero, Why, gallery)
-    tours/                     # SSG placeholder
-    packages/                  # SSG full gallery
+    landing/                   # SSG home (DrawSVG hero, Why, gallery, destinos, CTA)
+    tours/                     # SSG catalog (sections + fragments)
     about/                     # SSG placeholder
     contact/                   # SSG placeholder
     placeholder/               # SSG empty pages (blog, destinos, legal)
@@ -99,8 +99,8 @@ npx ng g @spartan-ng/cli:ui tooltip --defaults --interactive=false --directory=l
 Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client through [`afterNextGsap()`](src/app/core/animation/gsap.ts) (`morphSvg`, `drawSvg`, `splitText`, `scrollSmoother`). Do not register them at module top level.
 
 - [`SmoothScroll`](src/app/core/animation/smooth-scroll.ts) creates `ScrollSmoother` on `#smooth-wrapper` / `#smooth-content` in the app shell. It is skipped for `prefers-reduced-motion`, jsdom, and coarse+narrow viewports. The header is pinned while the smoother is active because `position: sticky` does not hold inside transformed content.
-- Home: the wordmark SVG is the hero. DrawSVG plays once per tab (`sessionStorage` `desertica-intro`), then the same mark settles. Why Desértica uses SplitText. Featured packages use a pin+scrub gallery.
-- `/packages` reuses the same gallery with every package placeholder.
+- Home: the wordmark SVG is the hero. DrawSVG plays once per tab (`sessionStorage` `desertica-intro`), then the same mark settles. Why Desértica uses SplitText. Featured tours use a pin+scrub gallery, then three destination cards and a closing CTA.
+- `/tours` lists every tour by destination. Header, footer, and gallery deep-link with fragments (`/tours#dune-buggy`).
 - Footer bounce (MorphSVG) waits for the smoother proxy via `whenReady()`.
 
 [`public/splashes/`](public/splashes/) are looping HTML pages and are not routed.

@@ -61,6 +61,7 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Desértica');
     expect(compiled.textContent).toContain('Tours');
+    expect(compiled.textContent).toContain('Products');
     expect(compiled.textContent).toContain('Plan your trip');
     expect(compiled.textContent).toContain('Newsletter');
     expect(compiled.textContent).toContain('Nazca');
@@ -73,6 +74,10 @@ describe('App', () => {
     expect(compiled.querySelector('app-whatsapp-fab a')?.getAttribute('href')).toBe(
       'https://wa.me/519XXXXXXXX',
     );
+    expect(compiled.querySelector('app-whatsapp-fab img')?.getAttribute('src')).toBe(
+      '/brand/whatsapp-glyph.png',
+    );
+    expect(compiled.querySelector('app-whatsapp-fab ng-icon')).toBeNull();
   });
 
   it('should toggle and persist the color theme', async () => {
@@ -105,7 +110,7 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Planifica tu viaje');
     expect(compiled.textContent).toContain('Suscribirme');
-    expect(compiled.textContent).toContain('Paquetes');
+    expect(compiled.textContent).toContain('Productos');
     expect(
       compiled.querySelector<HTMLButtonElement>('button[aria-label="Cambiar tema de color"]'),
     ).not.toBeNull();

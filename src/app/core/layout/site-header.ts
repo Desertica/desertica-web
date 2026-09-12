@@ -13,7 +13,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
 import { LocaleSwitcher } from './locale-switcher';
-import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
+import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './primary-nav';
 
 @Component({
   selector: 'app-site-header',
@@ -58,24 +58,84 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
                       {{ item.labelKey | translate: i18n.locale() }}
                     </button>
                     <hlm-navigation-menu-content *hlmNavigationMenuPortal>
-                      <ul class="w-80">
-                        @for (child of item.children; track child.path) {
-                          <li>
-                            <a hlmNavigationMenuLink [routerLink]="child.path">
-                              <div class="flex flex-col gap-1 text-sm">
-                                <div class="leading-none font-medium">
-                                  {{ child.labelKey | translate: i18n.locale() }}
-                                </div>
-                                @if (child.descriptionKey) {
-                                  <div class="text-muted-foreground line-clamp-2">
-                                    {{ child.descriptionKey | translate: i18n.locale() }}
+                      @if (item.columns?.length) {
+                        <ul class="grid w-[min(100vw-4rem,52rem)] gap-3 lg:grid-cols-3">
+                          @for (child of item.children; track navTrack(child)) {
+                            <li class="lg:col-span-3">
+                              <a
+                                hlmNavigationMenuLink
+                                [routerLink]="child.path"
+                                [fragment]="child.fragment"
+                              >
+                                <div class="flex flex-col gap-1 text-sm">
+                                  <div class="leading-none font-medium">
+                                    {{ child.labelKey | translate: i18n.locale() }}
                                   </div>
-                                }
-                              </div>
-                            </a>
-                          </li>
-                        }
-                      </ul>
+                                  @if (child.descriptionKey) {
+                                    <div class="text-muted-foreground line-clamp-2">
+                                      {{ child.descriptionKey | translate: i18n.locale() }}
+                                    </div>
+                                  }
+                                </div>
+                              </a>
+                            </li>
+                          }
+                          @for (column of item.columns; track column.fragment) {
+                            <li class="flex flex-col gap-1">
+                              <a
+                                hlmNavigationMenuLink
+                                [routerLink]="column.path"
+                                [fragment]="column.fragment"
+                              >
+                                <div class="leading-none font-medium">
+                                  {{ column.headingKey | translate: i18n.locale() }}
+                                </div>
+                              </a>
+                              @for (child of column.children; track navTrack(child)) {
+                                <a
+                                  hlmNavigationMenuLink
+                                  [routerLink]="child.path"
+                                  [fragment]="child.fragment"
+                                >
+                                  <div class="flex flex-col gap-1 text-sm">
+                                    <div class="leading-none font-medium">
+                                      {{ child.labelKey | translate: i18n.locale() }}
+                                    </div>
+                                    @if (child.descriptionKey) {
+                                      <div class="text-muted-foreground line-clamp-2">
+                                        {{ child.descriptionKey | translate: i18n.locale() }}
+                                      </div>
+                                    }
+                                  </div>
+                                </a>
+                              }
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <ul class="w-80">
+                          @for (child of item.children; track navTrack(child)) {
+                            <li>
+                              <a
+                                hlmNavigationMenuLink
+                                [routerLink]="child.path"
+                                [fragment]="child.fragment"
+                              >
+                                <div class="flex flex-col gap-1 text-sm">
+                                  <div class="leading-none font-medium">
+                                    {{ child.labelKey | translate: i18n.locale() }}
+                                  </div>
+                                  @if (child.descriptionKey) {
+                                    <div class="text-muted-foreground line-clamp-2">
+                                      {{ child.descriptionKey | translate: i18n.locale() }}
+                                    </div>
+                                  }
+                                </div>
+                              </a>
+                            </li>
+                          }
+                        </ul>
+                      }
                     </hlm-navigation-menu-content>
                   } @else {
                     <a
@@ -135,15 +195,37 @@ import { isNavGroup, planTripLink, primaryNavLinks } from './primary-nav';
                     >
                       {{ item.labelKey | translate: i18n.locale() }}
                     </p>
-                    @for (child of item.children; track child.path) {
+                    @for (child of item.children; track navTrack(child)) {
                       <a
                         [routerLink]="child.path"
+                        [fragment]="child.fragment"
                         routerLinkActive="bg-muted text-foreground"
                         class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
                         (click)="mobileNav.close()"
                       >
                         {{ child.labelKey | translate: i18n.locale() }}
                       </a>
+                    }
+                    @for (column of item.columns ?? []; track column.fragment) {
+                      <a
+                        [routerLink]="column.path"
+                        [fragment]="column.fragment"
+                        class="text-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase"
+                        (click)="mobileNav.close()"
+                      >
+                        {{ column.headingKey | translate: i18n.locale() }}
+                      </a>
+                      @for (child of column.children; track navTrack(child)) {
+                        <a
+                          [routerLink]="child.path"
+                          [fragment]="child.fragment"
+                          routerLinkActive="bg-muted text-foreground"
+                          class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                          (click)="mobileNav.close()"
+                        >
+                          {{ child.labelKey | translate: i18n.locale() }}
+                        </a>
+                      }
                     }
                   } @else {
                     <a
@@ -205,6 +287,7 @@ export class SiteHeader {
   protected readonly navLinks = primaryNavLinks;
   protected readonly planTrip = planTripLink;
   protected readonly isGroup = isNavGroup;
+  protected readonly navTrack = navItemTrack;
 
   constructor() {
     let cancelled = false;

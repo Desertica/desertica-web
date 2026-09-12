@@ -1,13 +1,24 @@
+import { TOURS_PATH, tourDestinations } from '../catalog/tours';
+
 export interface NavLink {
   labelKey: string;
   path: string;
+  fragment?: string;
   descriptionKey?: string;
+}
+
+export interface NavColumn {
+  headingKey: string;
+  path: string;
+  fragment: string;
+  children: readonly NavLink[];
 }
 
 export interface NavGroup {
   labelKey: string;
   path: string;
   children: readonly NavLink[];
+  columns?: readonly NavColumn[];
 }
 
 export type NavItem = NavLink | NavGroup;
@@ -16,59 +27,36 @@ export function isNavGroup(item: NavItem): item is NavGroup {
   return 'children' in item;
 }
 
+export function navItemTrack(item: Pick<NavLink, 'path' | 'fragment'>): string {
+  return item.fragment ? `${item.path}#${item.fragment}` : item.path;
+}
+
+const toursNavGroup: NavGroup = {
+  labelKey: 'nav.tours',
+  path: TOURS_PATH,
+  children: [
+    {
+      labelKey: 'nav.toursAll',
+      path: TOURS_PATH,
+      descriptionKey: 'nav.toursAllDesc',
+    },
+  ],
+  columns: tourDestinations.map((destination) => ({
+    headingKey: destination.titleKey,
+    path: TOURS_PATH,
+    fragment: destination.id,
+    children: destination.tours.map((tour) => ({
+      labelKey: tour.titleKey,
+      path: TOURS_PATH,
+      fragment: tour.id,
+      descriptionKey: tour.descriptionKey,
+    })),
+  })),
+};
+
 export const primaryNavLinks: readonly NavItem[] = [
-  {
-    labelKey: 'nav.tours',
-    path: '/tours',
-    children: [
-      {
-        labelKey: 'nav.toursAll',
-        path: '/tours',
-        descriptionKey: 'nav.toursAllDesc',
-      },
-      {
-        labelKey: 'nav.duneBuggy',
-        path: '/experiences/dune-buggy',
-        descriptionKey: 'nav.duneBuggyDesc',
-      },
-      {
-        labelKey: 'nav.vineyardSunset',
-        path: '/experiences/vineyard-sunset',
-        descriptionKey: 'nav.vineyardSunsetDesc',
-      },
-      {
-        labelKey: 'nav.oasisCamp',
-        path: '/experiences/oasis-camp',
-        descriptionKey: 'nav.oasisCampDesc',
-      },
-    ],
-  },
-  {
-    labelKey: 'nav.packages',
-    path: '/packages',
-    children: [
-      {
-        labelKey: 'nav.packagesAll',
-        path: '/packages',
-        descriptionKey: 'nav.packagesAllDesc',
-      },
-      {
-        labelKey: 'nav.huacachinaWeekend',
-        path: '/experiences/huacachina-weekend',
-        descriptionKey: 'nav.huacachinaWeekendDesc',
-      },
-      {
-        labelKey: 'nav.sunsetWine',
-        path: '/experiences/sunset-wine',
-        descriptionKey: 'nav.sunsetWineDesc',
-      },
-      {
-        labelKey: 'nav.oasisOvernight',
-        path: '/experiences/oasis-overnight',
-        descriptionKey: 'nav.oasisOvernightDesc',
-      },
-    ],
-  },
+  toursNavGroup,
+  { labelKey: 'nav.products', path: '/products' },
   { labelKey: 'nav.about', path: '/about' },
   { labelKey: 'nav.contact', path: '/contact' },
 ];
@@ -78,15 +66,6 @@ export const planTripLink = {
   path: '/reservations',
 } as const;
 
-export function packageChildren(): readonly NavLink[] {
-  const group = primaryNavLinks.find((item) => isNavGroup(item) && item.path === '/packages');
-  if (!group || !isNavGroup(group)) {
-    return [];
-  }
-
-  return group.children;
-}
-
-export function packageGalleryItems(): readonly NavLink[] {
-  return packageChildren().filter((child) => child.path !== '/packages');
+export function toursNavColumns(): readonly NavColumn[] {
+  return toursNavGroup.columns ?? [];
 }

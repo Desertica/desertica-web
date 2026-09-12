@@ -6,9 +6,12 @@ import { filter } from 'rxjs';
 type SmootherInstance = {
   kill: () => void;
   scrollTop: (position: number) => unknown;
+  scrollTo: (target: string | Element, smooth?: boolean, position?: string) => unknown;
 };
 
 const JSDOM = /jsdom/i;
+const FRAGMENT_OFFSET = 'top 96px';
+const MAX_FRAGMENT_ATTEMPTS = 20;
 
 @Injectable({ providedIn: 'root' })
 export class SmoothScroll {
@@ -58,6 +61,45 @@ export class SmoothScroll {
     void this.create(wrapper, content);
   }
 
+  scrollToId(id: string): boolean {
+    if (!isPlatformBrowser(this.platformId) || !id) {
+      return false;
+    }
+
+    const target = document.getElementById(id);
+    if (!target) {
+      return false;
+    }
+
+    if (this.instance) {
+      this.instance.scrollTo(target, true, FRAGMENT_OFFSET);
+      return true;
+    }
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
+    return true;
+  }
+
+  scrollToFragmentWhenReady(id: string | null | undefined): void {
+    if (!id) {
+      return;
+    }
+
+    void this.whenReady().then(() => this.retryScroll(id, 0));
+  }
+
+  private retryScroll(id: string, attempt: number): void {
+    if (this.scrollToId(id) || attempt >= MAX_FRAGMENT_ATTEMPTS) {
+      return;
+    }
+
+    requestAnimationFrame(() => this.retryScroll(id, attempt + 1));
+  }
+
   private async create(wrapper: HTMLElement, content: HTMLElement): Promise<void> {
     try {
       if (!this.canUse()) {
@@ -77,14 +119,19 @@ export class SmoothScroll {
         normalizeScroll: true,
         ignoreMobileResize: true,
         effects: false,
-      } as Parameters<typeof ScrollSmoother.create>[0]);
+      } as Parameters<typeof ScrollSmoother.create>[0]) as SmootherInstance;
 
       ScrollTrigger.refresh();
 
       const navigation = this.router.events
         .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
         .subscribe(() => {
-          this.instance?.scrollTop(0);
+          const fragment = this.router.parseUrl(this.router.url).fragment;
+          if (fragment) {
+            this.scrollToFragmentWhenReady(fragment);
+          } else {
+            this.instance?.scrollTop(0);
+          }
           ScrollTrigger.refresh();
         });
 
