@@ -1,4 +1,13 @@
-import { catalogTours, featuredTours, FOOTER_DESTINATION_IDS, tourDestinations } from './tours';
+import {
+  catalogTours,
+  featuredTours,
+  FOOTER_DESTINATION_IDS,
+  TOURS_BANNER_IMAGE,
+  tourDestinations,
+} from './tours';
+
+const unsplashPhotoId = (url: string): string =>
+  url.match(/images\.unsplash\.com\/(photo-[^?]+)/)?.[1] ?? url;
 
 describe('tour catalog', () => {
   it('keeps three destinations with variable tour counts', () => {
@@ -16,5 +25,15 @@ describe('tour catalog', () => {
 
   it('keeps footer hubs in Nazca, Huacachina, Paracas order', () => {
     expect(FOOTER_DESTINATION_IDS).toEqual(['nazca', 'huacachina', 'paracas']);
+  });
+
+  it('uses a Huacachina banner photo that is not a card or destination image', () => {
+    expect(TOURS_BANNER_IMAGE).toContain('photo-1511919471431-35002133f316');
+    const used = new Set(
+      [...tourDestinations.map((item) => item.image), ...catalogTours.map((item) => item.image)].map(
+        unsplashPhotoId,
+      ),
+    );
+    expect(used.has(unsplashPhotoId(TOURS_BANNER_IMAGE))).toBe(false);
   });
 });

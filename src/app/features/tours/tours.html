@@ -1,8 +1,25 @@
-<section class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
-  <h1 class="font-heading text-4xl">{{ 'nav.tours' | translate: i18n.locale() }}</h1>
-  <p class="text-muted-foreground mx-auto mt-4 max-w-2xl">
-    {{ 'pages.toursLead' | translate: i18n.locale() }}
-  </p>
+<section
+  class="relative isolate h-[min(50svh,28rem)] w-full overflow-hidden sm:h-[min(42svh,28rem)]"
+>
+  <img
+    [ngSrc]="bannerImage"
+    fill
+    priority
+    sizes="100vw"
+    alt=""
+    class="rounded-none object-cover object-[50%_40%]"
+  />
+  <div
+    class="tours-banner-overlay pointer-events-none absolute inset-0 flex flex-col items-center justify-end p-6 text-center md:p-8"
+  >
+    <div class="flex max-w-md flex-col items-center gap-3">
+      <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+      <h1>{{ 'nav.tours' | translate: i18n.locale() }}</h1>
+      <p>
+        {{ 'pages.toursLead' | translate: i18n.locale() }}
+      </p>
+    </div>
+  </div>
 </section>
 
 @for (destination of destinations; track destination.id) {

@@ -1,8 +1,9 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
-import { tourDestinations } from '../../core/catalog/tours';
+import { TOURS_BANNER_IMAGE, tourDestinations } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { TourCard } from '../../core/layout/tour-card';
@@ -10,8 +11,9 @@ import { TourCard } from '../../core/layout/tour-card';
 @Component({
   selector: 'app-tours',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, TourCard],
+  imports: [NgOptimizedImage, TranslatePipe, TourCard],
   templateUrl: './tours.html',
+  styleUrl: './tours.css',
 })
 export class Tours {
   private readonly route = inject(ActivatedRoute);
@@ -22,6 +24,7 @@ export class Tours {
 
   protected readonly i18n = inject(I18nService);
   protected readonly destinations = tourDestinations;
+  protected readonly bannerImage = TOURS_BANNER_IMAGE;
 
   constructor() {
     effect(() => {
