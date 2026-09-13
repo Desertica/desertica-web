@@ -5,7 +5,7 @@ import {
 } from '../catalog/tours';
 import {
   simpleFacebook,
-  simpleGoogle,
+  simpleGooglemaps,
   simpleInstagram,
   simpleLinkedin,
   simpleTiktok,
@@ -90,7 +90,7 @@ export const footerSocials: readonly FooterSocial[] = [
   {
     labelKey: 'footer.social.google',
     href: 'https://maps.google.com/?q=Desertica',
-    svg: simpleGoogle,
+    svg: simpleGooglemaps,
   },
   {
     labelKey: 'footer.social.tripadvisor',

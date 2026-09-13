@@ -47,7 +47,7 @@ describe('footer nav', () => {
         expect.stringContaining('<title>TikTok</title>'),
         expect.stringContaining('<title>YouTube</title>'),
         expect.stringContaining('<title>LinkedIn</title>'),
-        expect.stringContaining('<title>Google</title>'),
+        expect.stringContaining('<title>Google Maps</title>'),
         expect.stringContaining('<title>Tripadvisor</title>'),
       ]),
     );
