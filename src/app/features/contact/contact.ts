@@ -5,7 +5,6 @@ import {
   Component,
   computed,
   DestroyRef,
-  ElementRef,
   inject,
   signal,
 } from '@angular/core';
@@ -25,7 +24,6 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { CountryCode } from 'libphonenumber-js/min';
-import { afterNextGsapUi } from '../../core/animation/gsap-ui';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import {
@@ -56,7 +54,6 @@ import {
   templateUrl: './contact.html',
 })
 export class Contact {
-  private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
   private readonly phoneTouched = signal(false);
 
@@ -88,24 +85,6 @@ export class Contact {
   });
 
   constructor() {
-    afterNextGsapUi((gsap) => {
-      const items = this.host.nativeElement.querySelectorAll('.contact-enter');
-      if (!items.length) {
-        return;
-      }
-
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      return gsap.context(() => {
-        gsap.from(items, {
-          autoAlpha: reduced ? 1 : 0,
-          y: reduced ? 0 : 16,
-          duration: reduced ? 0 : 0.6,
-          stagger: reduced ? 0 : 0.08,
-          ease: 'power2.out',
-        });
-      }, this.host.nativeElement);
-    });
-
     afterNextRender(() => {
       void this.guessCountryFromIp();
     });

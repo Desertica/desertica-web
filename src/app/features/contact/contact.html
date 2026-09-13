@@ -1,14 +1,12 @@
 <section class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
-  <div class="contact-enter">
-    <h1 class="font-heading text-4xl">{{ 'nav.contact' | translate: i18n.locale() }}</h1>
-    <p class="text-muted-foreground mx-auto mt-4 max-w-2xl">
-      {{ 'pages.contactLead' | translate: i18n.locale() }}
-    </p>
-  </div>
+  <h1 class="font-heading text-4xl">{{ 'nav.contact' | translate: i18n.locale() }}</h1>
+  <p class="text-muted-foreground mx-auto mt-4 max-w-2xl">
+    {{ 'pages.contactLead' | translate: i18n.locale() }}
+  </p>
 
   <div class="mt-10 grid gap-8 md:grid-cols-2 md:gap-0">
     <div
-      class="contact-enter relative min-h-72 overflow-hidden rounded-none md:h-full md:min-h-full"
+      class="relative min-h-72 overflow-hidden rounded-none md:h-full md:min-h-full"
     >
       <img
         [ngSrc]="bandImage"
@@ -19,7 +17,7 @@
       />
     </div>
 
-    <div class="contact-enter px-0 text-left md:px-8">
+    <div class="px-0 text-left md:px-8">
       <p class="font-medium">{{ 'contact.replyTitle' | translate: i18n.locale() }}</p>
       <p class="text-muted-foreground mt-1 text-sm">
         {{ 'contact.replyHours' | translate: i18n.locale() }}

@@ -20,20 +20,6 @@ describe('Contact', () => {
       json: async () => ({}),
     });
     vi.stubGlobal('fetch', fetchMock);
-    Object.defineProperty(window, 'matchMedia', {
-      writable: true,
-      configurable: true,
-      value: (query: string) => ({
-        matches: false,
-        media: query,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-        addListener: () => undefined,
-        removeListener: () => undefined,
-        dispatchEvent: () => false,
-        onchange: null,
-      }),
-    });
 
     await TestBed.configureTestingModule({
       imports: [Contact],
