@@ -36,11 +36,12 @@ describe('Contact', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.querySelector('h1')?.textContent).toContain('Contact');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Contact Us');
     expect(compiled.textContent).toContain('Questions about tours and dates');
     expect(compiled.textContent).toContain('We reply on WhatsApp');
     expect(compiled.textContent).toContain('Monday to Saturday');
     expect(compiled.querySelector('.grid.md\\:grid-cols-2')).not.toBeNull();
+    expect(compiled.querySelector('.lg\\:grid-cols-2')).not.toBeNull();
     const photo = compiled.querySelector('img[src*="photo-1533106497176-45ae19e68ba2"]');
     expect(photo).not.toBeNull();
     expect(photo?.className).toContain('rounded-none');
@@ -53,12 +54,21 @@ describe('Contact', () => {
     expect(compiled.querySelector('#contact-whatsapp')).not.toBeNull();
     expect(compiled.querySelector('[data-country]')?.getAttribute('data-country')).toBe('PE');
     expect(compiled.querySelector('#contact-country')?.textContent).toContain('+51');
-    expect(compiled.querySelector('#contact-message')).not.toBeNull();
+    const message = compiled.querySelector('#contact-message');
+    expect(message).not.toBeNull();
+    expect(message?.className).toContain('field-sizing-fixed');
+    expect(message?.className).toContain('h-48');
+    expect(message?.className).toContain('overflow-y-auto');
     expect(compiled.querySelector('#contact-captcha')?.getAttribute('type')).toBe('checkbox');
+    expect(compiled.querySelector('#contact-captcha')?.closest('.w-fit')).not.toBeNull();
+    expect(compiled.querySelector('.lg\\:flex-row')).not.toBeNull();
     expect(compiled.textContent).toContain("I'm not a robot");
     expect(compiled.textContent).toContain('Turnstile');
     expect(compiled.querySelector('script[src*="cloudflare"]')).toBeNull();
-    expect(compiled.querySelector('button[type="submit"]')?.textContent).toContain('Send');
+    const submit = compiled.querySelector('button[type="submit"]');
+    expect(submit?.textContent).toContain('Send');
+    expect(submit?.className).toContain('self-end');
+    expect(submit?.className).not.toContain('w-full');
   });
 
   it('opens a searchable list of countries from the flag trigger', async () => {
@@ -80,6 +90,7 @@ describe('Contact', () => {
     const list = overlay.querySelector('[data-slot="combobox-list"]');
     expect(list).not.toBeNull();
     expect(list?.className).toContain('overflow-y-auto');
+    expect(list?.className).toContain('overscroll-contain');
     expect(list?.className).toContain('max-h-60');
     expect(list?.className).not.toContain('no-scrollbar');
     expect(overlay.querySelectorAll('[data-slot="combobox-item"]').length).toBeGreaterThan(20);

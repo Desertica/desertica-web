@@ -63,6 +63,12 @@ describe('i18n catalogs', () => {
     expect(translate('nav.paracasSunset', 'es')).toContain('Atardecer');
     expect(translate('nav.cahuachi', 'es')).toBe('Cahuachi');
     expect(translate('nav.mariaReiche', 'es')).toContain('María Reiche');
+    expect(translate('nav.contact', 'es')).toBe('Contacto');
+    expect(translate('nav.contact', 'en')).toBe('Contact');
+    expect(translate('pages.contactTitle', 'es')).toBe('Contáctanos');
+    expect(translate('pages.contactTitle', 'en')).toBe('Contact Us');
+    expect(translate('footer.contact', 'es')).toBe('Contáctanos');
+    expect(translate('footer.contact', 'en')).toBe('Contact Us');
     expect(translate('pages.contactLead', 'es')).toBe(
       'Consultas sobre tours y fechas. Para reservar, usa Planifica tu viaje.',
     );

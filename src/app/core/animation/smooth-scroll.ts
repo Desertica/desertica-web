@@ -116,7 +116,7 @@ export class SmoothScroll {
         content,
         smooth: 2,
         preventDefault: true,
-        normalizeScroll: true,
+        normalizeScroll: { allowNestedScroll: true },
         ignoreMobileResize: true,
         effects: false,
       } as Parameters<typeof ScrollSmoother.create>[0]) as SmootherInstance;

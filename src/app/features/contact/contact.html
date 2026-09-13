@@ -1,5 +1,5 @@
 <section class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
-  <h1 class="font-heading text-4xl">{{ 'nav.contact' | translate: i18n.locale() }}</h1>
+  <h1 class="font-heading text-4xl">{{ 'pages.contactTitle' | translate: i18n.locale() }}</h1>
   <p class="text-muted-foreground mx-auto mt-4 max-w-2xl">
     {{ 'pages.contactLead' | translate: i18n.locale() }}
   </p>
@@ -43,29 +43,30 @@
             }
           </div>
 
-          <div hlmField>
-            <label hlmFieldLabel for="contact-email">{{
-              'contact.email' | translate: i18n.locale()
-            }}</label>
-            <input
-              hlmInput
-              id="contact-email"
-              type="email"
-              autocomplete="email"
-              [formControl]="form.controls.email"
-            />
-            @if (showError('email')) {
-              <hlm-field-error [forceShow]="true">{{
-                'contact.emailError' | translate: i18n.locale()
-              }}</hlm-field-error>
-            }
-          </div>
+          <div class="grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-2">
+            <div hlmField class="min-w-0">
+              <label hlmFieldLabel for="contact-email">{{
+                'contact.email' | translate: i18n.locale()
+              }}</label>
+              <input
+                hlmInput
+                id="contact-email"
+                type="email"
+                autocomplete="email"
+                [formControl]="form.controls.email"
+              />
+              @if (showError('email')) {
+                <hlm-field-error [forceShow]="true">{{
+                  'contact.emailError' | translate: i18n.locale()
+                }}</hlm-field-error>
+              }
+            </div>
 
-          <div hlmField>
-            <label hlmFieldLabel for="contact-whatsapp">{{
-              'contact.whatsapp' | translate: i18n.locale()
-            }}</label>
-            <div hlmInputGroup>
+            <div hlmField class="min-w-0">
+              <label hlmFieldLabel for="contact-whatsapp">{{
+                'contact.whatsapp' | translate: i18n.locale()
+              }}</label>
+              <div hlmInputGroup class="min-w-0">
               <hlm-input-group-addon class="ps-1">
                 <hlm-combobox
                   class="inline-flex"
@@ -104,7 +105,7 @@
                     }}</hlm-combobox-empty>
                     <div
                       hlmComboboxList
-                      class="max-h-60 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5"
+                      class="max-h-60 overflow-y-auto overscroll-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5"
                     >
                       @for (country of countries(); track country.code) {
                         <hlm-combobox-item [value]="country">
@@ -134,11 +135,12 @@
                 (input)="onWhatsappInput()"
               />
             </div>
-            @if (showError('whatsapp')) {
-              <hlm-field-error [forceShow]="true">{{
-                'contact.whatsappError' | translate: i18n.locale()
-              }}</hlm-field-error>
-            }
+              @if (showError('whatsapp')) {
+                <hlm-field-error [forceShow]="true">{{
+                  'contact.whatsappError' | translate: i18n.locale()
+                }}</hlm-field-error>
+              }
+            </div>
           </div>
 
           <div hlmField>
@@ -148,7 +150,8 @@
             <textarea
               hlmTextarea
               id="contact-message"
-              rows="5"
+              rows="8"
+              class="field-sizing-fixed h-48 overflow-y-auto"
               [formControl]="form.controls.message"
             ></textarea>
             @if (showError('message')) {
@@ -158,35 +161,37 @@
             }
           </div>
 
-          <div hlmField>
-            <div
-              class="border-border bg-muted/30 flex min-h-16 items-center justify-between gap-4 rounded-md border px-3 py-2"
-            >
-              <div class="flex min-w-0 items-center gap-3">
-                <input
-                  id="contact-captcha"
-                  type="checkbox"
-                  class="border-input size-5 shrink-0 rounded-sm border accent-primary"
-                  [formControl]="form.controls.captcha"
-                />
-                <label hlmFieldLabel for="contact-captcha">{{
-                  'contact.notRobot' | translate: i18n.locale()
-                }}</label>
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div hlmField class="w-fit max-w-full">
+              <div
+                class="border-border bg-muted/30 flex min-h-16 w-fit items-center justify-between gap-4 rounded-md border px-3 py-2"
+              >
+                <div class="flex min-w-0 items-center gap-3">
+                  <input
+                    id="contact-captcha"
+                    type="checkbox"
+                    class="border-input size-5 shrink-0 rounded-sm border accent-primary"
+                    [formControl]="form.controls.captcha"
+                  />
+                  <label hlmFieldLabel for="contact-captcha">{{
+                    'contact.notRobot' | translate: i18n.locale()
+                  }}</label>
+                </div>
+                <span class="text-muted-foreground shrink-0 text-[0.65rem] tracking-wide uppercase">{{
+                  'contact.captchaBrand' | translate: i18n.locale()
+                }}</span>
               </div>
-              <span class="text-muted-foreground shrink-0 text-[0.65rem] tracking-wide uppercase">{{
-                'contact.captchaBrand' | translate: i18n.locale()
-              }}</span>
+              @if (showError('captcha')) {
+                <hlm-field-error [forceShow]="true">{{
+                  'contact.captchaError' | translate: i18n.locale()
+                }}</hlm-field-error>
+              }
             </div>
-            @if (showError('captcha')) {
-              <hlm-field-error [forceShow]="true">{{
-                'contact.captchaError' | translate: i18n.locale()
-              }}</hlm-field-error>
-            }
-          </div>
 
-          <button hlmBtn class="w-full" type="submit">
-            {{ 'contact.submit' | translate: i18n.locale() }}
-          </button>
+            <button hlmBtn class="self-end" type="submit">
+              {{ 'contact.submit' | translate: i18n.locale() }}
+            </button>
+          </div>
         </div>
       </form>
     </div>
