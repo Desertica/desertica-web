@@ -67,8 +67,25 @@ describe('Contact', () => {
     expect(compiled.querySelector('script[src*="cloudflare"]')).toBeNull();
     const submit = compiled.querySelector('button[type="submit"]');
     expect(submit?.textContent).toContain('Send');
-    expect(submit?.className).toContain('self-end');
-    expect(submit?.className).not.toContain('w-full');
+    expect(submit?.className).toContain('h-10');
+    expect(submit?.className).toContain('flex-1');
+    expect(submit?.className).not.toContain('min-h-16');
+    expect(compiled.querySelector('#contact-name')?.getAttribute('maxlength')).toBe('80');
+    expect(compiled.querySelector('#contact-email')?.getAttribute('maxlength')).toBe('254');
+    expect(compiled.querySelector('#contact-message')?.getAttribute('maxlength')).toBe('500');
+    expect(compiled.querySelector('#contact-name')?.hasAttribute('required')).toBe(true);
+    expect(compiled.querySelector('#contact-email')?.hasAttribute('required')).toBe(true);
+    expect(compiled.querySelector('#contact-whatsapp')?.hasAttribute('required')).toBe(true);
+    expect(compiled.querySelector('#contact-message')?.hasAttribute('required')).toBe(true);
+    expect(compiled.querySelector('#contact-captcha')?.hasAttribute('required')).toBe(true);
+    expect(compiled.querySelectorAll('.text-destructive').length).toBeGreaterThanOrEqual(5);
+    expect(compiled.querySelector('#contact-message')?.getAttribute('placeholder')).toBe(
+      'What did you have in mind?',
+    );
+    expect(compiled.textContent).not.toContain('Between 2 and 80 characters');
+    expect(compiled.textContent).not.toContain('Enter a valid email address');
+    expect(compiled.textContent).not.toContain('A valid number for the selected country');
+    expect(compiled.textContent).toContain('0 of 500 max characters');
   });
 
   it('opens a searchable list of countries from the flag trigger', async () => {
@@ -126,6 +143,44 @@ describe('Contact', () => {
     expect(compiled.textContent).toContain('Enter a message');
     expect(compiled.textContent).toContain('not a robot');
     expect(toast).not.toHaveBeenCalled();
+  });
+
+  it('rejects a one-character name', async () => {
+    const fixture = TestBed.createComponent(Contact);
+    await fixture.whenStable();
+    fill(fixture.nativeElement, {
+      name: 'A',
+      email: 'ana@desertica.pe',
+      whatsapp: '987654321',
+      message: 'Hola',
+      captcha: true,
+    });
+    fixture.detectChanges();
+    compiledSubmit(fixture.nativeElement);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('at least 2 characters');
+    expect(toast).not.toHaveBeenCalled();
+  });
+
+  it('counts message characters and cuts at 500', async () => {
+    const fixture = TestBed.createComponent(Contact);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(compiled, '#contact-message', 'Hi');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(compiled.textContent).toContain('2 of 500 max characters');
+
+    setInput(compiled, '#contact-message', 'x'.repeat(600));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(compiled.querySelector<HTMLTextAreaElement>('#contact-message')?.value.length).toBe(
+      500,
+    );
+    expect(compiled.textContent).toContain('500 of 500 max characters');
   });
 
   it('rejects a WhatsApp value that is not a valid number', async () => {

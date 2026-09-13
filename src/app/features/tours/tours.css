@@ -3,12 +3,19 @@
   background-image: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 62%);
 }
 
-.tours-banner-overlay h1 {
+.tours-banner-overlay :is(h1, h2) {
   font-family: var(--font-heading);
-  font-size: clamp(1.75rem, 4vw, 3rem);
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-wrap: balance;
+}
+
+.tours-banner-overlay h1 {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+}
+
+.tours-banner-overlay h2 {
+  font-size: clamp(1.35rem, 3vw, 2.25rem);
 }

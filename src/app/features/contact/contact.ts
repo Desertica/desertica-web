@@ -37,6 +37,11 @@ import {
   type PhoneCountry,
 } from './phone';
 
+export const NAME_MIN = 2;
+export const NAME_MAX = 80;
+export const EMAIL_MAX = 254;
+export const MESSAGE_MAX = 500;
+
 @Component({
   selector: 'app-contact',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,6 +64,10 @@ export class Contact {
 
   protected readonly i18n = inject(I18nService);
   protected readonly bandImage = CONTACT_BAND_IMAGE;
+  protected readonly nameMax = NAME_MAX;
+  protected readonly emailMax = EMAIL_MAX;
+  protected readonly messageMax = MESSAGE_MAX;
+  protected readonly messageChars = signal(0);
   protected readonly countryCode = signal<CountryCode>(DEFAULT_PHONE_COUNTRY);
   protected readonly countries = computed(() => phoneCountries(this.i18n.locale()));
   protected readonly selectedCountry = computed(
@@ -68,16 +77,22 @@ export class Contact {
   );
 
   protected readonly form = new FormGroup({
-    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(NAME_MIN), Validators.maxLength(NAME_MAX)],
+    }),
     email: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.email],
+      validators: [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX)],
     }),
     whatsapp: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, (control) => this.validateWhatsapp(control)],
     }),
-    message: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    message: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(MESSAGE_MAX)],
+    }),
     captcha: new FormControl(false, {
       nonNullable: true,
       validators: [Validators.requiredTrue],
@@ -97,6 +112,25 @@ export class Contact {
     item: PhoneCountry | null | undefined,
     selected: PhoneCountry | null | undefined,
   ): boolean => item?.code === selected?.code;
+
+  protected readonly messageCountLabel = computed(() =>
+    this.i18n.t('contact.messageCount').replace('{count}', String(this.messageChars())),
+  );
+
+  protected nameErrorKey(): string {
+    return this.form.controls.name.hasError('minlength')
+      ? 'contact.nameMinError'
+      : 'contact.nameError';
+  }
+
+  protected onMessageInput(): void {
+    const value = this.form.controls.message.value;
+    if (value.length > MESSAGE_MAX) {
+      this.form.controls.message.setValue(value.slice(0, MESSAGE_MAX), { emitEvent: false });
+    }
+
+    this.messageChars.set(this.form.controls.message.value.length);
+  }
 
   protected showError(name: keyof typeof this.form.controls): boolean {
     const control = this.form.controls[name];
@@ -135,6 +169,7 @@ export class Contact {
     this.form.reset();
     this.countryCode.set(DEFAULT_PHONE_COUNTRY);
     this.phoneTouched.set(false);
+    this.messageChars.set(0);
   }
 
   private setCountry(code: CountryCode): void {

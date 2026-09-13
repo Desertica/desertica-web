@@ -39,3 +39,31 @@
     </div>
   </section>
 }
+
+<section
+  class="relative isolate h-[min(28svh,16rem)] w-full overflow-hidden sm:h-[min(24svh,16rem)]"
+>
+  <img
+    [ngSrc]="closerImage"
+    fill
+    sizes="100vw"
+    alt=""
+    class="rounded-none object-cover object-center"
+  />
+  <div
+    class="tours-banner-overlay pointer-events-none absolute inset-0 flex flex-col items-center justify-end p-6 text-center md:p-8"
+  >
+    <div class="flex max-w-md flex-col items-center gap-4">
+      <div class="flex flex-col items-center gap-3">
+        <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+        <h2>{{ 'pages.toursCtaTitle' | translate: i18n.locale() }}</h2>
+        <p>
+          {{ 'pages.toursCtaLead' | translate: i18n.locale() }}
+        </p>
+      </div>
+      <a hlmBtn class="pointer-events-auto" routerLink="/contact">
+        {{ 'pages.contactTitle' | translate: i18n.locale() }}
+      </a>
+    </div>
+  </div>
+</section>

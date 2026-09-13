@@ -56,4 +56,34 @@ describe('Tours', () => {
     expect(photo?.closest('section')?.className).toContain('w-full');
     expect(photo?.closest('.max-w-6xl')).toBeNull();
   });
+
+  it('renders a shorter full-bleed closer with a contact CTA', async () => {
+    const fixture = TestBed.createComponent(Tours);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.textContent).toContain('Looking for something else?');
+    expect(compiled.textContent).toContain("Private tours and custom days if the list doesn't fit.");
+
+    const closerPhoto = compiled.querySelector('img[src*="photo-1516026672322-bc52d61a55d5"]');
+    expect(closerPhoto).not.toBeNull();
+    expect(closerPhoto?.getAttribute('sizes')).toContain('100vw');
+    expect(closerPhoto?.className).toContain('object-cover');
+    const closer = closerPhoto?.closest('section');
+    expect(closer?.className).toContain('w-full');
+    expect(closer?.className).toContain('h-[min(28svh,16rem)]');
+    expect(closerPhoto?.closest('.max-w-6xl')).toBeNull();
+
+    const overlay = closer?.querySelector('.tours-banner-overlay');
+    expect(overlay).not.toBeNull();
+    expect(overlay?.className).toContain('items-center');
+    expect(overlay?.className).toContain('justify-end');
+    expect(overlay?.className).toContain('text-center');
+    expect(overlay?.querySelector('h2')?.textContent?.trim()).toBe('Looking for something else?');
+
+    const cta = overlay?.querySelector('a[href="/contact"]');
+    expect(cta).not.toBeNull();
+    expect(cta?.textContent?.trim()).toBe('Contact Us');
+    expect(cta?.className).toContain('pointer-events-auto');
+  });
 });

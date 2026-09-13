@@ -56,6 +56,10 @@ describe('i18n catalogs', () => {
     );
     expect(translate('pages.toursLead', 'es')).not.toContain('Nueve');
     expect(translate('pages.toursLead', 'en')).not.toContain('Nine');
+    expect(translate('pages.toursCtaTitle', 'es')).toBe('¿Buscas otra experiencia?');
+    expect(translate('pages.toursCtaTitle', 'en')).toBe('Looking for something else?');
+    expect(translate('pages.toursCtaLead', 'es')).toContain('Tours privados');
+    expect(translate('pages.toursCtaLead', 'en')).toContain('Private tours');
     expect(translate('home.featuredLead', 'es')).toContain('destacados');
     expect(translate('nav.sandboard', 'es')).toBe('Sandboard');
     expect(translate('nav.icaVineyards', 'en')).toBe('Ica vineyards');
@@ -85,5 +89,9 @@ describe('i18n catalogs', () => {
     expect(translate('contact.replyHours', 'en')).toContain('Peru time');
     expect(translate('contact.searchCountry', 'es')).toBe('Buscar país');
     expect(translate('contact.whatsappError', 'en')).toContain('valid WhatsApp number');
+    expect(translate('contact.messagePlaceholder', 'es')).toBe('¿Qué tienes pensado?');
+    expect(translate('contact.messagePlaceholder', 'en')).toBe('What did you have in mind?');
+    expect(translate('contact.messageCount', 'en')).toContain('{count} of 500');
+    expect(translate('contact.nameMinError', 'es')).toContain('2 caracteres');
   });
 });

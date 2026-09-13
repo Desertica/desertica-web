@@ -26,33 +26,39 @@
       <form class="mt-8" [formGroup]="form" (ngSubmit)="send()" novalidate>
         <div hlmFieldGroup>
           <div hlmField>
-            <label hlmFieldLabel for="contact-name">{{
-              'contact.name' | translate: i18n.locale()
-            }}</label>
+            <label hlmFieldLabel for="contact-name">
+              {{ 'contact.name' | translate: i18n.locale() }}
+              <span class="text-destructive" aria-hidden="true">*</span>
+            </label>
             <input
               hlmInput
               id="contact-name"
               type="text"
               autocomplete="name"
+              required
+              [attr.maxlength]="nameMax"
               [formControl]="form.controls.name"
             />
             @if (showError('name')) {
               <hlm-field-error [forceShow]="true">{{
-                'contact.nameError' | translate: i18n.locale()
+                nameErrorKey() | translate: i18n.locale()
               }}</hlm-field-error>
             }
           </div>
 
           <div class="grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-2">
             <div hlmField class="min-w-0">
-              <label hlmFieldLabel for="contact-email">{{
-                'contact.email' | translate: i18n.locale()
-              }}</label>
+              <label hlmFieldLabel for="contact-email">
+                {{ 'contact.email' | translate: i18n.locale() }}
+                <span class="text-destructive" aria-hidden="true">*</span>
+              </label>
               <input
                 hlmInput
                 id="contact-email"
                 type="email"
                 autocomplete="email"
+                required
+                [attr.maxlength]="emailMax"
                 [formControl]="form.controls.email"
               />
               @if (showError('email')) {
@@ -63,9 +69,10 @@
             </div>
 
             <div hlmField class="min-w-0">
-              <label hlmFieldLabel for="contact-whatsapp">{{
-                'contact.whatsapp' | translate: i18n.locale()
-              }}</label>
+              <label hlmFieldLabel for="contact-whatsapp">
+                {{ 'contact.whatsapp' | translate: i18n.locale() }}
+                <span class="text-destructive" aria-hidden="true">*</span>
+              </label>
               <div hlmInputGroup class="min-w-0">
               <hlm-input-group-addon class="ps-1">
                 <hlm-combobox
@@ -130,6 +137,7 @@
                 type="tel"
                 autocomplete="tel"
                 inputmode="tel"
+                required
                 [attr.placeholder]="'contact.whatsappPlaceholder' | translate: i18n.locale()"
                 [formControl]="form.controls.whatsapp"
                 (input)="onWhatsappInput()"
@@ -144,16 +152,22 @@
           </div>
 
           <div hlmField>
-            <label hlmFieldLabel for="contact-message">{{
-              'contact.message' | translate: i18n.locale()
-            }}</label>
+            <label hlmFieldLabel for="contact-message">
+              {{ 'contact.message' | translate: i18n.locale() }}
+              <span class="text-destructive" aria-hidden="true">*</span>
+            </label>
             <textarea
               hlmTextarea
               id="contact-message"
               rows="8"
               class="field-sizing-fixed h-48 overflow-y-auto"
+              required
+              [attr.maxlength]="messageMax"
+              [attr.placeholder]="'contact.messagePlaceholder' | translate: i18n.locale()"
               [formControl]="form.controls.message"
+              (input)="onMessageInput()"
             ></textarea>
+            <p hlmFieldDescription>{{ messageCountLabel() }}</p>
             @if (showError('message')) {
               <hlm-field-error [forceShow]="true">{{
                 'contact.messageError' | translate: i18n.locale()
@@ -171,11 +185,13 @@
                     id="contact-captcha"
                     type="checkbox"
                     class="border-input size-5 shrink-0 rounded-sm border accent-primary"
+                    required
                     [formControl]="form.controls.captcha"
                   />
-                  <label hlmFieldLabel for="contact-captcha">{{
-                    'contact.notRobot' | translate: i18n.locale()
-                  }}</label>
+                  <label hlmFieldLabel for="contact-captcha">
+                    {{ 'contact.notRobot' | translate: i18n.locale() }}
+                    <span class="text-destructive" aria-hidden="true">*</span>
+                  </label>
                 </div>
                 <span class="text-muted-foreground shrink-0 text-[0.65rem] tracking-wide uppercase">{{
                   'contact.captchaBrand' | translate: i18n.locale()
@@ -188,7 +204,7 @@
               }
             </div>
 
-            <button hlmBtn class="self-end" type="submit">
+            <button hlmBtn size="lg" class="min-w-0 w-full flex-1" type="submit">
               {{ 'contact.submit' | translate: i18n.locale() }}
             </button>
           </div>

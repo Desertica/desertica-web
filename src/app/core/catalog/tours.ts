@@ -34,6 +34,11 @@ export const TOURS_BANNER_IMAGE = unsplash('photo-1511919471431-35002133f316', {
   h: 1200,
 });
 
+export const TOURS_CLOSER_IMAGE = unsplash('photo-1516026672322-bc52d61a55d5', {
+  w: 2400,
+  h: 800,
+});
+
 export const tourDestinations: readonly CatalogDestination[] = [
   {
     id: 'huacachina',
