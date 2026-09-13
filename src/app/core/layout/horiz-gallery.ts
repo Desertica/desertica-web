@@ -33,7 +33,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
                 height="1200"
                 sizes="(min-width: 768px) 33vw, 100vw"
                 alt=""
-                class="aspect-square w-full object-cover"
+                class="aspect-square w-full rounded-none object-cover"
               />
               <div
                 class="horiz-gallery-overlay pointer-events-none absolute inset-0 flex flex-col justify-between p-6 md:p-8"
