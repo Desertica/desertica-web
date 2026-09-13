@@ -31,7 +31,7 @@ type TipTimeline = {
       (focusout)="reverse()"
     >
       <span
-        class="whatsapp-target inline-flex size-16 origin-center items-center justify-center overflow-hidden rounded-full text-white shadow-lg"
+        class="whatsapp-target inline-flex size-[3.6rem] origin-center items-center justify-center overflow-hidden rounded-full text-white shadow-lg"
         style="background-color: #25d366"
         aria-hidden="true"
       >
