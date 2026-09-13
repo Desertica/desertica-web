@@ -24,7 +24,19 @@
     "nazcaLinesDesc": "Las líneas desde el mirador terrestre.",
     "nazcaFlightDesc": "Sobrevuelo corto sobre el desierto.",
     "nazcaCantalloc": "Acueductos de Cantalloc",
-    "nazcaCantallocDesc": "Espirales de agua junto a Nazca."
+    "nazcaCantallocDesc": "Espirales de agua junto a Nazca.",
+    "sandboard": "Sandboard",
+    "sandboardDesc": "Baja las dunas de Huacachina en tabla.",
+    "icaVineyards": "Viñedos de Ica",
+    "icaVineyardsDesc": "Bodegas, pisco y atardecer entre parras.",
+    "oasisWalk": "Caminata al oasis",
+    "oasisWalkDesc": "Paseo corto por la laguna y el pueblo.",
+    "paracasSunset": "Atardecer en Paracas",
+    "paracasSunsetDesc": "Acantilados y luz baja sobre la reserva.",
+    "cahuachi": "Cahuachi",
+    "cahuachiDesc": "Pirámides de adobe en el desierto de Nazca.",
+    "mariaReiche": "Museo María Reiche",
+    "mariaReicheDesc": "Las líneas explicadas junto al desierto."
   },
   "a11y": {
     "toggleTheme": "Cambiar tema de color",
@@ -46,7 +58,7 @@
   "pages": {
     "landingLead": "Landing (SSG). Experiencias y reservas vienen después.",
     "mappedRoutes": "Rutas mapeadas",
-    "toursLead": "Nueve tours en Huacachina, Paracas y Nazca.",
+    "toursLead": "Huacachina, Paracas y Nazca, por destino.",
     "productsLead": "Pisco, tejas y cerámica. Catálogo más adelante.",
     "aboutLead": "Nosotros (SSG). Historia más adelante.",
     "contactLead": "Contacto (SSG). Formulario más adelante.",
@@ -106,7 +118,7 @@
     "whyHeadline": "Ica no es una parada entre ciudades. Es la razón de bajar al sur.",
     "whySupport": "Quédate por las dunas, el vino y la mañana lenta del día siguiente.",
     "featuredTitle": "Tours",
-    "featuredLead": "Huacachina, Paracas y Nazca, en un mismo recorrido.",
+    "featuredLead": "Los destacados de Huacachina, Paracas y Nazca.",
     "pitchKicker": "{ Cómo viajamos }",
     "pitchHeadline": "Un día en Ica no se improvisa. Se arma contigo.",
     "pitchBeat1": "Traslados y horarios al ritmo del grupo, sin cola ni paquete rígido.",

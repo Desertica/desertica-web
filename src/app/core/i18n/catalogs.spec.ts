@@ -50,5 +50,18 @@ describe('i18n catalogs', () => {
     expect(translate('home.pitchBeat2', 'en')).toContain('Oasis, reserve, or lines');
     expect(translate('home.pitchBeat3', 'es')).toContain('Un hilo para reservar');
     expect(translate('home.pitchBeat3', 'en')).toContain('One thread to book');
+    expect(translate('pages.toursLead', 'es')).toBe('Huacachina, Paracas y Nazca, por destino.');
+    expect(translate('pages.toursLead', 'en')).toBe(
+      'Huacachina, Paracas, and Nazca, by destination.',
+    );
+    expect(translate('pages.toursLead', 'es')).not.toContain('Nueve');
+    expect(translate('pages.toursLead', 'en')).not.toContain('Nine');
+    expect(translate('home.featuredLead', 'es')).toContain('destacados');
+    expect(translate('nav.sandboard', 'es')).toBe('Sandboard');
+    expect(translate('nav.icaVineyards', 'en')).toBe('Ica vineyards');
+    expect(translate('nav.oasisWalkDesc', 'es')).toContain('laguna');
+    expect(translate('nav.paracasSunset', 'es')).toContain('Atardecer');
+    expect(translate('nav.cahuachi', 'es')).toBe('Cahuachi');
+    expect(translate('nav.mariaReiche', 'es')).toContain('María Reiche');
   });
 });

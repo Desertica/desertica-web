@@ -20,12 +20,18 @@ describe('primary nav', () => {
       'dune-buggy',
       'oasis-overnight',
       'huacachina-weekend',
+      'sandboard',
+      'ica-vineyards',
+      'oasis-walk',
       'paracas-buggy',
       'ballestas',
       'paracas-reserve',
+      'paracas-sunset',
       'nazca-lines',
       'nazca-flight',
       'nazca-cantalloc',
+      'cahuachi',
+      'maria-reiche',
     ]);
   });
 

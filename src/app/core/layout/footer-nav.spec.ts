@@ -18,6 +18,9 @@ describe('footer nav', () => {
       'dune-buggy',
       'oasis-overnight',
       'huacachina-weekend',
+      'sandboard',
+      'ica-vineyards',
+      'oasis-walk',
     ]);
     expect(footerDestinations[1]?.children.every((item) => item.path === '/tours')).toBe(true);
   });

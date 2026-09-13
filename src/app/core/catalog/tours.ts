@@ -10,6 +10,7 @@ export type CatalogTour = {
   durationHours: number;
   priceFrom: number;
   image: string;
+  featured: boolean;
 };
 
 export type CatalogDestination = {
@@ -45,6 +46,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 4,
         priceFrom: 79,
         image: unsplash('photo-1533106497176-45ae19e68ba2'),
+        featured: true,
       },
       {
         id: 'oasis-overnight',
@@ -54,6 +56,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 24,
         priceFrom: 210,
         image: unsplash('photo-1419242902214-272b3f66ee7a'),
+        featured: true,
       },
       {
         id: 'huacachina-weekend',
@@ -63,6 +66,37 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 48,
         priceFrom: 289,
         image: unsplash('photo-1473580044384-7ba9967e16a0'),
+        featured: true,
+      },
+      {
+        id: 'sandboard',
+        destination: 'huacachina',
+        titleKey: 'nav.sandboard',
+        descriptionKey: 'nav.sandboardDesc',
+        durationHours: 3,
+        priceFrom: 45,
+        image: unsplash('photo-1474044159687-1ee9f3a62995'),
+        featured: false,
+      },
+      {
+        id: 'ica-vineyards',
+        destination: 'huacachina',
+        titleKey: 'nav.icaVineyards',
+        descriptionKey: 'nav.icaVineyardsDesc',
+        durationHours: 4,
+        priceFrom: 65,
+        image: unsplash('photo-1506377247377-2a5b3b417ebb'),
+        featured: false,
+      },
+      {
+        id: 'oasis-walk',
+        destination: 'huacachina',
+        titleKey: 'nav.oasisWalk',
+        descriptionKey: 'nav.oasisWalkDesc',
+        durationHours: 2,
+        priceFrom: 35,
+        image: unsplash('photo-1418065460487-3e41a6c84dc5'),
+        featured: false,
       },
     ],
   },
@@ -82,6 +116,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 4,
         priceFrom: 85,
         image: unsplash('photo-1547234935-80c7145ec969'),
+        featured: true,
       },
       {
         id: 'ballestas',
@@ -91,6 +126,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 3,
         priceFrom: 55,
         image: unsplash('photo-1507525428034-b723cf961d3e'),
+        featured: true,
       },
       {
         id: 'paracas-reserve',
@@ -100,6 +136,17 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 5,
         priceFrom: 72,
         image: unsplash('photo-1501785888041-af3ef285b470'),
+        featured: true,
+      },
+      {
+        id: 'paracas-sunset',
+        destination: 'paracas',
+        titleKey: 'nav.paracasSunset',
+        descriptionKey: 'nav.paracasSunsetDesc',
+        durationHours: 3,
+        priceFrom: 60,
+        image: unsplash('photo-1437719417032-859601134d76'),
+        featured: false,
       },
     ],
   },
@@ -119,6 +166,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 3,
         priceFrom: 45,
         image: unsplash('photo-1509316785289-025f5b846b35'),
+        featured: true,
       },
       {
         id: 'nazca-flight',
@@ -128,6 +176,7 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 2,
         priceFrom: 120,
         image: unsplash('photo-1451337516015-6b6e9a44a8a3'),
+        featured: true,
       },
       {
         id: 'nazca-cantalloc',
@@ -137,6 +186,27 @@ export const tourDestinations: readonly CatalogDestination[] = [
         durationHours: 3,
         priceFrom: 50,
         image: unsplash('photo-1469854523086-cc02fe5d8800'),
+        featured: true,
+      },
+      {
+        id: 'cahuachi',
+        destination: 'nazca',
+        titleKey: 'nav.cahuachi',
+        descriptionKey: 'nav.cahuachiDesc',
+        durationHours: 3,
+        priceFrom: 40,
+        image: unsplash('photo-1526392060635-9d6019884377'),
+        featured: false,
+      },
+      {
+        id: 'maria-reiche',
+        destination: 'nazca',
+        titleKey: 'nav.mariaReiche',
+        descriptionKey: 'nav.mariaReicheDesc',
+        durationHours: 2,
+        priceFrom: 30,
+        image: unsplash('photo-1554907984-15263bfd63bd'),
+        featured: false,
       },
     ],
   },
@@ -145,6 +215,8 @@ export const tourDestinations: readonly CatalogDestination[] = [
 export const catalogTours: readonly CatalogTour[] = tourDestinations.flatMap(
   (destination) => destination.tours,
 );
+
+export const featuredTours: readonly CatalogTour[] = catalogTours.filter((tour) => tour.featured);
 
 export const FOOTER_DESTINATION_IDS: readonly DestinationId[] = [
   'nazca',

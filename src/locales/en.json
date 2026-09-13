@@ -24,7 +24,19 @@
     "nazcaLinesDesc": "The lines from the ground lookout.",
     "nazcaFlightDesc": "A short flight over the desert.",
     "nazcaCantalloc": "Cantalloc aqueducts",
-    "nazcaCantallocDesc": "Spiral wells beside Nazca."
+    "nazcaCantallocDesc": "Spiral wells beside Nazca.",
+    "sandboard": "Sandboarding",
+    "sandboardDesc": "Ride a board down the Huacachina dunes.",
+    "icaVineyards": "Ica vineyards",
+    "icaVineyardsDesc": "Bodegas, pisco, and a sunset in the vines.",
+    "oasisWalk": "Oasis walk",
+    "oasisWalkDesc": "A short walk around the lagoon and town.",
+    "paracasSunset": "Paracas sunset",
+    "paracasSunsetDesc": "Cliffs and low light over the reserve.",
+    "cahuachi": "Cahuachi",
+    "cahuachiDesc": "Adobe pyramids in the Nazca desert.",
+    "mariaReiche": "María Reiche museum",
+    "mariaReicheDesc": "The lines, explained beside the desert."
   },
   "a11y": {
     "toggleTheme": "Toggle color theme",
@@ -46,7 +58,7 @@
   "pages": {
     "landingLead": "Landing (SSG). Experiences and reservations come next.",
     "mappedRoutes": "Mapped routes",
-    "toursLead": "Nine tours across Huacachina, Paracas, and Nazca.",
+    "toursLead": "Huacachina, Paracas, and Nazca, by destination.",
     "productsLead": "Pisco, tejas, and ceramics. Catalog later.",
     "aboutLead": "About (SSG). Story later.",
     "contactLead": "Contact (SSG). Form later.",
@@ -106,7 +118,7 @@
     "whyHeadline": "Ica isn't a stop between cities. It's the reason you came south.",
     "whySupport": "Stay for the dunes, the wine, and the slow morning after.",
     "featuredTitle": "Tours",
-    "featuredLead": "Huacachina, Paracas, and Nazca — one catalog.",
+    "featuredLead": "Highlights from Huacachina, Paracas, and Nazca.",
     "pitchKicker": "{ How we travel }",
     "pitchHeadline": "A day in Ica isn't improvised. It's built with you.",
     "pitchBeat1": "Transfers and timing at the group's pace — no queue, no rigid package.",
