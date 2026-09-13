@@ -58,7 +58,7 @@ export class Landing {
   protected readonly planTrip = planTripLink;
   protected readonly destinations = tourDestinations;
   protected readonly destRatio = 4 / 5;
-  protected readonly reserveBtnClass = buttonVariants({ size: 'lg' });
+  protected readonly reserveBtnClass = `${buttonVariants({ size: 'lg' })} w-fit self-start`;
   protected readonly pitchBeats = [
     'home.pitchBeat1',
     'home.pitchBeat2',

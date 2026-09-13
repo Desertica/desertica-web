@@ -1,6 +1,8 @@
 import { Directive, ElementRef, inject } from '@angular/core';
 import { afterNextGsapUi } from './gsap-ui';
 
+let destHoverLayer = 20;
+
 @Directive({
   selector: '[appPlanTripHover]',
   host: {
@@ -19,19 +21,35 @@ export class PlanTripHover {
       }
 
       const element = this.host.nativeElement;
+      const isDest = element.classList.contains('dest-card');
       return gsap.context(() => {
-        this.timeline = gsap.timeline({ paused: true }).to(element, {
-          scale: 1.04,
-          y: -4,
-          duration: 0.45,
-          ease: 'expo.out',
-          easeReverse: 'power2.out',
-        });
+        gsap.set(element, { scale: 1, y: 0, force3D: true });
+        this.timeline = gsap
+          .timeline({
+            paused: true,
+            onReverseComplete: () => {
+              if (isDest) {
+                element.style.zIndex = '';
+              }
+            },
+          })
+          .to(element, {
+            scale: 1.04,
+            y: -4,
+            duration: 0.45,
+            ease: 'expo.out',
+            easeReverse: 'power2.out',
+          });
       }, element);
     });
   }
 
   protected play(): void {
+    const element = this.host.nativeElement;
+    if (element.classList.contains('dest-card')) {
+      destHoverLayer += 1;
+      element.style.zIndex = String(destHoverLayer);
+    }
     this.timeline?.play();
   }
 

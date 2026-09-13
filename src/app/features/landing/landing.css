@@ -11,6 +11,11 @@
   transform-origin: center center;
 }
 
+.dest-card {
+  position: relative;
+  z-index: 0;
+}
+
 .dest-card [data-slot='card'] {
   padding-block: 0;
 }

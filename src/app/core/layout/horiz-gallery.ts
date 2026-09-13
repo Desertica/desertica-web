@@ -18,15 +18,15 @@ import { TranslatePipe } from '../i18n/translate-pipe';
       class="horiz-gallery-wrapper relative overflow-hidden max-md:overflow-visible md:flex md:flex-nowrap"
     >
       <div
-        class="horiz-gallery-strip flex will-change-transform max-md:flex-col max-md:gap-4 md:flex-nowrap"
+        class="horiz-gallery-strip flex will-change-transform max-md:flex-col max-md:gap-3 md:flex-nowrap md:gap-3"
       >
         @for (slide of slides; track slide.id) {
           <a
             [routerLink]="toursPath"
             [fragment]="slide.id"
-            class="horiz-gallery-item box-content shrink-0 md:w-[33vw] md:p-8 max-md:box-border max-md:w-full max-md:p-0"
+            class="horiz-gallery-item box-border shrink-0 max-md:w-full md:w-[33vw]"
           >
-            <section hlmCard class="relative">
+            <section hlmCard class="relative rounded-none py-0 shadow-none ring-0">
               <img
                 [ngSrc]="slide.image"
                 width="1200"
@@ -96,31 +96,31 @@ export class HorizGallery {
         inner = gsap.context(() => {
           const mm = gsap.matchMedia();
           mm.add(mq, () => {
-            let pinWrapWidth = 0;
-            let horizontalScrollLength = 0;
-            const refresh = () => {
-              pinWrapWidth = strip.scrollWidth;
-              horizontalScrollLength = pinWrapWidth - window.innerWidth;
+            let lastTravel = 0;
+            const travel = () => {
+              const width = strip.scrollWidth;
+              const view = wrapper.offsetWidth || window.innerWidth;
+              if (width < view) {
+                return lastTravel;
+              }
+              lastTravel = width - view;
+              return lastTravel;
             };
-            refresh();
 
             gsap.to(strip, {
-              x: () => -horizontalScrollLength,
+              x: () => -travel(),
               ease: 'none',
               scrollTrigger: {
                 trigger: wrapper,
                 pin: wrapper,
                 start: 'center center',
-                end: () => `+=${pinWrapWidth}`,
+                end: () => `+=${travel()}`,
                 scrub: true,
                 invalidateOnRefresh: true,
               },
             });
 
-            ScrollTrigger.addEventListener('refreshInit', refresh);
             ScrollTrigger.refresh();
-
-            return () => ScrollTrigger.removeEventListener('refreshInit', refresh);
           });
         }, this.host.nativeElement);
       });
