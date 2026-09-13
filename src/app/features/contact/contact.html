@@ -1,0 +1,196 @@
+<section class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6">
+  <div class="contact-enter">
+    <h1 class="font-heading text-4xl">{{ 'nav.contact' | translate: i18n.locale() }}</h1>
+    <p class="text-muted-foreground mx-auto mt-4 max-w-2xl">
+      {{ 'pages.contactLead' | translate: i18n.locale() }}
+    </p>
+  </div>
+
+  <div class="mt-10 grid gap-8 md:grid-cols-2 md:gap-0">
+    <div
+      class="contact-enter relative min-h-72 overflow-hidden rounded-none md:h-full md:min-h-full"
+    >
+      <img
+        [ngSrc]="bandImage"
+        fill
+        sizes="(min-width: 768px) 50vw, 92vw"
+        alt=""
+        class="rounded-none object-cover"
+      />
+    </div>
+
+    <div class="contact-enter px-0 text-left md:px-8">
+      <p class="font-medium">{{ 'contact.replyTitle' | translate: i18n.locale() }}</p>
+      <p class="text-muted-foreground mt-1 text-sm">
+        {{ 'contact.replyHours' | translate: i18n.locale() }}
+      </p>
+
+      <form class="mt-8" [formGroup]="form" (ngSubmit)="send()" novalidate>
+        <div hlmFieldGroup>
+          <div hlmField>
+            <label hlmFieldLabel for="contact-name">{{
+              'contact.name' | translate: i18n.locale()
+            }}</label>
+            <input
+              hlmInput
+              id="contact-name"
+              type="text"
+              autocomplete="name"
+              [formControl]="form.controls.name"
+            />
+            @if (showError('name')) {
+              <hlm-field-error [forceShow]="true">{{
+                'contact.nameError' | translate: i18n.locale()
+              }}</hlm-field-error>
+            }
+          </div>
+
+          <div hlmField>
+            <label hlmFieldLabel for="contact-email">{{
+              'contact.email' | translate: i18n.locale()
+            }}</label>
+            <input
+              hlmInput
+              id="contact-email"
+              type="email"
+              autocomplete="email"
+              [formControl]="form.controls.email"
+            />
+            @if (showError('email')) {
+              <hlm-field-error [forceShow]="true">{{
+                'contact.emailError' | translate: i18n.locale()
+              }}</hlm-field-error>
+            }
+          </div>
+
+          <div hlmField>
+            <label hlmFieldLabel for="contact-whatsapp">{{
+              'contact.whatsapp' | translate: i18n.locale()
+            }}</label>
+            <div hlmInputGroup>
+              <hlm-input-group-addon class="ps-1">
+                <hlm-combobox
+                  class="inline-flex"
+                  [value]="selectedCountry()"
+                  [itemToString]="countryToString"
+                  [isItemEqualToValue]="sameCountry"
+                  (valueChange)="onCountryPicked($event)"
+                >
+                  <hlm-combobox-trigger
+                    buttonId="contact-country"
+                    variant="ghost"
+                    class="h-8 min-w-0 gap-1.5 px-1.5 font-normal"
+                    [attr.aria-label]="'contact.country' | translate: i18n.locale()"
+                    [attr.data-country]="countryCode()"
+                  >
+                    <ng-template hlmComboboxValueTemplate let-value>
+                      @if (value) {
+                        <img
+                          [ngSrc]="value.flagSrc"
+                          width="40"
+                          height="30"
+                          alt=""
+                          class="size-5 rounded-sm object-cover"
+                        />
+                        <span>+{{ value.callingCode }}</span>
+                      }
+                    </ng-template>
+                  </hlm-combobox-trigger>
+                  <hlm-combobox-content *hlmComboboxPortal class="min-w-72">
+                    <hlm-combobox-input
+                      showTrigger="false"
+                      [placeholder]="'contact.searchCountry' | translate: i18n.locale()"
+                    />
+                    <hlm-combobox-empty>{{
+                      'contact.noCountry' | translate: i18n.locale()
+                    }}</hlm-combobox-empty>
+                    <div
+                      hlmComboboxList
+                      class="max-h-60 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5"
+                    >
+                      @for (country of countries(); track country.code) {
+                        <hlm-combobox-item [value]="country">
+                          <img
+                            [src]="country.flagSrc"
+                            width="20"
+                            height="15"
+                            alt=""
+                            class="size-5 rounded-sm object-cover"
+                          />
+                          <span class="min-w-0 flex-1 truncate">{{ country.label }}</span>
+                          <span class="text-muted-foreground">+{{ country.callingCode }}</span>
+                        </hlm-combobox-item>
+                      }
+                    </div>
+                  </hlm-combobox-content>
+                </hlm-combobox>
+              </hlm-input-group-addon>
+              <input
+                hlmInputGroupInput
+                id="contact-whatsapp"
+                type="tel"
+                autocomplete="tel"
+                inputmode="tel"
+                [attr.placeholder]="'contact.whatsappPlaceholder' | translate: i18n.locale()"
+                [formControl]="form.controls.whatsapp"
+                (input)="onWhatsappInput()"
+              />
+            </div>
+            @if (showError('whatsapp')) {
+              <hlm-field-error [forceShow]="true">{{
+                'contact.whatsappError' | translate: i18n.locale()
+              }}</hlm-field-error>
+            }
+          </div>
+
+          <div hlmField>
+            <label hlmFieldLabel for="contact-message">{{
+              'contact.message' | translate: i18n.locale()
+            }}</label>
+            <textarea
+              hlmTextarea
+              id="contact-message"
+              rows="5"
+              [formControl]="form.controls.message"
+            ></textarea>
+            @if (showError('message')) {
+              <hlm-field-error [forceShow]="true">{{
+                'contact.messageError' | translate: i18n.locale()
+              }}</hlm-field-error>
+            }
+          </div>
+
+          <div hlmField>
+            <div
+              class="border-border bg-muted/30 flex min-h-16 items-center justify-between gap-4 rounded-md border px-3 py-2"
+            >
+              <div class="flex min-w-0 items-center gap-3">
+                <input
+                  id="contact-captcha"
+                  type="checkbox"
+                  class="border-input size-5 shrink-0 rounded-sm border accent-primary"
+                  [formControl]="form.controls.captcha"
+                />
+                <label hlmFieldLabel for="contact-captcha">{{
+                  'contact.notRobot' | translate: i18n.locale()
+                }}</label>
+              </div>
+              <span class="text-muted-foreground shrink-0 text-[0.65rem] tracking-wide uppercase">{{
+                'contact.captchaBrand' | translate: i18n.locale()
+              }}</span>
+            </div>
+            @if (showError('captcha')) {
+              <hlm-field-error [forceShow]="true">{{
+                'contact.captchaError' | translate: i18n.locale()
+              }}</hlm-field-error>
+            }
+          </div>
+
+          <button hlmBtn class="w-full" type="submit">
+            {{ 'contact.submit' | translate: i18n.locale() }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

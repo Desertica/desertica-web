@@ -63,5 +63,21 @@ describe('i18n catalogs', () => {
     expect(translate('nav.paracasSunset', 'es')).toContain('Atardecer');
     expect(translate('nav.cahuachi', 'es')).toBe('Cahuachi');
     expect(translate('nav.mariaReiche', 'es')).toContain('María Reiche');
+    expect(translate('pages.contactLead', 'es')).toBe(
+      'Consultas sobre tours y fechas. Para reservar, usa Planifica tu viaje.',
+    );
+    expect(translate('pages.contactLead', 'en')).toBe(
+      'Questions about tours and dates. To book, use Plan your trip.',
+    );
+    expect(translate('pages.contactLead', 'es')).not.toContain('SSG');
+    expect(translate('pages.contactLead', 'en')).not.toContain('SSG');
+    expect(translate('contact.submit', 'es')).toBe('Enviar');
+    expect(translate('contact.notRobot', 'en')).toBe("I'm not a robot");
+    expect(translate('contact.whatsapp', 'es')).toBe('WhatsApp');
+    expect(translate('contact.thanks', 'en')).toContain('Message sent');
+    expect(translate('contact.replyTitle', 'es')).toBe('Te respondemos por WhatsApp');
+    expect(translate('contact.replyHours', 'en')).toContain('Peru time');
+    expect(translate('contact.searchCountry', 'es')).toBe('Buscar país');
+    expect(translate('contact.whatsappError', 'en')).toContain('valid WhatsApp number');
   });
 });
