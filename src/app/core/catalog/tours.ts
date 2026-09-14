@@ -242,3 +242,11 @@ export function destinationById(id: DestinationId): CatalogDestination {
 
   return destination;
 }
+
+export function tourById(id: string): CatalogTour | undefined {
+  return catalogTours.find((tour) => tour.id === id);
+}
+
+export function tourPath(id: string): string {
+  return `${TOURS_PATH}/${id}`;
+}

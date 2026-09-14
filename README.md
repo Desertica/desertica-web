@@ -38,6 +38,7 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | -------------------- | -------------------------------- | ----------------------------------------- |
 | `/`                  | **SSG** (`RenderMode.Prerender`) | Wordmark, Why, tour gallery, destinos, CTA |
 | `/tours`             | **SSG** (`RenderMode.Prerender`) | Catalog by Huacachina, Paracas, Nazca     |
+| `/tours/:id`         | **SSG** (`RenderMode.Prerender`) | Tour detail (`dune-buggy` is the first filled page) |
 | `/products`          | **SSG** (`RenderMode.Prerender`) | Products hub placeholder                  |
 | `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
 | `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
@@ -68,13 +69,15 @@ src/app/
     animation/gsap-ui.ts       # hover timelines (no ScrollTrigger)
     images/remote-image-loader.ts
     catalog/tours.ts           # Huacachina / Paracas / Nazca catalog
+    catalog/tour-pages.ts      # Per-tour detail content (dune-buggy first)
     layout/                    # header, footer bounce, horiz gallery
     models/experience.ts
     models/reservation.ts
     services/experiences.ts    # empty list / getBySlug
   features/
     landing/                   # SSG home (DrawSVG hero, Why, gallery, destinos, CTA)
-    tours/                     # SSG catalog (sections + fragments)
+    tours/                     # SSG catalog
+    tours/detail/              # SSG tour page (`/tours/:id`)
     about/                     # SSG placeholder
     contact/                   # SSG placeholder
     placeholder/               # SSG empty pages (blog, destinos, legal)
@@ -100,7 +103,7 @@ Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client th
 
 - [`SmoothScroll`](src/app/core/animation/smooth-scroll.ts) creates `ScrollSmoother` on `#smooth-wrapper` / `#smooth-content` in the app shell. It is skipped for `prefers-reduced-motion`, jsdom, and coarse+narrow viewports. The header is pinned while the smoother is active because `position: sticky` does not hold inside transformed content.
 - Home: the wordmark SVG is the hero. DrawSVG plays once per tab (`sessionStorage` `desertica-intro`), then the same mark settles. Why Desértica uses SplitText. Featured tours use a pin+scrub gallery, then three destination cards and a closing CTA.
-- `/tours` lists every tour by destination. Header, footer, and gallery deep-link with fragments (`/tours#dune-buggy`).
+- `/tours` lists every tour by destination. Cards, header, footer, and the home gallery go to `/tours/:id`. Destination headings still use `/tours#huacachina`.
 - Footer bounce (MorphSVG) waits for the smoother proxy via `whenReady()`.
 
 [`public/splashes/`](public/splashes/) are looping HTML pages and are not routed.

@@ -47,7 +47,7 @@ type TipTimeline = {
       <span
         [id]="tooltipId"
         role="tooltip"
-        class="whatsapp-bubble bg-popover text-popover-foreground after:border-t-popover pointer-events-none invisible absolute right-0 bottom-[calc(100%+14px)] origin-bottom-right rounded-md px-4 py-1.5 text-sm whitespace-nowrap opacity-0 after:absolute after:top-full after:right-3 after:border-[6px] after:border-solid after:border-transparent after:content-['']"
+        class="whatsapp-bubble bg-popover text-popover-foreground after:border-t-popover pointer-events-none invisible absolute right-0 bottom-[calc(100%+14px)] origin-bottom-right rounded-3xl px-4 py-1.5 text-sm whitespace-nowrap opacity-0 after:absolute after:top-full after:right-3 after:border-[6px] after:border-solid after:border-transparent after:content-['']"
       >
         {{ 'whatsapp.tooltip' | translate: i18n.locale() }}
       </span>

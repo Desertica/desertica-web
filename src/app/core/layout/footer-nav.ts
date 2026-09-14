@@ -1,7 +1,7 @@
 import {
   destinationById,
   FOOTER_DESTINATION_IDS,
-  TOURS_PATH,
+  tourPath,
 } from '../catalog/tours';
 import {
   simpleFacebook,
@@ -54,8 +54,7 @@ export const footerDestinations: readonly FooterDestination[] = FOOTER_DESTINATI
       all: { labelKey: destination.allLabelKey, path: destination.hubPath },
       children: destination.tours.map((tour) => ({
         labelKey: tour.titleKey,
-        path: TOURS_PATH,
-        fragment: tour.id,
+        path: tourPath(tour.id),
       })),
     };
   },

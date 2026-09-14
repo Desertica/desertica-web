@@ -62,7 +62,6 @@
     "toursCtaTitle": "Looking for something else?",
     "toursCtaLead": "Private tours and custom days if the list doesn't fit.",
     "productsLead": "Pisco, tejas, and ceramics. Catalog later.",
-    "aboutLead": "About (SSG). Story later.",
     "contactTitle": "Contact Us",
     "contactLead": "Questions about tours and dates. To book, use Plan your trip.",
     "reservationsTitle": "Reservations",
@@ -151,6 +150,168 @@
     "pitchBeat1": "Transfers and timing at the group's pace — no queue, no rigid package.",
     "pitchBeat2": "Oasis, reserve, or lines: you pick the axis; we handle the rest of the day.",
     "pitchBeat3": "One thread to book. A clear confirmation. The desert, on your hour."
+  },
+  "about": {
+    "heroTitle": "The desert is the destination, not the shortcut.",
+    "heroLead": "Three owners. Based in Ica. Huacachina, Paracas, and Nazca, at the group's pace.",
+    "kicker": "{ From Ica }",
+    "manifestoHeadline": "Ica isn't a place you pass through.",
+    "manifestoP1": "You come down, wait for the heat, and leave when the group is ready.",
+    "manifestoP2": "Desértica exists so the desert is the reason for the trip, not the stretch between two cities.",
+    "quoteA": "This is the beginning.",
+    "quoteB": "The desert, up close, every day.",
+    "mapKicker": "{ Origin }",
+    "mapHeadline": "The day is built here.",
+    "mapLead": "The department is the map. Oasis, reserve, and lines leave from Ica — not from a stop in the south.",
+    "mapIca": "Ica",
+    "ribbon": "Ica · Huacachina · Paracas · Nazca",
+    "trioCaption": "The three of us, Huacachina",
+    "motivaKicker": "{ What drives us }",
+    "motivaHeadline": "We stay for this.",
+    "motivaLabel1": "Drive",
+    "motivaLabel2": "Commitment",
+    "motivaLabel3": "Momentum",
+    "motivaP1": "What moves us is staying. Not a package that “hits Ica” and moves on. The heat on the dune, the slow morning by the oasis, the day that runs long if the group isn't ready to leave.",
+    "motivaP2": "One thread to book. Confirmation before the engine starts. Meet in Ica, until the work asks otherwise. Guides in Spanish and English. Private days and group days — both — without selling the whole south in a morning or leaving the price for the dune.",
+    "motivaP3": "We're just starting, and we want to grow here: more days built well, more of our own archive, more craft in Huacachina, Paracas, and Nazca. Not an agency that comes down on Sunday. Stay as long as the desert asks.",
+    "craftKicker": "{ The craft }",
+    "craftLabel1": "Meeting point",
+    "craftLabel2": "Format",
+    "craftLabel3": "Language",
+    "craftMeet": "For now, we meet in Ica.",
+    "craftFormat": "Private days and group days.",
+    "craftLang": "Guides in Spanish and English.",
+    "archiveKicker": "{ Archive }",
+    "archiveLead": "The archive fills as we go out.",
+    "closerTitle": "Shall we build your day?",
+    "closerLead": "Huacachina, Paracas, and Nazca. You pick the axis; we handle the rest."
+  },
+  "tour": {
+    "meetingIca": "Meet in Ica",
+    "highlights": "What the day includes",
+    "practices": "How we run it",
+    "included": "Included",
+    "notIncluded": "Not included",
+    "pack": "What to wear",
+    "notes": "Before you go",
+    "terms": "Reservation terms",
+    "book": "Book on WhatsApp",
+    "bookLead": "Date, language, and group size. We reply on the thread.",
+    "date": "Date",
+    "language": "Language",
+    "people": "People",
+    "adult": "adult",
+    "adults": "adults",
+    "child": "child",
+    "children": "children",
+    "adultsAge": "Adults (11+)",
+    "childrenAge": "Children (3–10)",
+    "format": "Format",
+    "name": "Name",
+    "shared": "Group",
+    "private": "Private",
+    "both": "Group or private",
+    "dateError": "Choose a date.",
+    "peopleError": "Enter 1 to 12 people.",
+    "nameError": "Enter your name.",
+    "nameMinError": "Name must be at least 2 characters.",
+    "languageError": "Choose a language.",
+    "formatError": "Choose a format.",
+    "whatsappMessage": "Hi, I want to book {tour}.\nDate: {date}\nLanguage: {language}\nAdults: {adults}\nChildren: {children}\nFormat: {format}\nName: {name}",
+    "crumb": "Breadcrumb",
+    "galleryLabel": "Tour photos",
+    "timelineLabel": "The day",
+    "portraitsLabel": "On the dunes",
+    "photoAlt": "{tour}, photo {n}"
+  },
+  "tours": {
+    "duneBuggy": {
+      "lead": "Ride the Huacachina dunes in a tubular, with stops to board and stay for the low light.",
+      "lead2": "We meet in Ica. The pace is the group's. Confirmation before the engine starts.",
+      "meeting": "Meet in Ica",
+      "highlights": {
+        "buggy": {
+          "title": "Dune buggy",
+          "body": "A run across the open sand, with photo stops on the ridges."
+        },
+        "board": {
+          "title": "Sandboard",
+          "body": "A board to ride belly-down. Beginner-friendly, not standing."
+        },
+        "helmet": {
+          "title": "Helmet",
+          "body": "Helmets on for the buggy. Say so if you need a different size."
+        },
+        "light": {
+          "title": "Low light",
+          "body": "We stay out until the light drops. Clouds happen; the hour still holds."
+        },
+        "meet": {
+          "title": "Meet in Ica",
+          "body": "The day starts in Ica, not a pickup from Lima."
+        }
+      },
+      "practices": {
+        "group": {
+          "title": "Small group",
+          "body": "Shared buggies. Room to hear the guide without a convoy."
+        },
+        "lang": {
+          "title": "Spanish and English",
+          "body": "Guides in both. Say which you want when you book."
+        },
+        "private": {
+          "title": "Private if you ask",
+          "body": "A quieter run, slower if you need it. Tell us ahead."
+        },
+        "pace": {
+          "title": "It can feel like a roller coaster",
+          "body": "The dunes move. If you want it calm, book private."
+        }
+      },
+      "itinerary": {
+        "meet": {
+          "title": "Meeting point",
+          "body": "Ica. Be ready ten minutes early."
+        },
+        "dunes": {
+          "title": "Dunes",
+          "body": "Buggy across the ridges, with stops for photos."
+        },
+        "board": {
+          "title": "Board",
+          "body": "Belly-down on an artisan board."
+        },
+        "light": {
+          "title": "Low light",
+          "body": "Time on the sand as the sun drops."
+        },
+        "close": {
+          "title": "Close",
+          "body": "Back toward the oasis as the light goes."
+        }
+      },
+      "included": {
+        "guide": "Guide in Spanish or English.",
+        "buggy": "Shared dune buggy.",
+        "board": "Belly-down sandboard.",
+        "helmet": "Helmet for the buggy."
+      },
+      "excluded": {
+        "meals": "Meals and drinks.",
+        "standing": "Standing sandboard — that is another operator."
+      },
+      "pack": {
+        "wind": "A wind layer for after sunset.",
+        "sun": "Sunscreen, sunglasses, a hat.",
+        "shoes": "Closed shoes. No sandals on the board."
+      },
+      "notes": {
+        "intensity": "The buggy can feel extreme. Private is slower if you ask in advance.",
+        "kids": "Young children and anyone who wants a quiet ride should go private.",
+        "weather": "Most days are clear. We stay until sunset even if the sky is flat."
+      }
+    }
   },
   "gallery": {
     "from": "FROM",

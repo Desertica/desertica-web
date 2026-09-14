@@ -202,7 +202,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
                         [routerLink]="child.path"
                         [fragment]="child.fragment"
                         routerLinkActive="bg-muted text-foreground"
-                        class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                        class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
                         (click)="mobileNav.close()"
                       >
                         {{ child.labelKey | translate: i18n.locale() }}
@@ -222,7 +222,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
                           [routerLink]="child.path"
                           [fragment]="child.fragment"
                           routerLinkActive="bg-muted text-foreground"
-                          class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                          class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
                           (click)="mobileNav.close()"
                         >
                           {{ child.labelKey | translate: i18n.locale() }}
@@ -233,7 +233,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
                     <a
                       [routerLink]="item.path"
                       routerLinkActive="bg-muted text-foreground"
-                      class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                      class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
                       (click)="mobileNav.close()"
                     >
                       {{ item.labelKey | translate: i18n.locale() }}

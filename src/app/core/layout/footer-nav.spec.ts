@@ -14,15 +14,17 @@ describe('footer nav', () => {
       '/huacachina',
       '/paracas',
     ]);
-    expect(footerDestinations[1]?.children.map((item) => item.fragment)).toEqual([
-      'dune-buggy',
-      'oasis-overnight',
-      'huacachina-weekend',
-      'sandboard',
-      'ica-vineyards',
-      'oasis-walk',
+    expect(footerDestinations[1]?.children.map((item) => item.path)).toEqual([
+      '/tours/dune-buggy',
+      '/tours/oasis-overnight',
+      '/tours/huacachina-weekend',
+      '/tours/sandboard',
+      '/tours/ica-vineyards',
+      '/tours/oasis-walk',
     ]);
-    expect(footerDestinations[1]?.children.every((item) => item.path === '/tours')).toBe(true);
+    expect(footerDestinations[1]?.children.every((item) => item.fragment === undefined)).toBe(
+      true,
+    );
   });
 
   it('keeps legal placeholders in RUC and company length', () => {

@@ -1,0 +1,35 @@
+---
+description: Spartan Luma is global; rounded-none only on photographs.
+alwaysApply: true
+---
+
+# Luma, except photos
+
+`components.json` is `"style": "luma"`. Helm in `libs/ui` already has Luma radii. Do not restyle toward default/shadcn.
+
+## Keep Helm radii
+
+- Cards / buttons: `rounded-4xl`
+- Inputs, selects, date triggers: `rounded-3xl`, `bg-input/50`, `border-transparent`
+- Popovers: `rounded-3xl`
+- Accordion: `rounded-2xl`
+
+## Exception: photographs only
+
+`rounded-none` is allowed on `<img>`, `NgOptimizedImage`, and surfaces that **are** the photo (mosaic, portraits, banners, `app-tour-card` / landing dest tiles). Forms, booking card, accordion, buttons, toggles stay Luma. Do not strip Helm’s own `rounded-none` on nested innards (calendar inside a popover, input-group internals).
+
+## Do not
+
+```html
+<!-- BAD: booking / notes UI forced square -->
+<section hlmCard class="rounded-none shadow-none">
+<hlm-accordion class="rounded-none">
+<hlm-date-picker-trigger class="... rounded-3xl bg-input/50"> <!-- double pill: class lands on host AND button -->
+
+<!-- GOOD -->
+<section hlmCard>
+<hlm-accordion type="multiple">
+<hlm-date-picker-trigger class="w-full">
+```
+
+Chrome for `hlm-date-picker-trigger` lives in the Helm trigger (`host: class contents` + inner button). Select-like fields use `hlm-select-trigger` classes, not `hlmBtn variant="outline"`.

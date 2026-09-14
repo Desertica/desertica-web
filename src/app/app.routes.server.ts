@@ -1,8 +1,17 @@
-import { RenderMode, ServerRoute } from '@angular/ssr';
+import { PrerenderFallback, RenderMode, ServerRoute } from '@angular/ssr';
+import { catalogTours } from './core/catalog/tours';
 
 export const serverRoutes: ServerRoute[] = [
   { path: '', renderMode: RenderMode.Prerender },
   { path: 'tours', renderMode: RenderMode.Prerender },
+  {
+    path: 'tours/:id',
+    renderMode: RenderMode.Prerender,
+    fallback: PrerenderFallback.Server,
+    async getPrerenderParams() {
+      return catalogTours.map((tour) => ({ id: tour.id }));
+    },
+  },
   { path: 'products', renderMode: RenderMode.Prerender },
   { path: 'about', renderMode: RenderMode.Prerender },
   { path: 'contact', renderMode: RenderMode.Prerender },

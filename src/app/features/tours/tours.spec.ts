@@ -86,4 +86,13 @@ describe('Tours', () => {
     expect(cta?.textContent?.trim()).toBe('Contact Us');
     expect(cta?.className).toContain('pointer-events-auto');
   });
+
+  it('links catalog cards to each tour page', async () => {
+    const fixture = TestBed.createComponent(Tours);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dune = compiled.querySelector('a[href="/tours/dune-buggy"]');
+    expect(dune).not.toBeNull();
+    expect(dune?.querySelector('app-tour-card')).not.toBeNull();
+  });
 });

@@ -62,7 +62,6 @@
     "toursCtaTitle": "¿Buscas otra experiencia?",
     "toursCtaLead": "Tours privados y salidas a medida, si no ves lo que necesitas.",
     "productsLead": "Pisco, tejas y cerámica. Catálogo más adelante.",
-    "aboutLead": "Nosotros (SSG). Historia más adelante.",
     "contactTitle": "Contáctanos",
     "contactLead": "Consultas sobre tours y fechas. Para reservar, usa Planifica tu viaje.",
     "reservationsTitle": "Reservas",
@@ -151,6 +150,168 @@
     "pitchBeat1": "Traslados y horarios al ritmo del grupo, sin cola ni paquete rígido.",
     "pitchBeat2": "Oasis, reserva o líneas: eliges el eje; nosotros el resto del día.",
     "pitchBeat3": "Un hilo para reservar. Confirmación clara. El desierto, a tu hora."
+  },
+  "about": {
+    "heroTitle": "El desierto es el destino, no el atajo.",
+    "heroLead": "Tres dueños. Base en Ica. Huacachina, Paracas y Nazca, al ritmo del grupo.",
+    "kicker": "{ Desde Ica }",
+    "manifestoHeadline": "Ica no se visita de paso.",
+    "manifestoP1": "Se baja, se espera el calor y se sale cuando el grupo está listo.",
+    "manifestoP2": "Desértica nace para que el desierto sea el motivo del viaje, no el tramo entre dos ciudades.",
+    "quoteA": "Somos el comienzo.",
+    "quoteB": "El desierto, de cerca, todos los días.",
+    "mapKicker": "{ Origen }",
+    "mapHeadline": "Aquí se arma el día.",
+    "mapLead": "El departamento es el mapa. Oasis, reserva y líneas salen de Ica, no de una escala en el sur.",
+    "mapIca": "Ica",
+    "ribbon": "Ica · Huacachina · Paracas · Nazca",
+    "trioCaption": "Los tres, Huacachina",
+    "motivaKicker": "{ Qué nos motiva }",
+    "motivaHeadline": "Seguimos por esto.",
+    "motivaLabel1": "Motivación",
+    "motivaLabel2": "Compromiso",
+    "motivaLabel3": "Impulso",
+    "motivaP1": "Nos mueve quedarnos. No armar un paquete que “toca Ica” y sigue. El calor de la duna, la mañana lenta del oasis, el día que se alarga si el grupo aún no quiere irse.",
+    "motivaP2": "Un hilo para reservar. Confirmación antes de encender el motor. Encuentro en Ica, hasta que el oficio pida otra cosa. Guías en español e inglés. Salidas privadas y en grupo, las dos, sin vender el sur entero en una mañana ni dejar el precio para la duna.",
+    "motivaP3": "Estamos empezando, y queremos crecer aquí: más días bien armados, más archivo propio, más oficio en Huacachina, Paracas y Nazca. No convertirnos en una agencia que baja el domingo. Quedarnos el tiempo que el desierto pide.",
+    "craftKicker": "{ El oficio }",
+    "craftLabel1": "Encuentro",
+    "craftLabel2": "Formato",
+    "craftLabel3": "Idioma",
+    "craftMeet": "El encuentro es en Ica, por ahora.",
+    "craftFormat": "Salidas privadas y en grupo.",
+    "craftLang": "Guías en español e inglés.",
+    "archiveKicker": "{ Archivo }",
+    "archiveLead": "El archivo se llena con las salidas.",
+    "closerTitle": "¿Armamos tu día?",
+    "closerLead": "Huacachina, Paracas y Nazca. Elige el eje; nosotros el resto."
+  },
+  "tour": {
+    "meetingIca": "Encuentro en Ica",
+    "highlights": "Qué entra en el día",
+    "practices": "Cómo se corre",
+    "included": "Qué incluye",
+    "notIncluded": "Qué no incluye",
+    "pack": "Qué llevar",
+    "notes": "Antes de salir",
+    "terms": "Términos de la reserva",
+    "book": "Reservar por WhatsApp",
+    "bookLead": "Fecha, idioma y grupo. Te respondemos en el hilo.",
+    "date": "Fecha",
+    "language": "Idioma",
+    "people": "Personas",
+    "adult": "adulto",
+    "adults": "adultos",
+    "child": "niño",
+    "children": "niños",
+    "adultsAge": "Adultos (11+)",
+    "childrenAge": "Niños (3–10)",
+    "format": "Formato",
+    "name": "Nombre",
+    "shared": "Grupo",
+    "private": "Privada",
+    "both": "Grupo o privada",
+    "dateError": "Elige una fecha.",
+    "peopleError": "Indica de 1 a 12 personas.",
+    "nameError": "Escribe tu nombre.",
+    "nameMinError": "El nombre debe tener al menos 2 caracteres.",
+    "languageError": "Elige un idioma.",
+    "formatError": "Elige un formato.",
+    "whatsappMessage": "Hola, quiero reservar {tour}.\nFecha: {date}\nIdioma: {language}\nAdultos: {adults}\nNiños: {children}\nFormato: {format}\nNombre: {name}",
+    "crumb": "Miga",
+    "galleryLabel": "Fotos del tour",
+    "timelineLabel": "El día",
+    "portraitsLabel": "En las dunas",
+    "photoAlt": "{tour}, foto {n}"
+  },
+  "tours": {
+    "duneBuggy": {
+      "lead": "Recorre las dunas de Huacachina en tubular, con paradas para bajar en tabla y quedarte a la luz baja.",
+      "lead2": "El encuentro es en Ica. El ritmo, el del grupo. Confirmación antes de encender el motor.",
+      "meeting": "Encuentro en Ica",
+      "highlights": {
+        "buggy": {
+          "title": "Tubular",
+          "body": "Un tramo por la arena abierta, con paradas de foto en las crestas."
+        },
+        "board": {
+          "title": "Sandboard",
+          "body": "Tabla para bajar boca abajo. Para empezar, no de pie."
+        },
+        "helmet": {
+          "title": "Casco",
+          "body": "Casco en el tubular. Di si necesitas otra talla."
+        },
+        "light": {
+          "title": "Luz baja",
+          "body": "Nos quedamos hasta que baja la luz. Si hay nubes, la hora se mantiene."
+        },
+        "meet": {
+          "title": "Encuentro en Ica",
+          "body": "El día sale de Ica, no de un recojo en Lima."
+        }
+      },
+      "practices": {
+        "group": {
+          "title": "Grupo chico",
+          "body": "Tubulares compartidos. Se oye al guía, sin convoy."
+        },
+        "lang": {
+          "title": "Español e inglés",
+          "body": "Guías en los dos. Di cuál quieres al reservar."
+        },
+        "private": {
+          "title": "Privada si la pides",
+          "body": "Una salida más quieta, más lenta si hace falta. Avísanos antes."
+        },
+        "pace": {
+          "title": "Se siente como montaña rusa",
+          "body": "Las dunas se mueven. Si la quieres calma, reserva privada."
+        }
+      },
+      "itinerary": {
+        "meet": {
+          "title": "Encuentro",
+          "body": "Ica. Diez minutos antes."
+        },
+        "dunes": {
+          "title": "Dunas",
+          "body": "Tubular por las crestas, con paradas de foto."
+        },
+        "board": {
+          "title": "Tabla",
+          "body": "Boca abajo, en tabla artesanal."
+        },
+        "light": {
+          "title": "Luz baja",
+          "body": "Tiempo en la arena cuando baja el sol."
+        },
+        "close": {
+          "title": "Cierre",
+          "body": "Vuelta hacia el oasis cuando se va la luz."
+        }
+      },
+      "included": {
+        "guide": "Guía en español o inglés.",
+        "buggy": "Tubular compartido.",
+        "board": "Tabla para bajar boca abajo.",
+        "helmet": "Casco para el tubular."
+      },
+      "excluded": {
+        "meals": "Comidas y bebidas.",
+        "standing": "Sandboard de pie: es otro operador."
+      },
+      "pack": {
+        "wind": "Una capa para después del atardecer.",
+        "sun": "Bloqueador, gafas, sombrero.",
+        "shoes": "Zapatilla cerrada. Sin sandalia en la tabla."
+      },
+      "notes": {
+        "intensity": "El tubular puede sentirse extremo. La privada va más lento si la pides antes.",
+        "kids": "Niños pequeños y quien quiera un tramo quieto, en privada.",
+        "weather": "La mayoría de los días están claros. Nos quedamos hasta el atardecer aunque el cielo esté plano."
+      }
+    }
   },
   "gallery": {
     "from": "DESDE",

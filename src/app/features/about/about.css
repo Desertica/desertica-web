@@ -1,0 +1,151 @@
+.about-banner-overlay {
+  color: #fff;
+  background-image: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 62%);
+}
+
+.about-banner-overlay :is(h1, h2) {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.about-banner-overlay h1 {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+}
+
+.about-banner-overlay h2 {
+  font-size: clamp(1.35rem, 3vw, 2.25rem);
+}
+
+.about-split-line {
+  overflow: hidden;
+}
+
+.about-quote-stack {
+  display: flex;
+  max-width: 52rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.about-quote-line {
+  margin: 0;
+  text-align: center;
+}
+
+.about-quote-plate {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.14em 0.48em 0.2em;
+  transform-origin: left center;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.about-quote-plate-a {
+  background: var(--foreground);
+  color: var(--background);
+  font-size: clamp(1.85rem, 6vw, 3.75rem);
+}
+
+.about-quote-plate-b {
+  background: #5a6b3e;
+  color: #f4efe4;
+  font-size: clamp(1.15rem, 3.2vw, 2rem);
+}
+
+.about-ribbon {
+  overflow: hidden;
+  border-block: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent);
+  background: var(--background);
+}
+
+.about-ribbon-pin {
+  display: flex;
+  min-height: min(46svh, 22rem);
+  align-items: center;
+  overflow: hidden;
+}
+
+.about-ribbon-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.about-ribbon-unit {
+  margin: 0;
+  padding-inline: 2.5rem;
+  font-family: var(--font-heading);
+  font-size: clamp(2.4rem, 8vw, 6.25rem);
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.about-map-scene {
+  background-color: var(--background);
+}
+
+.about-map-layer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-map-copy {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: clamp(1rem, 4vw, 3.5rem);
+  max-width: min(28rem, 38vw);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .about-map-copy {
+    top: 1.25rem;
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+    transform: none;
+  }
+}
+
+.about-map-stage {
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(100svh - var(--header-h));
+  padding-block: 0.75rem;
+}
+
+.about-trio-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  min-height: calc(100svh - var(--header-h));
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-trio-layer {
+    position: relative;
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.about-trio-surface {
+  transform-origin: center center;
+  will-change: transform;
+}

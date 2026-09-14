@@ -1,7 +1,7 @@
 import { isNavGroup, primaryNavLinks, toursNavColumns } from './primary-nav';
 
 describe('primary nav', () => {
-  it('groups tours by destination on /tours fragments', () => {
+  it('groups tours by destination and links each tour to its page', () => {
     const tours = primaryNavLinks.find((item) => isNavGroup(item) && item.path === '/tours');
     expect(tours && isNavGroup(tours)).toBe(true);
     if (!tours || !isNavGroup(tours)) {
@@ -15,24 +15,29 @@ describe('primary nav', () => {
       'nazca',
     ]);
     expect(
-      toursNavColumns().flatMap((column) => column.children.map((item) => item.fragment)),
+      toursNavColumns().flatMap((column) => column.children.map((item) => item.path)),
     ).toEqual([
-      'dune-buggy',
-      'oasis-overnight',
-      'huacachina-weekend',
-      'sandboard',
-      'ica-vineyards',
-      'oasis-walk',
-      'paracas-buggy',
-      'ballestas',
-      'paracas-reserve',
-      'paracas-sunset',
-      'nazca-lines',
-      'nazca-flight',
-      'nazca-cantalloc',
-      'cahuachi',
-      'maria-reiche',
+      '/tours/dune-buggy',
+      '/tours/oasis-overnight',
+      '/tours/huacachina-weekend',
+      '/tours/sandboard',
+      '/tours/ica-vineyards',
+      '/tours/oasis-walk',
+      '/tours/paracas-buggy',
+      '/tours/ballestas',
+      '/tours/paracas-reserve',
+      '/tours/paracas-sunset',
+      '/tours/nazca-lines',
+      '/tours/nazca-flight',
+      '/tours/nazca-cantalloc',
+      '/tours/cahuachi',
+      '/tours/maria-reiche',
     ]);
+    expect(
+      toursNavColumns()
+        .flatMap((column) => column.children)
+        .every((item) => item.fragment === undefined),
+    ).toBe(true);
   });
 
   it('exposes products as a leaf and drops packages', () => {

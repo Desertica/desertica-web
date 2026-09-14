@@ -1,10 +1,13 @@
+import { tourPage } from './tour-pages';
 import {
   catalogTours,
   featuredTours,
   FOOTER_DESTINATION_IDS,
   TOURS_BANNER_IMAGE,
   TOURS_CLOSER_IMAGE,
+  tourById,
   tourDestinations,
+  tourPath,
 } from './tours';
 
 const unsplashPhotoId = (url: string): string =>
@@ -40,5 +43,36 @@ describe('tour catalog', () => {
     );
     expect(used.has(unsplashPhotoId(TOURS_BANNER_IMAGE))).toBe(false);
     expect(used.has(unsplashPhotoId(TOURS_CLOSER_IMAGE))).toBe(false);
+  });
+
+  it('resolves tour paths and ids', () => {
+    expect(tourPath('dune-buggy')).toBe('/tours/dune-buggy');
+    expect(tourById('dune-buggy')?.titleKey).toBe('nav.duneBuggy');
+    expect(tourById('missing')).toBeUndefined();
+  });
+
+  it('fills dune-buggy detail and hides empty blocks on other tours', () => {
+    const dune = tourById('dune-buggy');
+    const sandboard = tourById('sandboard');
+    expect(dune).toBeDefined();
+    expect(sandboard).toBeDefined();
+    if (!dune || !sandboard) {
+      return;
+    }
+
+    const page = tourPage(dune);
+    expect(page.gallery).toHaveLength(3);
+    expect(new Set(page.gallery.map(unsplashPhotoId)).size).toBe(3);
+    expect(page.portraits).toHaveLength(2);
+    expect(page.itinerary).toHaveLength(5);
+    expect(page.highlights.length).toBeGreaterThan(3);
+    expect(page.leadKey).toBe('tours.duneBuggy.lead');
+
+    const stub = tourPage(sandboard);
+    expect(stub.gallery).toEqual([sandboard.image, sandboard.image, sandboard.image]);
+    expect(stub.highlights).toEqual([]);
+    expect(stub.itinerary).toEqual([]);
+    expect(stub.portraits).toEqual([]);
+    expect(stub.leadKey).toBe(sandboard.descriptionKey);
   });
 });

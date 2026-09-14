@@ -1,4 +1,4 @@
-import { TOURS_PATH, tourDestinations } from '../catalog/tours';
+import { TOURS_PATH, tourDestinations, tourPath } from '../catalog/tours';
 
 export interface NavLink {
   labelKey: string;
@@ -47,8 +47,7 @@ const toursNavGroup: NavGroup = {
     fragment: destination.id,
     children: destination.tours.map((tour) => ({
       labelKey: tour.titleKey,
-      path: TOURS_PATH,
-      fragment: tour.id,
+      path: tourPath(tour.id),
       descriptionKey: tour.descriptionKey,
     })),
   })),

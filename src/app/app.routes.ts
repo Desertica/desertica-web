@@ -16,6 +16,11 @@ export const routes: Routes = [
     path: 'tours',
     loadComponent: () => import('./features/tours/tours').then((m) => m.Tours),
   },
+  {
+    path: 'tours/:id',
+    loadComponent: () =>
+      import('./features/tours/detail/tour-detail').then((m) => m.TourDetail),
+  },
   placeholder('products', 'nav.products', 'pages.productsLead'),
   {
     path: 'about',

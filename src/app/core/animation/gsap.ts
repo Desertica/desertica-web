@@ -3,18 +3,23 @@ import { afterNextRender, DestroyRef, inject } from '@angular/core';
 type GsapCore = typeof import('gsap').default;
 type GsapScrollTrigger = (typeof import('gsap/ScrollTrigger'))['default'];
 type GsapSplitText = (typeof import('gsap/SplitText'))['default'];
+type GsapDrawSVG = (typeof import('gsap/DrawSVGPlugin'))['default'];
+type GsapScrambleText = (typeof import('gsap/ScrambleTextPlugin'))['default'];
 type GsapContext = { revert: () => void };
 
 export type GsapPluginFlags = {
   morphSvg?: boolean;
   drawSvg?: boolean;
   splitText?: boolean;
+  scrambleText?: boolean;
   scrollSmoother?: boolean;
 };
 
 export type GsapPlugins = {
   ScrollTrigger: GsapScrollTrigger;
   SplitText?: GsapSplitText;
+  DrawSVG?: GsapDrawSVG;
+  ScrambleText?: GsapScrambleText;
 };
 
 /**
@@ -40,9 +45,11 @@ export function afterNextGsap(
         gsap.registerPlugin(MorphSVGPlugin);
       }
 
+      let DrawSVG: GsapDrawSVG | undefined;
       if (flags.drawSvg) {
         const { default: DrawSVGPlugin } = await import('gsap/DrawSVGPlugin');
         gsap.registerPlugin(DrawSVGPlugin);
+        DrawSVG = DrawSVGPlugin;
       }
 
       if (flags.scrollSmoother) {
@@ -57,11 +64,18 @@ export function afterNextGsap(
         gsap.registerPlugin(SplitText);
       }
 
+      let ScrambleText: GsapScrambleText | undefined;
+      if (flags.scrambleText) {
+        const { default: ScrambleTextPlugin } = await import('gsap/ScrambleTextPlugin');
+        gsap.registerPlugin(ScrambleTextPlugin);
+        ScrambleText = ScrambleTextPlugin;
+      }
+
       if (destroyed) {
         return;
       }
 
-      ctx = create(gsap, { ScrollTrigger, SplitText });
+      ctx = create(gsap, { ScrollTrigger, SplitText, DrawSVG, ScrambleText });
       if (destroyed) {
         ctx?.revert();
       }

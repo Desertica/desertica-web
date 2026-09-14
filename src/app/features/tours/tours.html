@@ -31,9 +31,9 @@
       </p>
       <div class="mt-10 grid gap-3 text-left md:grid-cols-2 lg:grid-cols-3">
         @for (tour of destination.tours; track tour.id) {
-          <article [id]="tour.id" class="scroll-mt-24">
+          <a class="block" [routerLink]="detailPath(tour.id)">
             <app-tour-card [tour]="tour" />
-          </article>
+          </a>
         }
       </div>
     </div>
