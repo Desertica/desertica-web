@@ -8,10 +8,8 @@
       [title]="data.tour.titleKey | translate: i18n.locale()"
     />
 
-    <div
-      class="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-x-12"
-    >
-      <div class="flex flex-col gap-6 lg:col-start-1">
+    <div class="mt-10 grid gap-y-12 md:grid-cols-3 md:items-start md:gap-x-3">
+      <div class="flex flex-col gap-6 md:col-span-2">
         <p class="text-muted-foreground max-w-2xl text-base sm:text-lg">
           {{ data.page.leadKey | translate: i18n.locale() }}
         </p>
@@ -23,26 +21,26 @@
       </div>
 
       <app-tour-book
-        class="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:col-start-2 lg:row-start-1 lg:row-span-6"
+        class="md:sticky md:top-[calc(var(--header-h)+1.5rem)] md:col-start-3 md:row-start-1 md:row-span-6"
         [tour]="data.tour"
         [page]="data.page"
       />
 
       @if (data.page.highlights.length) {
         <app-tour-features
-          class="lg:col-start-1"
+          class="md:col-span-2 md:col-start-1"
           headingKey="tour.highlights"
           [items]="data.page.highlights"
         />
       }
 
       @if (data.page.itinerary.length) {
-        <app-tour-timeline class="lg:col-start-1" [stops]="data.page.itinerary" />
+        <app-tour-timeline class="md:col-span-2 md:col-start-1" [stops]="data.page.itinerary" />
       }
 
       @if (data.page.practices.length) {
         <app-tour-features
-          class="lg:col-start-1"
+          class="md:col-span-2 md:col-start-1"
           headingKey="tour.practices"
           [items]="data.page.practices"
         />
@@ -54,12 +52,12 @@
         data.page.packKeys.length ||
         data.page.notesKeys.length
       ) {
-        <app-tour-notes class="lg:col-start-1" [page]="data.page" />
+        <app-tour-notes class="md:col-span-2 md:col-start-1" [page]="data.page" />
       }
 
       @if (data.page.portraits.length) {
         <app-tour-portraits
-          class="lg:col-start-1"
+          class="md:col-span-2 md:col-start-1"
           [photos]="data.page.portraits"
           [title]="data.tour.titleKey | translate: i18n.locale()"
         />

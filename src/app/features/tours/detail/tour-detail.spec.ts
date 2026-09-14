@@ -45,7 +45,8 @@ describe('TourDetail', () => {
     expect(compiled.textContent).toContain('How we run it');
     expect(compiled.textContent).toContain('The day');
     expect(compiled.textContent).toContain('15:50');
-    expect(compiled.textContent).toContain('Book on WhatsApp');
+    expect(compiled.textContent).toContain('Book');
+    expect(compiled.textContent).not.toContain('Book on WhatsApp');
     expect(compiled.textContent).toContain('Included');
     expect(compiled.textContent).toContain('On the dunes');
     const heading = compiled.querySelector('app-tour-heading');

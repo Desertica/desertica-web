@@ -122,7 +122,10 @@ describe('i18n catalogs', () => {
     expect(translate('about.archiveLead', 'es')).toContain('archivo');
     expect(translate('about.closerTitle', 'es')).toContain('Armamos');
     expect(translate('about.closerLead', 'en')).toContain('axis');
-    expect(translate('tour.book', 'es')).toContain('WhatsApp');
+    expect(translate('tour.book', 'es')).toBe('Reservar');
+    expect(translate('tour.book', 'en')).toBe('Book');
+    expect(translate('tour.book', 'es')).not.toContain('WhatsApp');
+    expect(translate('tour.payLater', 'es')).toContain('paga después');
     expect(translate('tour.highlights', 'en')).toContain('includes');
     expect(translate('tours.duneBuggy.lead', 'es')).toContain('tubular');
     expect(translate('tours.duneBuggy.lead', 'en')).toContain('tubular');
@@ -133,5 +136,8 @@ describe('i18n catalogs', () => {
     expect(translate('tour.whatsappMessage', 'en')).toContain('{adults}');
     expect(translate('tour.whatsappMessage', 'en')).toContain('{children}');
     expect(translate('tour.whatsappMessage', 'en')).not.toContain('{people}');
+    expect(translate('tour.whatsappMessage', 'en')).toContain('{payment}');
+    expect(translate('tour.whatsappMessage', 'en')).toContain('{amount}');
+    expect(translate('tour.whatsappMessage', 'en')).not.toContain('{name}');
   });
 });

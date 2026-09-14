@@ -5,7 +5,8 @@ export type TourWhatsappFields = {
   adults: string;
   children: string;
   format: string;
-  name: string;
+  payment: string;
+  amount: string;
 };
 
 export function formatPickerDate(date: Date): string {
@@ -39,7 +40,8 @@ export function buildTourWhatsappHref(
     .replace('{adults}', fields.adults)
     .replace('{children}', fields.children)
     .replace('{format}', fields.format)
-    .replace('{name}', fields.name);
+    .replace('{payment}', fields.payment)
+    .replace('{amount}', fields.amount);
 
   const separator = base.includes('?') ? '&' : '?';
   return `${base}${separator}text=${encodeURIComponent(text)}`;

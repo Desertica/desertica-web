@@ -6,7 +6,10 @@ import {
   inject,
   input,
   PLATFORM_ID,
+  signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { merge } from 'rxjs';
 import {
   AbstractControl,
   FormControl,
@@ -21,8 +24,9 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmDatePickerImports } from '@spartan-ng/helm/date-picker';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
-import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
+import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import { TourFormat, TourLanguage, TourPage } from '../../../core/catalog/tour-pages';
 import { CatalogTour } from '../../../core/catalog/tours';
@@ -36,15 +40,33 @@ import {
   startOfLocalDay,
 } from './tour-whatsapp';
 
-export const TOUR_NAME_MIN = 2;
-export const TOUR_NAME_MAX = 80;
 export const TOUR_ADULTS_MIN = 1;
-export const TOUR_ADULTS_DEFAULT = 2;
+export const TOUR_ADULTS_DEFAULT = 1;
 export const TOUR_CHILDREN_MIN = 0;
 export const TOUR_CHILDREN_DEFAULT = 0;
 export const TOUR_PEOPLE_MAX = 12;
+export const TOUR_DEPOSIT_RATE = 0.2;
+
+export type TourPayment = 'full' | 'deposit';
 
 type PartyKind = 'adults' | 'children';
+
+export function tourDuePrice(unitPrice: number, payment: TourPayment, people = 1): number {
+  const total = unitPrice * Math.max(people, 1);
+  return payment === 'deposit' ? Math.round(total * TOUR_DEPOSIT_RATE) : total;
+}
+
+function paymentValue(value: unknown): TourPayment | null {
+  if (value === 'full' || value === 'deposit') {
+    return value;
+  }
+
+  if (typeof value === 'object' && value !== null && 'value' in value) {
+    return paymentValue((value as { value: unknown }).value);
+  }
+
+  return null;
+}
 
 function partyMaxValidator(control: AbstractControl): ValidationErrors | null {
   const adults = Number(control.get('adults')?.value ?? 0);
@@ -63,21 +85,22 @@ function partyMaxValidator(control: AbstractControl): ValidationErrors | null {
     HlmCardImports,
     HlmDatePickerImports,
     HlmFieldImports,
-    HlmInput,
+    HlmLabel,
     HlmPopoverImports,
+    HlmRadioGroupImports,
     HlmToggleGroupImports,
   ],
   providers: [provideIcons({ lucideChevronDown })],
   host: {
-    class: 'block',
+    class: 'block w-full',
   },
   template: `
     <section hlmCard>
       <div hlmCardHeader>
-        <p class="font-heading text-2xl tracking-wide">
+        <p id="tour-due" class="font-heading text-2xl tracking-wide">
           {{ 'gallery.from' | translate: i18n.locale() }}
           {{ 'gallery.currency' | translate: i18n.locale() }}
-          {{ tour().priceFrom }}
+          {{ duePrice() }}
         </p>
       </div>
       <form hlmCardContent class="flex flex-col gap-6" [formGroup]="form" (ngSubmit)="send()" novalidate>
@@ -236,23 +259,46 @@ function partyMaxValidator(control: AbstractControl): ValidationErrors | null {
           }
         </div>
 
-        <div hlmField>
-          <label hlmFieldLabel for="tour-name">{{ 'tour.name' | translate: i18n.locale() }}</label>
-          <input
-            hlmInput
-            id="tour-name"
-            type="text"
-            autocomplete="name"
-            required
-            [attr.maxlength]="nameMax"
-            [formControl]="form.controls.name"
-          />
-          @if (showError('name')) {
-            <hlm-field-error [forceShow]="true">{{
-              nameErrorKey() | translate: i18n.locale()
-            }}</hlm-field-error>
-          }
-        </div>
+        <fieldset hlmFieldSet>
+          <legend hlmFieldLegend id="tour-payment-legend" variant="label" class="sr-only">
+            {{ 'tour.payment' | translate: i18n.locale() }}
+          </legend>
+          <hlm-radio-group
+            class="w-full"
+            name="tour-payment"
+            [value]="payment()"
+            (valueChange)="onPayment($event)"
+          >
+            <label hlmLabel [class]="payOptionClass" for="tour-pay-full">
+              <hlm-radio value="full" inputId="tour-pay-full">
+                <hlm-radio-indicator indicator />
+              </hlm-radio>
+              <span class="flex min-w-0 flex-1 flex-col text-start">
+                <span class="text-sm font-medium tracking-wide uppercase">{{
+                  'tour.payFull' | translate: i18n.locale()
+                }}</span>
+                <span id="tour-pay-full-amount">
+                  {{ 'gallery.currency' | translate: i18n.locale() }}
+                  {{ fullPrice() }}
+                </span>
+              </span>
+            </label>
+            <label hlmLabel [class]="payOptionClass" for="tour-pay-deposit">
+              <hlm-radio value="deposit" inputId="tour-pay-deposit">
+                <hlm-radio-indicator indicator />
+              </hlm-radio>
+              <span class="flex min-w-0 flex-1 flex-col text-start">
+                <span class="text-sm font-medium tracking-wide uppercase">{{
+                  'tour.payLater' | translate: i18n.locale()
+                }}</span>
+                <span id="tour-pay-deposit-amount">
+                  {{ 'gallery.currency' | translate: i18n.locale() }}
+                  {{ depositPrice() }}
+                </span>
+              </span>
+            </label>
+          </hlm-radio-group>
+        </fieldset>
 
         <button hlmBtn type="submit" class="w-full">
           {{ 'tour.book' | translate: i18n.locale() }}
@@ -269,9 +315,19 @@ export class TourBook {
   readonly page = input.required<TourPage>();
   protected readonly i18n = inject(I18nService);
   protected readonly minDate = startOfLocalDay();
-  protected readonly nameMax = TOUR_NAME_MAX;
   protected readonly formatPickerDate = formatPickerDate;
   protected readonly showFormat = computed(() => this.page().format === 'both');
+  protected readonly payment = signal<TourPayment>('full');
+  protected readonly partySize = signal(TOUR_ADULTS_DEFAULT + TOUR_CHILDREN_DEFAULT);
+  protected readonly fullPrice = computed(() => this.tour().priceFrom * this.partySize());
+  protected readonly depositPrice = computed(() =>
+    tourDuePrice(this.tour().priceFrom, 'deposit', this.partySize()),
+  );
+  protected readonly duePrice = computed(() =>
+    tourDuePrice(this.tour().priceFrom, this.payment(), this.partySize()),
+  );
+  protected readonly payOptionClass =
+    'border-transparent bg-input/50 hover:bg-input/80 flex w-full cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 [&:has([data-checked=true])]:border-primary';
 
   readonly form = new FormGroup(
     {
@@ -302,19 +358,21 @@ export class TourBook {
         nonNullable: true,
         validators: [Validators.required],
       }),
-      name: new FormControl('', {
+      payment: new FormControl<TourPayment>('full', {
         nonNullable: true,
-        validators: [
-          Validators.required,
-          Validators.minLength(TOUR_NAME_MIN),
-          Validators.maxLength(TOUR_NAME_MAX),
-        ],
+        validators: [Validators.required],
       }),
     },
     { validators: [partyMaxValidator] },
   );
 
-  protected showError(name: 'date' | 'language' | 'format' | 'name'): boolean {
+  constructor() {
+    merge(this.form.controls.adults.valueChanges, this.form.controls.children.valueChanges)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.syncParty());
+  }
+
+  protected showError(name: 'date' | 'language' | 'format'): boolean {
     const control = this.form.controls[name];
     return control.invalid && control.touched;
   }
@@ -327,12 +385,6 @@ export class TourBook {
         this.form.controls.adults.invalid ||
         this.form.controls.children.invalid)
     );
-  }
-
-  protected nameErrorKey(): string {
-    return this.form.controls.name.hasError('minlength')
-      ? 'tour.nameMinError'
-      : 'tour.nameError';
   }
 
   protected peopleSummary(): string {
@@ -357,6 +409,10 @@ export class TourBook {
 
   protected canIncParty(): boolean {
     return this.form.controls.adults.value + this.form.controls.children.value < TOUR_PEOPLE_MAX;
+  }
+
+  private syncParty(): void {
+    this.partySize.set(this.form.controls.adults.value + this.form.controls.children.value);
   }
 
   protected bump(kind: PartyKind, delta: 1 | -1): void {
@@ -392,6 +448,16 @@ export class TourBook {
     }
   }
 
+  protected onPayment(value: unknown): void {
+    const next = paymentValue(value);
+    if (!next) {
+      return;
+    }
+
+    this.payment.set(next);
+    this.form.controls.payment.setValue(next);
+  }
+
   send(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
@@ -410,6 +476,8 @@ export class TourBook {
     const page = this.page();
     const format = page.format === 'both' ? this.form.controls.format.value : page.format;
     const date = this.form.controls.date.value;
+    const payment = this.form.controls.payment.value;
+    const people = this.form.controls.adults.value + this.form.controls.children.value;
     return buildTourWhatsappHref(footerContact.whatsapp, this.i18n.t('tour.whatsappMessage'), {
       tour: this.i18n.t(this.tour().titleKey),
       date: date ? formatTourDate(date) : '',
@@ -417,7 +485,8 @@ export class TourBook {
       adults: String(this.form.controls.adults.value),
       children: String(this.form.controls.children.value),
       format: this.i18n.t(`tour.${format}`),
-      name: this.form.controls.name.value.trim(),
+      payment: this.i18n.t(payment === 'deposit' ? 'tour.payLater' : 'tour.payFull'),
+      amount: String(tourDuePrice(this.tour().priceFrom, payment, people)),
     });
   }
 

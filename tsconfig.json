@@ -39,7 +39,8 @@
       "@spartan-ng/helm/toggle-group": ["./libs/ui/toggle-group/src/index.ts"],
       "@spartan-ng/helm/toggle": ["./libs/ui/toggle/src/index.ts"],
       "@spartan-ng/helm/date-picker": ["./libs/ui/date-picker/src/index.ts"],
-      "@spartan-ng/helm/popover": ["./libs/ui/popover/src/index.ts"]
+      "@spartan-ng/helm/popover": ["./libs/ui/popover/src/index.ts"],
+      "@spartan-ng/helm/radio-group": ["./libs/ui/radio-group/src/index.ts"]
     }
   },
   "angularCompilerOptions": {
