@@ -107,7 +107,6 @@ describe('i18n catalogs', () => {
     expect(translate('about.mapHeadline', 'es')).toContain('arma el día');
     expect(translate('about.mapLead', 'es')).not.toContain('Trujillo');
     expect(translate('about.mapLead', 'en')).not.toContain('Trujillo');
-    expect(translate('about.mapIca', 'es')).toBe('Ica');
     expect(translate('about.ribbon', 'es')).toBe('Ica · Huacachina · Paracas · Nazca');
     expect(translate('about.ribbon', 'en')).toContain('Ica');
     expect(translate('about.ribbon', 'en')).not.toContain('Trujillo');

@@ -63,15 +63,14 @@
 
 .about-ribbon {
   overflow: hidden;
-  border-block: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent);
   background: var(--background);
 }
 
 .about-ribbon-pin {
   display: flex;
-  min-height: min(46svh, 22rem);
   align-items: center;
   overflow: hidden;
+  padding-block: 3.25rem 2.5rem;
 }
 
 .about-ribbon-track {
@@ -103,12 +102,13 @@
 
 .about-map-copy {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   top: 50%;
   left: clamp(1rem, 4vw, 3.5rem);
   max-width: min(28rem, 38vw);
   transform: translateY(-50%);
   pointer-events: none;
+  color: var(--foreground);
 }
 
 @media (max-width: 767px) {

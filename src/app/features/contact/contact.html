@@ -11,6 +11,7 @@
       <img
         [ngSrc]="bandImage"
         fill
+        priority
         sizes="(min-width: 768px) 50vw, 92vw"
         alt=""
         class="rounded-none object-cover"
@@ -94,9 +95,9 @@
                         <img
                           [ngSrc]="value.flagSrc"
                           width="40"
-                          height="30"
+                          height="27"
                           alt=""
-                          class="size-5 rounded-sm object-cover"
+                          class="h-5 w-auto rounded-sm"
                         />
                         <span>+{{ value.callingCode }}</span>
                       }

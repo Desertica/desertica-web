@@ -5,6 +5,8 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
+@source not "../node_modules/@spartan-ng/cli";
+
 /* Swap later: change these two families and the Google Fonts <link> in index.html. */
 @theme {
   --font-sans:

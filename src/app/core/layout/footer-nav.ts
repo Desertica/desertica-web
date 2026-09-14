@@ -121,16 +121,16 @@ export const footerLegalLinks: readonly FooterLink[] = [
 export const footerStamps: readonly FooterStamp[] = [
   {
     src: '/legal/mincetur-agencia.png',
-    width: 466,
-    height: 669,
+    width: 223,
+    height: 320,
     path: '/legal/mincetur',
     altKey: 'footer.minceturAlt',
     optimized: true,
   },
   {
     src: '/legal/libro-reclamaciones.png',
-    width: 1253,
-    height: 1916,
+    width: 209,
+    height: 320,
     path: '/complaints',
     altKey: 'footer.complaintsAlt',
     optimized: true,

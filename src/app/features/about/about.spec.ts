@@ -83,8 +83,11 @@ describe('About', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.querySelector('[data-ribbon]')).not.toBeNull();
-    expect(compiled.querySelectorAll('[data-ribbon-unit]').length).toBe(2);
+    expect(compiled.querySelector('[data-quote]')?.className).not.toContain('min-h-[min(80svh,32rem)]');
+    expect(compiled.querySelector('[data-quote]')?.className).toContain('pb-24');
+    expect(compiled.querySelector('[data-ribbon]')?.className).toBe('about-ribbon');
+    expect(compiled.querySelector('[data-map-kicker]')).not.toBeNull();
+    expect(compiled.querySelectorAll('[data-ribbon-unit]').length).toBe(3);
     expect(compiled.textContent).toContain('Ica · Huacachina · Paracas · Nazca');
     expect(compiled.querySelector('.about-quote-plate-a')).not.toBeNull();
     expect(compiled.querySelector('.about-quote-plate-b')).not.toBeNull();
@@ -98,7 +101,7 @@ describe('About', () => {
     expect(compiled.querySelector('.about-map-frame')).toBeNull();
     expect(compiled.innerHTML).not.toContain('max-h-[28rem]');
     expect(compiled.querySelector('[data-ica]')).not.toBeNull();
-    expect(compiled.querySelector('[data-map-label]')?.textContent?.trim()).toBe('Ica');
+    expect(compiled.querySelector('[data-map-label]')).toBeNull();
     expect(compiled.querySelector('[data-peru]')).not.toBeNull();
     expect(compiled.querySelector('.about-map-svg')?.getAttribute('viewBox')).toBe(
       '0 0 542.76703 792',

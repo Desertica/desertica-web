@@ -23,6 +23,9 @@ export const ABOUT_VIDEO_WEBM = '/about/sand.webm';
 export const ABOUT_VIDEO_MP4 = '/about/sand.mp4';
 export { ABOUT_TRIO_IMAGE } from './about-media';
 
+const ICA_FILL_WASH = 0.18;
+const LAKE_STROKE_WIDTH = 1.2;
+
 type SplitInstance = {
   revert: () => void;
   kill?: () => void;
@@ -56,7 +59,6 @@ export class About {
   private bindRibbon: (() => void) | undefined;
   private bindMapCopy: (() => void) | undefined;
   private bindMotiva: (() => void) | undefined;
-  private bindMapLabel: (() => void) | undefined;
 
   protected readonly i18n = inject(I18nService);
   protected readonly poster = ABOUT_POSTER;
@@ -99,7 +101,6 @@ export class About {
         this.bindRibbon?.();
         this.bindMapCopy?.();
         this.bindMotiva?.();
-        this.bindMapLabel?.();
       });
     });
 
@@ -345,6 +346,7 @@ export class About {
           const pinEl = this.host.nativeElement.querySelector('[data-ribbon-pin]');
           const track = this.host.nativeElement.querySelector('[data-ribbon-track]');
           const units = this.host.nativeElement.querySelectorAll('[data-ribbon-unit]');
+          const unit0 = units.item(0);
           const phrase = this.i18n.t('about.ribbon');
           units.forEach((unit: Element) => {
             unit.textContent = `${phrase} · `;
@@ -353,24 +355,27 @@ export class About {
             reduced() ||
             !(ribbon instanceof HTMLElement) ||
             !(pinEl instanceof HTMLElement) ||
-            !(track instanceof HTMLElement)
+            !(track instanceof HTMLElement) ||
+            !(unit0 instanceof HTMLElement)
           ) {
             return;
           }
 
-          const travel = () => Math.max(track.scrollWidth - pinEl.offsetWidth, 0);
+          const unitW = () => unit0.offsetWidth;
+          gsap.set(track, { x: 0 });
           ribbonTween = gsap.to(track, {
-            x: () => -travel(),
+            x: () => -unitW(),
             ease: 'none',
             scrollTrigger: {
               trigger: pinEl,
               pin: true,
               scrub: 1,
-              start: 'top top',
-              end: () => `+=${Math.max(travel(), window.innerWidth)}`,
+              start: 'center center',
+              end: () => `+=${Math.max(Math.round(window.innerHeight * 0.75), 1)}`,
               invalidateOnRefresh: true,
             },
           });
+          void document.fonts.ready.then(() => ScrollTrigger.refresh());
         };
 
         let mapSplit: SplitInstance | undefined;
@@ -378,52 +383,74 @@ export class About {
         this.bindMapCopy = () => {
           mapTween?.scrollTrigger?.kill();
           mapTween?.kill();
+          mapSplit?.kill?.();
           mapSplit?.revert();
           mapSplit = undefined;
           mapTween = undefined;
 
-          const scene = this.host.nativeElement.querySelector('[data-map-scene]');
+          const copyEl = this.host.nativeElement.querySelector('[data-map-copy]');
+          const kicker = this.host.nativeElement.querySelector('[data-map-kicker]');
           const headline = this.host.nativeElement.querySelector('[data-map-headline]');
           const lead = this.host.nativeElement.querySelector('[data-map-lead]');
-          if (
-            !(scene instanceof HTMLElement) ||
-            !(headline instanceof HTMLElement) ||
-            !SplitText
-          ) {
+          if (!(copyEl instanceof HTMLElement) || !(headline instanceof HTMLElement) || !SplitText) {
             return;
           }
 
+          if (kicker instanceof HTMLElement) {
+            kicker.textContent = this.i18n.t('about.mapKicker');
+          }
           headline.textContent = this.i18n.t('about.mapHeadline');
+          if (lead instanceof HTMLElement) {
+            lead.textContent = this.i18n.t('about.mapLead');
+          }
+          gsap.set(copyEl, { autoAlpha: 1 });
           if (reduced()) {
             return;
           }
 
-          mapSplit = new SplitText(headline, { type: 'words,lines', linesClass: 'about-split-line' });
-          mapTween = gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: scene,
-                start: 'top 80%',
-                toggleActions: 'play none none none',
-              },
-            })
-            .from(mapSplit.words, {
-              yPercent: 100,
-              duration: 0.7,
-              stagger: 0.05,
-              ease: 'power3.out',
-              immediateRender: false,
-            })
-            .from(
-              lead,
-              {
-                autoAlpha: 0,
-                duration: 0.7,
-                ease: 'power1.out',
-                immediateRender: false,
-              },
-              '-=0.35',
-            );
+          mapSplit = new SplitText(headline, {
+            type: 'words,lines',
+            linesClass: 'about-split-line',
+            autoSplit: true,
+            aria: 'auto',
+            onSplit: (self) => {
+              mapTween?.scrollTrigger?.kill();
+              mapTween?.kill();
+              mapTween = gsap
+                .timeline({
+                  scrollTrigger: {
+                    trigger: copyEl,
+                    start: 'top 85%',
+                    toggleActions: 'play none none none',
+                  },
+                })
+                .from(kicker, {
+                  autoAlpha: 0,
+                  duration: 0.45,
+                  ease: 'power1.out',
+                })
+                .from(
+                  self.words,
+                  {
+                    yPercent: 100,
+                    duration: 0.7,
+                    stagger: 0.05,
+                    ease: 'power3.out',
+                  },
+                  '-=0.2',
+                )
+                .from(
+                  lead,
+                  {
+                    autoAlpha: 0,
+                    duration: 0.7,
+                    ease: 'power1.out',
+                  },
+                  '-=0.35',
+                );
+              return mapTween;
+            },
+          });
         };
 
         let motivaSplit: SplitInstance | undefined;
@@ -502,13 +529,6 @@ export class About {
           });
         };
 
-        this.bindMapLabel = () => {
-          const label = this.host.nativeElement.querySelector('[data-map-label]');
-          if (label instanceof SVGTextElement || label instanceof HTMLElement) {
-            label.textContent = this.i18n.t('about.mapIca');
-          }
-        };
-
         return gsap.context(() => {
           const poster = this.host.nativeElement.querySelector('[data-hero-poster]');
           const video = this.host.nativeElement.querySelector('[data-hero-video]');
@@ -560,7 +580,6 @@ export class About {
             const stage = this.host.nativeElement.querySelector('[data-map-stage]');
             const svg = this.host.nativeElement.querySelector('.about-map-svg');
             const ica = this.host.nativeElement.querySelector('[data-ica]');
-            const label = this.host.nativeElement.querySelector('[data-map-label]');
             const trio = this.host.nativeElement.querySelector('[data-trio]');
             const peruGroup = this.host.nativeElement.querySelector('[data-peru]');
             const lake = this.host.nativeElement.querySelector('[data-lake]');
@@ -602,26 +621,6 @@ export class About {
             };
             const sortDrawOrder = (nodes: Element[]) =>
               [...nodes].sort((a, b) => drawRank(a) - drawRank(b));
-
-            const placeIcaLabel = () => {
-              if (!(label instanceof SVGTextElement) || !(ica instanceof SVGGraphicsElement)) {
-                return;
-              }
-              try {
-                const box = ica.getBBox();
-                if (box.width < 1 || box.height < 1) {
-                  return;
-                }
-                const cx = box.x + box.width * 0.36;
-                const cy = box.y + box.height * 0.48;
-                label.setAttribute('text-anchor', 'middle');
-                label.setAttribute('dominant-baseline', 'middle');
-                label.setAttribute('x', String(cx));
-                label.setAttribute('y', String(cy));
-              } catch {
-                return;
-              }
-            };
 
             const icaCamera = () => {
               const fallback = { x: 0, y: 0, w: 542.76703, h: 792 };
@@ -675,20 +674,18 @@ export class About {
               ]);
 
               gsap.set(drawn, { drawSVG: '0% 0%' });
-              placeIcaLabel();
               gsap.set(stage, { clearProps: 'transform' });
               gsap.set(stageWrap, { x: 0, y: 0, scale: 1, force3D: false });
               if (ica instanceof Element) {
                 gsap.set(ica, { fillOpacity: 0 });
               }
-              if (label) {
-                gsap.set(label, { autoAlpha: 0 });
-              }
               if (trio instanceof Element) {
                 gsap.set(trio, { autoAlpha: 0 });
               }
+              if (copy instanceof Element) {
+                gsap.set(copy, { autoAlpha: 1 });
+              }
 
-              const icaName = this.i18n.t('about.mapIca');
               const baseVb =
                 svg instanceof SVGSVGElement
                   ? svg.viewBox.baseVal
@@ -712,7 +709,7 @@ export class About {
                 }
                 if (lake instanceof SVGElement) {
                   lake.removeAttribute('vector-effect');
-                  lake.style.strokeWidth = `${0.7 * k}`;
+                  lake.style.strokeWidth = `${LAKE_STROKE_WIDTH * k}`;
                 }
                 if (ica instanceof SVGElement) {
                   ica.removeAttribute('vector-effect');
@@ -751,24 +748,7 @@ export class About {
                 },
               );
               if (ica instanceof Element) {
-                drawTl.to(ica, { fillOpacity: 1, duration: 2, ease: 'none' });
-              }
-              if (label) {
-                drawTl.set(label, { autoAlpha: 1 }, 'label');
-                drawTl.to(
-                  label,
-                  {
-                    duration: 1.5,
-                    scrambleText: {
-                      text: icaName,
-                      chars: 'ICA ',
-                      speed: 0.4,
-                      revealDelay: 0.15,
-                    },
-                    ease: 'none',
-                  },
-                  'label',
-                );
+                drawTl.to(ica, { fillOpacity: ICA_FILL_WASH, duration: 2, ease: 'none' });
               }
               const tl = gsap.timeline({
                 scrollTrigger: {
@@ -786,13 +766,6 @@ export class About {
               tl.to({}, { duration: dummyDur, ease: 'none' });
               tl.to({}, { duration: 0.4 });
 
-              if (copy instanceof Element) {
-                tl.to(copy, { autoAlpha: 0, duration: 1.2, ease: 'none' }, 'takeover');
-              }
-              if (label) {
-                tl.to(label, { autoAlpha: 0, duration: 0.8, ease: 'none' }, 'takeover+=3.2');
-              }
-
               tl.to(
                 camera,
                 {
@@ -808,6 +781,9 @@ export class About {
               );
 
               tl.to({}, { duration: 1 });
+              if (copy instanceof Element) {
+                tl.to(copy, { autoAlpha: 0, duration: 1.2, ease: 'none' }, 'takeover');
+              }
               tl.to(mapLayer, { autoAlpha: 0, duration: 1.2, ease: 'none' }, 'cross');
               if (trio instanceof Element) {
                 tl.to(trio, { autoAlpha: 1, duration: 1.2, ease: 'none' }, 'cross');
@@ -822,11 +798,7 @@ export class About {
                 gsap.set(lake, { drawSVG: '0% 100%' });
               }
               if (ica instanceof Element) {
-                gsap.set(ica, { drawSVG: '0% 100%', fillOpacity: 1 });
-              }
-              if (label) {
-                placeIcaLabel();
-                gsap.set(label, { autoAlpha: 1 });
+                gsap.set(ica, { drawSVG: '0% 100%', fillOpacity: ICA_FILL_WASH });
               }
               if (trio instanceof Element) {
                 gsap.set(trio, { autoAlpha: 1 });
@@ -835,7 +807,7 @@ export class About {
           });
         }, this.host.nativeElement);
       },
-      { morphSvg: false, splitText: true, drawSvg: true, scrambleText: true },
+      { morphSvg: false, splitText: true, drawSvg: true, scrambleText: false },
     );
   }
 }

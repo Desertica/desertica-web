@@ -32,28 +32,21 @@ import { ICA_SVG_ORIGIN } from './about-media';
     [data-lake] {
       fill: none;
       stroke: #3d4a2a;
-      stroke-opacity: 0.4;
-      stroke-width: 0.7;
+      stroke-opacity: 0.75;
+      stroke-width: 1.2;
     }
 
     [data-ica] {
       fill: #5a6b3e;
+      fill-opacity: 0;
       stroke: #3d4a2a;
       stroke-width: 2.4;
       stroke-linejoin: round;
     }
 
-    [data-map-label] {
-      fill: #3d4a2a;
-      font-family: var(--font-heading);
-      font-size: 16px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
     @media (prefers-reduced-motion: reduce) {
       [data-ica] {
-        fill-opacity: 1;
+        fill-opacity: 0.18;
       }
     }
   `,

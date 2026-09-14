@@ -65,7 +65,7 @@
 
 <section
   data-quote
-  class="about-quote flex min-h-[min(80svh,32rem)] items-center justify-center px-4 py-24 sm:px-6"
+  class="about-quote flex items-center justify-center px-4 pt-16 pb-24 sm:px-6 sm:pt-20 sm:pb-32"
 >
   <blockquote class="about-quote-stack">
     <p data-quote-a class="about-quote-line">
@@ -90,6 +90,9 @@
       <p data-ribbon-unit class="about-ribbon-unit">
         {{ 'about.ribbon' | translate: i18n.locale() }}
       </p>
+      <p data-ribbon-unit class="about-ribbon-unit">
+        {{ 'about.ribbon' | translate: i18n.locale() }}
+      </p>
     </div>
   </div>
 </section>
@@ -104,12 +107,12 @@
     class="about-map-layer relative z-10 min-h-[calc(100svh-var(--header-h))] w-full"
   >
     <div data-map-copy class="about-map-copy">
-      <p class="text-sm font-medium tracking-wide">
+      <p data-map-kicker class="text-muted-foreground text-sm font-medium tracking-wide">
         {{ 'about.mapKicker' | translate: i18n.locale() }}
       </p>
       <h2
         data-map-headline
-        class="font-heading mt-4 text-3xl text-balance sm:text-5xl"
+        class="font-heading mt-4 text-3xl sm:text-5xl"
       >
         {{ 'about.mapHeadline' | translate: i18n.locale() }}
       </h2>

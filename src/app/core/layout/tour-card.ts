@@ -19,6 +19,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
         [ngSrc]="tour().image"
         width="1200"
         height="1200"
+        [priority]="priority()"
         [sizes]="sizes()"
         alt=""
         class="aspect-square w-full rounded-none object-cover"
@@ -50,5 +51,6 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 export class TourCard {
   readonly tour = input.required<CatalogTour>();
   readonly sizes = input('(min-width: 768px) 33vw, 100vw');
+  readonly priority = input(false);
   protected readonly i18n = inject(I18nService);
 }

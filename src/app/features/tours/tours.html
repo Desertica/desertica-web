@@ -22,7 +22,7 @@
   </div>
 </section>
 
-@for (destination of destinations; track destination.id) {
+@for (destination of destinations; track destination.id; let firstDest = $first) {
   <section [id]="destination.id" class="scroll-mt-24">
     <div class="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6">
       <h2 class="font-heading text-3xl">{{ destination.titleKey | translate: i18n.locale() }}</h2>
@@ -30,9 +30,9 @@
         {{ destination.leadKey | translate: i18n.locale() }}
       </p>
       <div class="mt-10 grid gap-3 text-left md:grid-cols-2 lg:grid-cols-3">
-        @for (tour of destination.tours; track tour.id) {
+        @for (tour of destination.tours; track tour.id; let firstTour = $first) {
           <a class="block" [routerLink]="detailPath(tour.id)">
-            <app-tour-card [tour]="tour" />
+            <app-tour-card [tour]="tour" [priority]="firstDest && firstTour" />
           </a>
         }
       </div>
