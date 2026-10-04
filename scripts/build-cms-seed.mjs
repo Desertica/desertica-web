@@ -1,6 +1,9 @@
 #!/usr/bin/env node
-// Genera cms/seed/catalog.json a partir del catalogo estatico de la app Angular.
-// Uso (desde la raiz del repo): node scripts/build-cms-seed.mjs
+// Genera el seed del CMS (catalog.json) a partir del catalogo estatico de la app Angular.
+// Uso (desde la raiz del repo):
+//   node scripts/build-cms-seed.mjs                       -> cms/seed/catalog.json
+//   node scripts/build-cms-seed.mjs --out ../desertica-cms/seed/catalog.json
+// Tambien acepta CMS_SEED_OUT. Con el CMS en su propio repo, el JSON resultante se commitea alli.
 import { buildSync } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -178,7 +181,12 @@ const pages = pageDefs.map(([slug, titleKey, leadKey]) => ({
   i18n: Object.fromEntries(['en', 'es'].map((l) => [l, { title: t(l, titleKey), lead: t(l, leadKey), body: '' }])),
 }));
 
-const target = resolve(root, 'cms/seed/catalog.json');
+const outIndex = process.argv.indexOf('--out');
+const outArg = outIndex !== -1 ? process.argv[outIndex + 1] : process.env.CMS_SEED_OUT;
+if (outIndex !== -1 && !outArg) {
+  throw new Error('--out needs a path');
+}
+const target = resolve(process.cwd(), outArg ?? resolve(root, 'cms/seed/catalog.json'));
 mkdirSync(dirname(target), { recursive: true });
 writeFileSync(target, JSON.stringify({ destinations, tours, siteSetting, translations, mediaSlots, pages }, null, 2) + '\n');
 console.log(`[seed] ${destinations.length} destinations, ${tours.length} tours, ${translations.length} translations -> ${target}`);
