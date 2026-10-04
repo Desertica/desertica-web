@@ -1,13 +1,18 @@
 import { parseCookie, resolveLocale, translate } from './catalogs';
 
 describe('i18n catalogs', () => {
-  it('prefers the cookie over the query', () => {
+  it('prefers an explicit query over the cookie, so hreflang URLs return their language', () => {
     expect(
       resolveLocale({
         cookie: 'en',
         query: 'es',
       }),
-    ).toBe('en');
+    ).toBe('es');
+  });
+
+  it('uses the cookie when the query is missing or not a locale', () => {
+    expect(resolveLocale({ cookie: 'es' })).toBe('es');
+    expect(resolveLocale({ cookie: 'es', query: 'fr' })).toBe('es');
   });
 
   it('uses the query when no cookie is set', () => {

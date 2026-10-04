@@ -17,6 +17,7 @@ import type { CatalogTour } from '../../core/catalog/tours';
 import { TOURS_BANNER_IMAGE, TOURS_CLOSER_IMAGE, tourPath } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { usePageMeta } from '../../core/seo/page-meta';
 import { PhotoCta } from '../../core/layout/photo-cta';
 import { TourCard } from '../../core/layout/tour-card';
 
@@ -45,6 +46,13 @@ export class Tours {
   private readonly analytics = inject(AnalyticsService);
 
   constructor() {
+    usePageMeta(() => ({
+      title: this.i18n.t('nav.tours'),
+      description: this.i18n.t('pages.toursLead'),
+      image: this.bannerImage,
+      breadcrumbs: [],
+    }));
+
     afterNextRender(() => {
       this.analytics.track('view_item_list', {
         item_list_name: LIST_NAME,

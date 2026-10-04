@@ -75,7 +75,7 @@ describe('I18nService', () => {
         { provide: PLATFORM_ID, useValue: 'server' },
         {
           provide: REQUEST,
-          useValue: new Request('http://localhost/tours?lang=es', {
+          useValue: new Request('http://localhost/tours', {
             headers: { cookie: 'locale=en' },
           }),
         },
@@ -85,6 +85,20 @@ describe('I18nService', () => {
     const fromCookie = TestBed.inject(I18nService);
     expect(fromCookie.locale()).toBe('en');
     fromCookie.setLocale('es');
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'server' },
+        {
+          provide: REQUEST,
+          useValue: new Request('http://localhost/tours?lang=es', {
+            headers: { cookie: 'locale=en' },
+          }),
+        },
+      ],
+    });
+    expect(TestBed.inject(I18nService).locale()).toBe('es');
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({

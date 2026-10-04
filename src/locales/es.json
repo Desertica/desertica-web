@@ -36,7 +36,8 @@
     "cahuachi": "Cahuachi",
     "cahuachiDesc": "Pirámides de adobe en el desierto de Nazca.",
     "mariaReiche": "Museo María Reiche",
-    "mariaReicheDesc": "Las líneas explicadas junto al desierto."
+    "mariaReicheDesc": "Las líneas explicadas junto al desierto.",
+    "home": "Inicio"
   },
   "a11y": {
     "toggleTheme": "Cambiar tema de color",
@@ -71,7 +72,6 @@
     "reservationsLead": "Huacachina, Paracas o Nazca. Elige el eje y el tour. Un hilo para reservar.",
     "reservationsAxis": "Eje",
     "reservationsTour": "Tour",
-    "experienceLead": "Placeholder SSR. Catálogo más adelante.",
     "blogLead": "Historias de Ica y Huacachina.",
     "blogSoon": "Próximamente",
     "blogHeroAlt": "Dunas del desierto de Ica al atardecer.",
