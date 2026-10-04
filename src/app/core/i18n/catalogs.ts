@@ -42,12 +42,14 @@ export function resolveLocale(options: {
   cookie?: string | null;
   query?: string | null;
 }): AppLocale {
-  if (isAppLocale(options.cookie)) {
-    return options.cookie;
-  }
-
+  // An explicit `?lang=` is part of the URL a crawler or a shared link carries (it is what
+  // `hreflang` points at), so it wins over whatever the visitor chose on an earlier visit.
   if (isAppLocale(options.query)) {
     return options.query;
+  }
+
+  if (isAppLocale(options.cookie)) {
+    return options.cookie;
   }
 
   return DEFAULT_LOCALE;

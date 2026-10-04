@@ -21,11 +21,19 @@
       </div>
 
       <div class="flex flex-col gap-4 md:col-start-3 md:row-start-1 md:row-span-2">
-        <app-tour-book
-          class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
-          [tour]="data.tour"
-          [page]="data.page"
-        />
+        @if (bookingEngine) {
+          <app-booking-panel
+            class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
+            [tour]="data.tour"
+            [page]="data.page"
+          />
+        } @else {
+          <app-tour-book
+            class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
+            [tour]="data.tour"
+            [page]="data.page"
+          />
+        }
         <app-tour-assurances [custom]="data.page.assurances" />
         @if (data.page.itineraryFile; as file) {
           <a hlmBtn class="w-full" [href]="file" download>

@@ -6,6 +6,7 @@ import { CatalogService } from '../../core/catalog/catalog';
 import { TOURS_PATH } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { usePageMeta } from '../../core/seo/page-meta';
 
 @Component({
   selector: 'app-blog',
@@ -56,5 +57,14 @@ export class Blog {
       month: 'short',
       day: 'numeric',
     }).format(new Date(iso));
+  }
+
+  constructor() {
+    usePageMeta(() => ({
+      title: this.i18n.t('nav.blog'),
+      description: this.i18n.t('pages.blogLead'),
+      image: this.heroImage,
+      breadcrumbs: [],
+    }));
   }
 }

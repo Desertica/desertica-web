@@ -91,6 +91,8 @@ export class ContentPage {
     usePageMeta(() => ({
       title: this.cms()?.seoTitle || this.title(),
       description: this.cms()?.seoDescription || this.lead(),
+      image: this.hero(),
+      breadcrumbs: [],
     }));
   }
 }

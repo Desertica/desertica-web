@@ -25,6 +25,14 @@ npm run start:cms        # Angular on :4200 reading Strapi
 
 The first visit to `/admin` asks for an admin user. Contact data in `Site — Settings` is placeholder (`XXXX`).
 
+## Ola 1 (tracking, SEO, booking engine, complaints)
+
+- **Tracking**: `core/analytics/` (consent, GTM loader, typed `AnalyticsService`, first-touch attribution) and the cookie banner. GTM loads in the browser only, after the denied Consent Mode default. Events follow `docs/analytics-events.md` in `desertica-api`.
+- **SEO**: `core/seo/` (`SeoService`, `usePageMeta`), `src/seo-routes.ts` (sitemap, robots, `/experiences` 301). Language strategy and the path-prefix plan: `docs/SEO-LOCALE.md`.
+- **Booking engine** (`BOOKING_ENGINE_ENABLED`, off by default): `core/api` (generated types + `BookingApi`), `core/booking`, `features/booking`, `src/api-proxy.ts`. Regenerate types with `npm run api:generate` (needs `../desertica-api`). Payment is a placeholder until Ola 2.
+- **Libro de Reclamaciones**: `features/complaints`, validated in `src/forms-validation.ts`, filed through `/api/forms/complaint` (needs `API_URL`). Legal wording is provisional until the lawyer reviews it.
+- Environment: see `.env.example` (`SITE_URL`, `GTM_ID`, `API_URL`, `BOOKING_ENGINE_ENABLED`, `TURNSTILE_*`, `ROBOTS_DISALLOW_ALL`).
+
 ## Open work
 
 - Deploy both apps (see `docs/DEPLOY.md` here and in the CMS repo). No webhook or rebuild is needed after publishing: pages render per request.

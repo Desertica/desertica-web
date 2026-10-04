@@ -41,3 +41,12 @@ describe('CMS setting defaults', () => {
     expect(withIntroDefaults(undefined).failsafeMs).toBe(12_000);
   });
 });
+
+describe('availability window', () => {
+  it('defaults to three months and caps what the CMS can ask for', () => {
+    expect(withBookingDefaults({}).availabilityMonths).toBe(3);
+    expect(withBookingDefaults({ availabilityMonths: 6 }).availabilityMonths).toBe(6);
+    expect(withBookingDefaults({ availabilityMonths: 0 }).availabilityMonths).toBe(3);
+    expect(withBookingDefaults({ availabilityMonths: 99 }).availabilityMonths).toBe(12);
+  });
+});

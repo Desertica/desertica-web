@@ -160,6 +160,9 @@
             link.labelKey | translate: i18n.locale()
           }}</a>
         }
+        <button type="button" class="hover:text-foreground py-0.5" (click)="consent.openPreferences()">
+          {{ 'cookies.preferences' | translate: i18n.locale() }}
+        </button>
       </nav>
       <p>© {{ legal().year }} {{ legal().name }} · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }}</p>
     </div>

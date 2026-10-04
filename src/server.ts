@@ -9,7 +9,10 @@ import express from 'express';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
+import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
+import { apiProxy } from './api-proxy';
 import { formsProxy } from './forms-proxy';
+import { legacyRedirects, seoRouter } from './seo-routes';
 import {
   catalogs,
   DEFAULT_LOCALE,
@@ -33,6 +36,8 @@ const { I18n } = nodeRequire('i18n') as {
 };
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
+/** Angular's `outputHashing: all` names bundles `main-ABCD1234.js`. */
+const HASHED_ASSET = /-[A-Z0-9]{8}\.[a-z0-9]+$/;
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
@@ -46,6 +51,24 @@ const i18n = new I18n({
   staticCatalog: catalogs,
 });
 
+app.set('trust proxy', process.env['TRUST_PROXY'] === 'true');
+const cms = cmsConfigFromEnv(process.env);
+const publicConfig = publicConfigFromEnv(process.env);
+const apiUrl = apiUrlFromEnv(process.env);
+
+/** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
+app.use(legacyRedirects());
+
+/** `sitemap.xml` and `robots.txt` are built from the live catalog. */
+app.use(
+  seoRouter({
+    strapiUrl: cms.url,
+    token: cms.token,
+    siteUrl: publicConfig.siteUrl,
+    disallowAll: process.env['ROBOTS_DISALLOW_ALL'] === 'true',
+  }),
+);
+
 app.use(cookieParser());
 app.use((req, res, next) => {
   i18n.init(req, res, () => {
@@ -58,7 +81,7 @@ app.use((req, res, next) => {
 
     (req as express.Request & { setLocale?: (locale: string) => void }).setLocale?.(locale);
 
-    if (!req.cookies[LOCALE_COOKIE]) {
+    if (req.cookies[LOCALE_COOKIE] !== locale) {
       res.cookie(LOCALE_COOKIE, locale, {
         maxAge: 365 * 24 * 60 * 60 * 1000,
         sameSite: 'lax',
@@ -74,27 +97,57 @@ app.use((req, res, next) => {
  * Contact and reservation forms are validated here and forwarded to Strapi, so the browser never
  * needs the CMS URL or CORS access.
  */
-const cms = cmsConfigFromEnv(process.env);
-app.set('trust proxy', process.env['TRUST_PROXY'] === 'true');
 app.use(
   '/api/forms',
   formsProxy({
     strapiUrl: cms.url,
     token: process.env['STRAPI_FORMS_TOKEN'] ?? null,
     secret: process.env['FORMS_PROXY_SECRET'] ?? null,
+    apiUrl,
+    bookingEngine: publicConfig.bookingEngineEnabled,
+    turnstileSecret: process.env['TURNSTILE_SECRET_KEY']?.trim() || null,
+  }),
+);
+
+/** The booking engine's public calls reach desertica-api through here (off until the flag is on). */
+app.use(
+  '/api/public',
+  apiProxy({ apiUrl, enabled: publicConfig.bookingEngineEnabled }),
+);
+
+/**
+ * Serve static files from /browser. Files with a content hash never change; the rest (brand
+ * images, fonts, favicon) are cached for a day so a replaced file reaches visitors.
+ */
+app.use(
+  express.static(browserDistFolder, {
+    index: false,
+    redirect: false,
+    setHeaders: (res, filePath) => {
+      res.setHeader(
+        'Cache-Control',
+        HASHED_ASSET.test(filePath)
+          ? 'public, max-age=31536000, immutable'
+          : 'public, max-age=86400',
+      );
+    },
   }),
 );
 
 /**
- * Serve static files from /browser
+ * Pages depend on the language cookie and on live CMS content, so a shared cache must not store
+ * them: browsers revalidate on every request. `ROBOTS_DISALLOW_ALL` also keeps staging out of
+ * search engines at the header level.
  */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'private, no-cache');
+  res.vary('Cookie');
+  if (process.env['ROBOTS_DISALLOW_ALL'] === 'true') {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  }
+
+  next();
+});
 
 /**
  * Handle all other requests by rendering the Angular application.

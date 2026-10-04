@@ -8,7 +8,6 @@ import {
   makeStateKey,
   signal,
 } from '@angular/core';
-import { Meta } from '@angular/platform-browser';
 import { withBookingDefaults, withFormDefaults, withIntroDefaults } from '../cms/booking-defaults';
 import { CmsApi } from '../cms/cms-api';
 import type { BlogPost, CmsPage, CmsSnapshot, MediaSlot, Product } from '../cms/cms-models';
@@ -41,7 +40,6 @@ export class CatalogService {
   private readonly i18n = inject(I18nService);
   private readonly transfer = inject(TransferState);
   private readonly themeStyles = inject(CmsThemeStyles);
-  private readonly meta = inject(Meta);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly snapshot = signal<CmsSnapshot | null>(null);
 
@@ -155,15 +153,6 @@ export class CatalogService {
     this.snapshot.set(snapshot);
     this.i18n.setOverlay(snapshot.messages);
     this.themeStyles.apply(snapshot.theme);
-
-    const site = this.site();
-    if (site.brandName) {
-      this.meta.updateTag({ property: 'og:site_name', content: site.brandName });
-    }
-
-    if (site.shareImage) {
-      this.meta.updateTag({ property: 'og:image', content: site.shareImage });
-    }
   }
 
   private fallbackImage(kind: 'destination' | 'tour', slug: string): string {
