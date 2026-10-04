@@ -10,7 +10,8 @@
     "serve:ssr:desertica-web": "node dist/desertica-web/server/server.mjs",
     "start:cms": "STRAPI_URL=http://localhost:1337 ng serve",
     "cms:dev": "npm --prefix ../desertica-cms run develop",
-    "cms:seed": "node scripts/build-cms-seed.mjs --out ../desertica-cms/seed/catalog.json"
+    "cms:seed": "node scripts/build-cms-seed.mjs --out ../desertica-cms/seed/catalog.json",
+    "api:generate": "openapi-typescript ../desertica-api/openapi/openapi.yaml -o src/app/core/api/schema.d.ts --default-non-nullable=false"
   },
   "private": true,
   "packageManager": "npm@10.9.7",
@@ -35,6 +36,7 @@
     "i18n": "^0.15.4",
     "libphonenumber-js": "^1.13.13",
     "marked": "^18.0.14",
+    "openapi-fetch": "^0.17.0",
     "rxjs": "~7.8.0",
     "tailwind-merge": "^3.5.0",
     "tslib": "^2.3.0"
@@ -50,6 +52,7 @@
     "@types/node": "^20.17.19",
     "@vitest/coverage-v8": "^4.1.11",
     "jsdom": "^28.0.0",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.12",

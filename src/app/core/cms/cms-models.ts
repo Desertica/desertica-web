@@ -76,6 +76,8 @@ export type BookingSettings = {
   childrenMin: number;
   childrenDefault: number;
   peopleMax: number;
+  /** How many months of availability the online booking calendar loads. */
+  availabilityMonths: number;
   currencyCode: string;
   /** Global assurances shown on every tour page, as i18n keys. */
   assurances: readonly TourFeature[];

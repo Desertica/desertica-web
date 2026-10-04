@@ -9,6 +9,7 @@ export const DEFAULT_BOOKING: BookingSettings = {
   childrenMin: 0,
   childrenDefault: 0,
   peopleMax: 12,
+  availabilityMonths: 3,
   currencyCode: 'USD',
   assurances: [
     {
@@ -58,6 +59,10 @@ export function withBookingDefaults(
     childrenMin: atLeastZero(booking?.childrenMin, DEFAULT_BOOKING.childrenMin),
     childrenDefault: atLeastZero(booking?.childrenDefault, DEFAULT_BOOKING.childrenDefault),
     peopleMax: positive(booking?.peopleMax, DEFAULT_BOOKING.peopleMax),
+    availabilityMonths: Math.min(
+      positive(booking?.availabilityMonths, DEFAULT_BOOKING.availabilityMonths),
+      12,
+    ),
     currencyCode: booking?.currencyCode?.trim() || DEFAULT_BOOKING.currencyCode,
     assurances: booking?.assurances?.length ? booking.assurances : DEFAULT_BOOKING.assurances,
   };
