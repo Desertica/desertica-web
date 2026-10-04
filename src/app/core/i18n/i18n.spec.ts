@@ -96,3 +96,24 @@ describe('I18nService', () => {
     expect(TestBed.inject(I18nService).locale()).toBe('es');
   });
 });
+
+describe('I18nService with blocked storage', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    TestBed.resetTestingModule();
+  });
+
+  it('falls back to the default locale and keeps working when storage throws', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    const i18n = TestBed.inject(I18nService);
+
+    expect(i18n.locale()).toBe('en');
+    expect(() => i18n.setLocale('es')).not.toThrow();
+    expect(i18n.locale()).toBe('es');
+  });
+});

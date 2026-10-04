@@ -79,7 +79,13 @@ export function afterNextGsap(
       if (destroyed) {
         ctx?.revert();
       }
-    })();
+    })().catch((error: unknown) => {
+      // A failed chunk load (flaky network, or the page/test environment going away) must not
+      // surface as an unhandled rejection; the page simply stays without the animation.
+      if (!destroyed) {
+        console.error('[gsap] could not load the animation plugins', error);
+      }
+    });
   });
 
   destroyRef.onDestroy(() => {
