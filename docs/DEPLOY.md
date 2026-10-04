@@ -43,3 +43,22 @@ docker compose up --build
 1. Deploy the CMS, create the admin user, edit `Site — Settings`, upload media.
 2. Deploy the site with `NG_ALLOWED_HOSTS`, `STRAPI_URL`, `STRAPI_PUBLIC_URL` and the shared `FORMS_PROXY_SECRET`.
 3. Terminate TLS in front of both apps and set `TRUST_PROXY=true`.
+
+## Recommended platform: Railway + Cloudflare
+
+For real-environment testing (staging) and a small first production. Railway deploys each private GitHub repo straight from its `Dockerfile` (the same one CI builds, no registry credentials), provisions Postgres in one click, gives services a private network, volumes, TLS domains and separate environments (staging from `develop`, production from `main`) with an option to wait for CI. Cost is usage-based: check current pricing. Put Cloudflare in front for DNS and CDN, and use R2 for media (S3-compatible). Fly.io (region `gru`, São Paulo) or AWS (ECS + RDS + S3) are the alternatives; the containers and variables are the same.
+
+### Site service
+
+1. Add a service from `Desertica/desertica-web` (branch `main` for production, `develop` for staging) after the CMS service from `desertica-cms` exists (see its `docs/DEPLOY.md`).
+2. Variables:
+   - `NG_ALLOWED_HOSTS=tudominio.com,www.tudominio.com,healthcheck.railway.app`. The healthcheck must be allowed or it gets 400 and the deploy never turns healthy (confirm the healthcheck host in Railway's docs if it still fails).
+   - `STRAPI_URL=http://<cms service>.railway.internal:1337` (private network) and `STRAPI_PUBLIC_URL=https://cms.tudominio.com`.
+   - `FORMS_PROXY_SECRET` (same value as the CMS) and `TRUST_PROXY=true`.
+3. Service settings: healthcheck path `/`, port from `PORT` (4000 by default), domain `tudominio.com`, then the Cloudflare record with proxy on.
+4. Cloudflare cache rules: cache `/fonts/*` and the hashed JS/CSS; leave HTML uncached (it is rendered per request).
+5. Staging: duplicate the environment, point it at `develop` and give it its own database, secrets and domain.
+
+### What is verified
+
+The image, `NG_ALLOWED_HOSTS` behaviour, the compose stack with Postgres and the CI and image workflows are tested. The Railway settings above come from its documentation and have **not been tried on a real account**.
