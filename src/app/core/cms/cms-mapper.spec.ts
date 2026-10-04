@@ -119,7 +119,10 @@ const raw: CmsRaw = {
   theme: {
     light: { primary: 'red', unknownToken: 'x' },
     dark: { primary: 'blue' },
-    radius: '1rem',
+    radius: 'large',
+    fontSans: 'inter',
+    fontHeading: 'lora',
+    headerSize: 'compact',
     introEnabled: false,
     introAccent: '#123456',
     introRestScale: 0.9,
@@ -293,7 +296,12 @@ describe('mapCms global settings', () => {
   it('maps theme palettes, ignoring unknown tokens', () => {
     expect(snapshot.theme?.light).toEqual({ primary: 'red' });
     expect(snapshot.theme?.dark).toEqual({ primary: 'blue' });
-    expect(snapshot.theme?.radius).toBe('1rem');
+    expect(snapshot.theme).toMatchObject({
+      radius: 'large',
+      fontSans: 'inter',
+      fontHeading: 'lora',
+      headerSize: 'compact',
+    });
     expect(snapshot.theme?.intro).toEqual({
       enabled: false,
       accent: '#123456',

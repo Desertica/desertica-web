@@ -337,28 +337,54 @@ const PALETTE_KEYS = [
   'secondary', 'secondaryForeground', 'muted', 'mutedForeground', 'accent', 'accentForeground', 'destructive', 'border',
   'input', 'ring', 'tierra', 'tierraForeground', 'arena', 'arenaForeground',
 ];
+// oklch(L C H [/ A]) -> #rrggbb[aa]. OKLab -> linear sRGB (Ottosson) -> gamma-encoded, clamped to the sRGB gamut.
+const oklchToHex = (value) => {
+  const m = value.match(/^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)(?:deg)?\s*(?:\/\s*([\d.]+)(%?))?\s*\)$/);
+  if (!m) throw new Error(`unsupported color (expected oklch): ${value}`);
+  const L = Number(m[1]) / (m[2] ? 100 : 1);
+  const C = Number(m[3]);
+  const h = (Number(m[4]) * Math.PI) / 180;
+  const a = C * Math.cos(h);
+  const b = C * Math.sin(h);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const mm = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const lin = [
+    4.0767416621 * l - 3.3077115913 * mm + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * mm - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * mm + 1.707614701 * s,
+  ];
+  const hex = (v) => {
+    const c = Math.min(1, Math.max(0, v));
+    const g = c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
+    return Math.round(g * 255).toString(16).padStart(2, '0');
+  };
+  const alpha = m[5] === undefined ? 1 : Number(m[5]) / (m[6] ? 100 : 1);
+  return `#${lin.map(hex).join('')}${alpha < 1 ? Math.round(alpha * 255).toString(16).padStart(2, '0') : ''}`;
+};
+// Sanity check on known pairs (white, black, the brand olive); fails the build if the conversion drifts.
+for (const [input, expected] of [['oklch(1 0 0)', '#ffffff'], ['oklch(0 0 0)', '#000000'], ['oklch(0.502 0.07 125.689)', '#5a6b3e']]) {
+  const out = oklchToHex(input);
+  const close = [1, 3, 5].every((i) => Math.abs(parseInt(out.slice(i, i + 2), 16) - parseInt(expected.slice(i, i + 2), 16)) <= 4);
+  if (!close) throw new Error(`oklchToHex(${input}) = ${out}, expected about ${expected}`);
+}
 const palette = (body) => {
   const vars = Object.fromEntries([...body.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map(([, k, v]) => [camel(k), v.trim()]));
-  return Object.fromEntries(PALETTE_KEYS.map((k) => [k, vars[k]]));
+  return Object.fromEntries(PALETTE_KEYS.map((k) => [k, vars[k] && oklchToHex(vars[k])]));
 };
 const light = palette(block(':root'));
 const dark = palette(block(':root\\.dark,\\s*\\.dark'));
 for (const [mode, p] of Object.entries({ light, dark })) {
   for (const k of PALETTE_KEYS) if (!p[k]) throw new Error(`styles.css ${mode} palette lacks ${k}`);
 }
-const cssVar = (body, name) => body.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1].replace(/\s+/g, ' ').trim();
-const themeBlock = css.match(/@theme\s*\{([^}]*)\}/)[1];
-const headerH = (re) => cssVar(re, 'header-h');
-const mediaBlock = (min) => css.match(new RegExp(`@media \\(min-width: ${min}px\\)\\s*\\{\\s*:root\\s*\\{([^}]*)\\}`))[1];
 const themeSetting = {
   light,
   dark,
-  radius: cssVar(block(':root'), 'radius'),
-  fontSans: cssVar(themeBlock, 'font-sans'),
-  fontHeading: cssVar(themeBlock, 'font-heading'),
-  headerHeightSm: headerH(block(':root')),
-  headerHeightMd: headerH(mediaBlock(640)),
-  headerHeightLg: headerH(mediaBlock(1024)),
+  // Editor-facing options (selectors in the CMS). Values map to the frontend's current look.
+  fontSans: 'radio-canada',
+  fontHeading: 'radio-canada',
+  radius: 'medium', // 0.625rem
+  headerSize: 'standard', // 3.5rem / 4rem / 5rem
   introEnabled: true,
   introAccent: '#5a6b3e', // INTRO_OLIVE in src/app/core/animation/wordmark-intro.ts
   introRestScale: 0.85, // INTRO_REST_SCALE

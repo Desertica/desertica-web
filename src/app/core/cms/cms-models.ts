@@ -61,12 +61,11 @@ export type IntroStyle = {
 export type ThemeSettings = {
   light: ThemePalette;
   dark: ThemePalette;
+  /** Option keys chosen in Strapi; `core/theme/cms-theme.ts` maps them to CSS. */
   radius?: string;
   fontSans?: string;
   fontHeading?: string;
-  headerHeightSm?: string;
-  headerHeightMd?: string;
-  headerHeightLg?: string;
+  headerSize?: string;
   intro: Partial<IntroStyle>;
 };
 

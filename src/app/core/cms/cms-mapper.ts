@@ -318,9 +318,7 @@ export function mapTheme(entry: RawEntry): ThemeSettings {
     radius: text(entry['radius']),
     fontSans: text(entry['fontSans']),
     fontHeading: text(entry['fontHeading']),
-    headerHeightSm: text(entry['headerHeightSm']),
-    headerHeightMd: text(entry['headerHeightMd']),
-    headerHeightLg: text(entry['headerHeightLg']),
+    headerSize: text(entry['headerSize']),
     intro: compact({
       enabled: typeof entry['introEnabled'] === 'boolean' ? entry['introEnabled'] : undefined,
       accent: text(entry['introAccent']),

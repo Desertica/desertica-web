@@ -9,6 +9,41 @@ import {
 
 const STYLE_ID = 'cms-theme';
 
+const SYSTEM_FONTS =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'";
+const SERIF_FONTS = "Georgia, Cambria, 'Times New Roman', Times, serif";
+
+/**
+ * CSS font stacks for the fonts editors can pick in Strapi. The files are self-hosted
+ * (`public/fonts`, declared in `src/fonts.css` and `src/styles.css`).
+ */
+export const FONT_STACKS: Readonly<Record<string, string>> = {
+  'radio-canada': `'Radio Canada', ${SYSTEM_FONTS}`,
+  inter: `'Inter', ${SYSTEM_FONTS}`,
+  poppins: `'Poppins', ${SYSTEM_FONTS}`,
+  montserrat: `'Montserrat', ${SYSTEM_FONTS}`,
+  'dm-sans': `'DM Sans', ${SYSTEM_FONTS}`,
+  'playfair-display': `'Playfair Display', ${SERIF_FONTS}`,
+  lora: `'Lora', ${SERIF_FONTS}`,
+  merriweather: `'Merriweather', ${SERIF_FONTS}`,
+  system: SYSTEM_FONTS,
+};
+
+export const RADIUS_VALUES: Readonly<Record<string, string>> = {
+  none: '0',
+  small: '0.25rem',
+  medium: '0.625rem',
+  large: '1rem',
+  full: '1.5rem',
+};
+
+/** Header height at the three breakpoints (base, >=640px, >=1024px). */
+export const HEADER_SIZES: Readonly<Record<string, readonly [string, string, string]>> = {
+  compact: ['3rem', '3.5rem', '4rem'],
+  standard: ['3.5rem', '4rem', '5rem'],
+  tall: ['4rem', '5rem', '6rem'],
+};
+
 /** Only plain CSS values are accepted: no braces, semicolons or markup. */
 function safe(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -22,19 +57,36 @@ function declarations(palette: ThemePalette): string[] {
   });
 }
 
+function fontStack(choice: string | undefined): string | undefined {
+  const value = safe(choice);
+  if (!value) {
+    return undefined;
+  }
+
+  // A known option, or a plain CSS font-family list kept for compatibility.
+  return FONT_STACKS[value] ?? (/[,'"]/.test(value) ? value : undefined);
+}
+
+function radiusValue(choice: string | undefined): string | undefined {
+  const value = safe(choice);
+  return value
+    ? (RADIUS_VALUES[value] ?? (/^\d*\.?\d+(rem|em|px)$/.test(value) ? value : undefined))
+    : undefined;
+}
+
 /** CSS that overrides the design tokens in `styles.css` with the values edited in Strapi. */
 export function buildThemeCss(theme: ThemeSettings): string {
   const root = [...declarations(theme.light)];
+  const sizes = theme.headerSize ? HEADER_SIZES[theme.headerSize] : undefined;
   const extras: [string, string | undefined][] = [
-    ['--radius', theme.radius],
-    ['--font-sans', theme.fontSans],
-    ['--font-heading', theme.fontHeading],
-    ['--header-h', theme.headerHeightSm],
+    ['--radius', radiusValue(theme.radius)],
+    ['--font-sans', fontStack(theme.fontSans)],
+    ['--font-heading', fontStack(theme.fontHeading)],
+    ['--header-h', sizes?.[0]],
   ];
   for (const [name, value] of extras) {
-    const clean = safe(value);
-    if (clean) {
-      root.push(`${name}:${clean}`);
+    if (value) {
+      root.push(`${name}:${value}`);
     }
   }
 
@@ -48,14 +100,9 @@ export function buildThemeCss(theme: ThemeSettings): string {
     rules.push(`:root.dark,.dark{${dark.join(';')}}`);
   }
 
-  const md = safe(theme.headerHeightMd);
-  if (md) {
-    rules.push(`@media (min-width:640px){:root{--header-h:${md}}}`);
-  }
-
-  const lg = safe(theme.headerHeightLg);
-  if (lg) {
-    rules.push(`@media (min-width:1024px){:root{--header-h:${lg}}}`);
+  if (sizes) {
+    rules.push(`@media (min-width:640px){:root{--header-h:${sizes[1]}}}`);
+    rules.push(`@media (min-width:1024px){:root{--header-h:${sizes[2]}}}`);
   }
 
   return rules.join('');
