@@ -1,8 +1,12 @@
 import type { CatalogDestination } from '../catalog/tours';
-import type { TourPage } from '../catalog/tour-pages';
+import type { TourFeature, TourPage } from '../catalog/tour-pages';
 import type { AppLocale, Messages } from '../i18n/catalogs';
 
 export type SiteSettings = {
+  brandName: string;
+  legalYear: number;
+  /** Image used for `og:image`; empty when none is set. */
+  shareImage: string;
   email: string;
   phone: string;
   /** Digits only, e.g. `519XXXXXXXXX`. */
@@ -16,6 +20,88 @@ export type SiteSettings = {
   tripadvisor: string;
   legalName: string;
   ruc: string;
+};
+
+/** CSS custom properties a palette can override, keyed by the CMS field name. */
+export const PALETTE_TOKENS = {
+  background: '--background',
+  foreground: '--foreground',
+  card: '--card',
+  cardForeground: '--card-foreground',
+  popover: '--popover',
+  popoverForeground: '--popover-foreground',
+  primary: '--primary',
+  primaryForeground: '--primary-foreground',
+  secondary: '--secondary',
+  secondaryForeground: '--secondary-foreground',
+  muted: '--muted',
+  mutedForeground: '--muted-foreground',
+  accent: '--accent',
+  accentForeground: '--accent-foreground',
+  destructive: '--destructive',
+  border: '--border',
+  input: '--input',
+  ring: '--ring',
+  tierra: '--tierra',
+  tierraForeground: '--tierra-foreground',
+  arena: '--arena',
+  arenaForeground: '--arena-foreground',
+} as const;
+
+export type PaletteToken = keyof typeof PALETTE_TOKENS;
+export type ThemePalette = Partial<Record<PaletteToken, string>>;
+
+export type IntroStyle = {
+  enabled: boolean;
+  accent: string;
+  restScale: number;
+  failsafeMs: number;
+};
+
+export type ThemeSettings = {
+  light: ThemePalette;
+  dark: ThemePalette;
+  radius?: string;
+  fontSans?: string;
+  fontHeading?: string;
+  headerHeightSm?: string;
+  headerHeightMd?: string;
+  headerHeightLg?: string;
+  intro: Partial<IntroStyle>;
+};
+
+export type BookingSettings = {
+  depositRate: number;
+  adultsMin: number;
+  adultsDefault: number;
+  childrenMin: number;
+  childrenDefault: number;
+  peopleMax: number;
+  currencyCode: string;
+  /** Global assurances shown on every tour page, as i18n keys. */
+  assurances: readonly TourFeature[];
+};
+
+export type FormSettings = {
+  nameMin: number;
+  nameMax: number;
+  emailMax: number;
+  messageMax: number;
+};
+
+export type CmsNavLink = {
+  labelKey: string;
+  path: string;
+  fragment?: string;
+  /** `tours-menu` marks the header item whose dropdown is built from destinations and tours. */
+  kind: 'link' | 'tours-menu';
+};
+
+export type CmsNavigation = {
+  headerLinks: readonly CmsNavLink[];
+  footerBrandLinks: readonly CmsNavLink[];
+  footerLegalLinks: readonly CmsNavLink[];
+  planTrip: { labelKey: string; path: string };
 };
 
 export type MediaSlot = {
@@ -68,6 +154,10 @@ export type CmsSnapshot = {
   destinations: readonly CatalogDestination[];
   tourPages: Readonly<Record<string, TourPage>>;
   site: SiteSettings | null;
+  theme: ThemeSettings | null;
+  booking: BookingSettings | null;
+  forms: FormSettings | null;
+  navigation: CmsNavigation | null;
   messages: Readonly<Partial<Record<AppLocale, Messages>>>;
   media: Readonly<Record<string, MediaSlot>>;
   pages: Readonly<Record<string, CmsPage>>;

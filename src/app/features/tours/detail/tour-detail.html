@@ -26,7 +26,7 @@
           [tour]="data.tour"
           [page]="data.page"
         />
-        <app-tour-assurances />
+        <app-tour-assurances [custom]="data.page.assurances" />
         @if (data.page.itineraryFile; as file) {
           <a hlmBtn class="w-full" [href]="file" download>
             <ng-icon name="lucideDownload" />

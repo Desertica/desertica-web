@@ -25,6 +25,7 @@ import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { CountryCode } from 'libphonenumber-js/min';
 import { CatalogService } from '../../core/catalog/catalog';
+import { DEFAULT_FORMS } from '../../core/cms/booking-defaults';
 import { FormsApi } from '../../core/cms/forms-api';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -40,10 +41,10 @@ import {
   type PhoneCountry,
 } from './phone';
 
-export const NAME_MIN = 2;
-export const NAME_MAX = 80;
-export const EMAIL_MAX = 254;
-export const MESSAGE_MAX = 500;
+export const NAME_MIN = DEFAULT_FORMS.nameMin;
+export const NAME_MAX = DEFAULT_FORMS.nameMax;
+export const EMAIL_MAX = DEFAULT_FORMS.emailMax;
+export const MESSAGE_MAX = DEFAULT_FORMS.messageMax;
 
 @Component({
   selector: 'app-contact',
@@ -69,9 +70,10 @@ export class Contact {
 
   protected readonly i18n = inject(I18nService);
   protected readonly bandImage = inject(CatalogService).mediaImage('contact.band', CONTACT_BAND_IMAGE);
-  protected readonly nameMax = NAME_MAX;
-  protected readonly emailMax = EMAIL_MAX;
-  protected readonly messageMax = MESSAGE_MAX;
+  private readonly limits = inject(CatalogService).forms();
+  protected readonly nameMax = this.limits.nameMax;
+  protected readonly emailMax = this.limits.emailMax;
+  protected readonly messageMax = this.limits.messageMax;
   protected readonly messageChars = signal(0);
   protected readonly countryCode = signal<CountryCode>(DEFAULT_PHONE_COUNTRY);
   protected readonly countries = computed(() => phoneCountries(this.i18n.locale()));
@@ -84,11 +86,11 @@ export class Contact {
   protected readonly form = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(NAME_MIN), Validators.maxLength(NAME_MAX)],
+      validators: [Validators.required, Validators.minLength(this.limits.nameMin), Validators.maxLength(this.limits.nameMax)],
     }),
     email: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.email, Validators.maxLength(EMAIL_MAX)],
+      validators: [Validators.required, Validators.email, Validators.maxLength(this.limits.emailMax)],
     }),
     whatsapp: new FormControl('', {
       nonNullable: true,
@@ -96,7 +98,7 @@ export class Contact {
     }),
     message: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(MESSAGE_MAX)],
+      validators: [Validators.required, Validators.maxLength(this.limits.messageMax)],
     }),
     captcha: new FormControl(false, {
       nonNullable: true,
@@ -130,8 +132,10 @@ export class Contact {
 
   protected onMessageInput(): void {
     const value = this.form.controls.message.value;
-    if (value.length > MESSAGE_MAX) {
-      this.form.controls.message.setValue(value.slice(0, MESSAGE_MAX), { emitEvent: false });
+    if (value.length > this.limits.messageMax) {
+      this.form.controls.message.setValue(value.slice(0, this.limits.messageMax), {
+        emitEvent: false,
+      });
     }
 
     this.messageChars.set(this.form.controls.message.value.length);

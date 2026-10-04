@@ -23,10 +23,10 @@
       <div class="flex flex-col gap-4">
         <p class="flex items-center gap-2.5">
           <app-brand-mark />
-          <span class="text-foreground font-heading text-xl tracking-tight">Desértica</span>
+          <span class="text-foreground font-heading text-xl tracking-tight">{{ brandName() }}</span>
         </p>
         <ul class="flex flex-col gap-2 text-base">
-          @for (link of brandLinks; track link.path) {
+          @for (link of brandLinks(); track link.path) {
             <li>
               <a
                 [routerLink]="link.path"
@@ -155,7 +155,7 @@
       class="text-muted-foreground mt-8 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between lg:mt-10"
     >
       <nav class="flex flex-wrap gap-5" [attr.aria-label]="'nav.footer' | translate: i18n.locale()">
-        @for (link of legalLinks; track link.path) {
+        @for (link of legalLinks(); track link.path) {
           <a [routerLink]="link.path" class="hover:text-foreground py-0.5">{{
             link.labelKey | translate: i18n.locale()
           }}</a>

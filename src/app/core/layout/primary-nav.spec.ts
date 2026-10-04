@@ -1,4 +1,6 @@
+import { tourDestinations } from '../catalog/tours';
 import {
+  buildPrimaryNavLinks,
   isNavGroup,
   mobilePrimaryNavLinks,
   navItemTrack,
@@ -72,5 +74,25 @@ describe('primary nav', () => {
       '/tours',
     ]);
     expect(isNavGroup(mobilePrimaryNavLinks[3]!)).toBe(true);
+  });
+});
+
+describe('primary nav from CMS links', () => {
+  it('orders items as configured and builds the dropdown from destinations', () => {
+    const links = buildPrimaryNavLinks(tourDestinations, [
+      { labelKey: 'cms.nav.header.0.label', path: '/about', kind: 'link' },
+      { labelKey: 'cms.nav.header.1.label', path: '/tours', kind: 'tours-menu' },
+    ]);
+
+    expect(links.map((item) => item.path)).toEqual(['/about', '/tours']);
+    const tours = links[1];
+    expect(tours && isNavGroup(tours) && tours.labelKey).toBe('cms.nav.header.1.label');
+    expect(toursNavColumns(links)).toHaveLength(tourDestinations.length);
+  });
+
+  it('falls back to the static list when the CMS has no links', () => {
+    expect(buildPrimaryNavLinks(tourDestinations, []).map((item) => item.path)).toEqual(
+      primaryNavLinks.map((item) => item.path),
+    );
   });
 });

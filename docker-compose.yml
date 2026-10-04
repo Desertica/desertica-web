@@ -1,0 +1,68 @@
+# Local production-like stack: the site, the CMS (built from the sibling repo) and Postgres.
+#   git clone https://github.com/Desertica/desertica-cms.git ../desertica-cms
+#   cp .env.example .env   # and fill FORMS_PROXY_SECRET, the CMS secrets below
+#   docker compose up --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: desertica
+      POSTGRES_USER: desertica
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desertica -d desertica"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  cms:
+    build: ../desertica-cms
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+      PUBLIC_URL: ${CMS_PUBLIC_URL:-http://localhost:1337}
+      CLIENT_URLS: ${WEB_PUBLIC_URL:-http://localhost:4000}
+      APP_KEYS: ${APP_KEYS:?set APP_KEYS}
+      API_TOKEN_SALT: ${API_TOKEN_SALT:?set API_TOKEN_SALT}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET:?set ADMIN_JWT_SECRET}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT:?set TRANSFER_TOKEN_SALT}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      FORMS_PROXY_SECRET: ${FORMS_PROXY_SECRET:?set FORMS_PROXY_SECRET}
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: desertica
+      DATABASE_USERNAME: desertica
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "1337:1337"
+    volumes:
+      - cms-uploads:/opt/app/public/uploads
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      cms:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      STRAPI_URL: http://cms:1337
+      STRAPI_PUBLIC_URL: ${CMS_PUBLIC_URL:-http://localhost:1337}
+      FORMS_PROXY_SECRET: ${FORMS_PROXY_SECRET}
+      NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS:-localhost}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+    ports:
+      - "4000:4000"
+
+volumes:
+  db-data:
+  cms-uploads:

@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, afterNextRender, computed, inject, signal } from '@angular/core';
+import { CatalogService } from '../catalog/catalog';
 
 export const INTRO_STORAGE_KEY = 'desertica-intro';
 
@@ -14,6 +15,7 @@ export function isHomePath(pathname: string): boolean {
 export class IntroService {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly catalog = inject(CatalogService);
   private readonly openedOnHome = this.readIsHome();
   private readonly ready = signal(false);
 
@@ -27,6 +29,10 @@ export class IntroService {
   }
 
   shouldPlay(): boolean {
+    if (!this.catalog.introStyle().enabled) {
+      return false;
+    }
+
     if (!isPlatformBrowser(this.platformId)) {
       return false;
     }

@@ -31,7 +31,7 @@
         {{ 'home.heroLead' | translate: i18n.locale() }}
       </p>
       <div class="pointer-events-auto mt-2 flex flex-wrap items-center justify-center gap-3">
-        <a hlmBtn [routerLink]="planTrip.path">{{ planTrip.labelKey | translate: i18n.locale() }}</a>
+        <a hlmBtn [routerLink]="planTrip().path">{{ planTrip().labelKey | translate: i18n.locale() }}</a>
         <a
           hlmBtn
           variant="outline"
@@ -92,9 +92,9 @@
         appPlanTripHover
         size="lg"
         class="mt-10 w-fit transition-none"
-        [routerLink]="planTrip.path"
+        [routerLink]="planTrip().path"
       >
-        {{ planTrip.labelKey | translate: i18n.locale() }}
+        {{ planTrip().labelKey | translate: i18n.locale() }}
       </a>
     </div>
   </div>
@@ -106,7 +106,7 @@
       <a
         appPlanTripHover
         class="dest-card block transition-none"
-        [routerLink]="planTrip.path"
+        [routerLink]="planTrip().path"
         [fragment]="destination.id"
       >
         <section hlmCard class="rounded-none py-0 shadow-none ring-0">
@@ -131,7 +131,7 @@
                 </p>
               </div>
               <span [class]="reserveBtnClass">
-                {{ planTrip.labelKey | translate: i18n.locale() }}
+                {{ planTrip().labelKey | translate: i18n.locale() }}
               </span>
             </div>
           </div>

@@ -38,6 +38,10 @@ export type TourPage = {
   packKeys: readonly string[];
   notesKeys: readonly string[];
   termsSummaryKey?: string;
+  /** Per-tour override of the global booking assurances. */
+  assurances?: readonly TourFeature[];
+  seoTitleKey?: string;
+  seoDescriptionKey?: string;
   itineraryFile?: string;
 };
 

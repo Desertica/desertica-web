@@ -1,4 +1,4 @@
-import { mapCms, mediaUrl, type CmsRaw, type RawEntry } from './cms-mapper';
+import { mapCms, mapTheme, mediaUrl, type CmsRaw, type RawEntry } from './cms-mapper';
 import { mapSite } from './cms-mapper';
 
 const options = { mediaBase: 'https://cms.test', fallbackImage: () => 'https://fallback/img.jpg' };
@@ -6,6 +6,8 @@ const options = { mediaBase: 'https://cms.test', fallbackImage: () => 'https://f
 const destination = (locale: 'en' | 'es'): RawEntry => ({
   slug: 'huacachina',
   order: 0,
+  footerOrder: 2,
+  showInFooter: false,
   imageUrl: 'https://img/dest.jpg',
   title: locale === 'en' ? 'Huacachina' : 'Huacachina ES',
   lead: locale === 'en' ? 'Dunes' : 'Dunas',
@@ -30,6 +32,9 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   lead: locale === 'en' ? 'Lead' : null,
   termsSummary: locale === 'en' ? 'Summary' : null,
   itineraryFileUrl: '/files/itinerary.pdf',
+  seoTitle: locale === 'en' ? 'SEO title' : null,
+  seoDescription: null,
+  assurances: [{ icon: 'lucideShield', title: locale === 'en' ? 'Safe' : 'Seguro', body: 'Body' }],
   meeting: locale === 'en' ? 'Meet' : 'Punto',
   paragraphs: [{ text: locale === 'en' ? 'First' : 'Primero' }],
   expandedParagraphs: [{ text: 'Long' }],
@@ -102,7 +107,60 @@ const raw: CmsRaw = {
   products: both((l) => [
     { slug: 'pisco', order: 1, price: '25', title: l === 'en' ? 'Pisco' : 'Pisco ES' },
   ]),
-  site: { email: 'a@b.pe', phone: '+51 1', whatsapp: '+51 999-000', ruc: '123' },
+  site: {
+    brandName: 'Desértica',
+    legalYear: 2027,
+    shareImage: { url: '/uploads/share.jpg' },
+    email: 'a@b.pe',
+    phone: '+51 1',
+    whatsapp: '+51 999-000',
+    ruc: '123',
+  },
+  theme: {
+    light: { primary: 'red', unknownToken: 'x' },
+    dark: { primary: 'blue' },
+    radius: '1rem',
+    introEnabled: false,
+    introAccent: '#123456',
+    introRestScale: 0.9,
+    introFailsafeMs: 5000,
+  },
+  forms: { nameMin: 3, nameMax: 60, emailMax: 200, messageMax: 400 },
+  booking: {
+    en: {
+      depositRate: 0.3,
+      adultsMin: 1,
+      adultsDefault: 2,
+      childrenMin: 0,
+      childrenDefault: 0,
+      peopleMax: 10,
+      currencyCode: 'USD',
+      assurances: [{ icon: 'lucideClock', title: 'Free cancel', body: 'Up to 24h' }],
+    },
+    es: { assurances: [{ icon: 'lucideClock', title: 'Cancelación gratis', body: 'Hasta 24h' }] },
+  },
+  navigation: {
+    en: {
+      headerLinks: [
+        { label: 'Tours', path: '/tours', kind: 'tours-menu' },
+        { label: 'About', path: '/about', kind: 'link' },
+      ],
+      footerBrandLinks: [{ label: 'Blog', path: '/blog' }],
+      footerLegalLinks: [],
+      planTripLabel: 'Plan your trip',
+      planTripPath: '/contact',
+    },
+    es: {
+      headerLinks: [
+        { label: 'Tours', path: '/tours', kind: 'tours-menu' },
+        { label: 'Nosotros', path: '/about', kind: 'link' },
+      ],
+      footerBrandLinks: [{ label: 'Blog', path: '/blog' }],
+      footerLegalLinks: [],
+      planTripLabel: 'Planea tu viaje',
+      planTripPath: '/contact',
+    },
+  },
 };
 
 describe('mapCms', () => {
@@ -217,5 +275,73 @@ describe('mediaUrl', () => {
 describe('mapSite', () => {
   it('strips non-digits from the WhatsApp number', () => {
     expect(mapSite({ whatsapp: '+51 (999) 000-111' }).whatsapp).toBe('51999000111');
+  });
+});
+
+describe('mapCms global settings', () => {
+  const snapshot = mapCms(raw, options);
+
+  it('maps the site settings including the share image', () => {
+    expect(snapshot.site).toMatchObject({
+      brandName: 'Desértica',
+      legalYear: 2027,
+      shareImage: 'https://cms.test/uploads/share.jpg',
+      whatsapp: '51999000',
+    });
+  });
+
+  it('maps theme palettes, ignoring unknown tokens', () => {
+    expect(snapshot.theme?.light).toEqual({ primary: 'red' });
+    expect(snapshot.theme?.dark).toEqual({ primary: 'blue' });
+    expect(snapshot.theme?.radius).toBe('1rem');
+    expect(snapshot.theme?.intro).toEqual({
+      enabled: false,
+      accent: '#123456',
+      restScale: 0.9,
+      failsafeMs: 5000,
+    });
+    expect(mapTheme({ light: null }).light).toEqual({});
+  });
+
+  it('maps booking rules and localized assurances', () => {
+    expect(snapshot.booking).toMatchObject({
+      depositRate: 0.3,
+      adultsDefault: 2,
+      peopleMax: 10,
+      assurances: [
+        {
+          icon: 'lucideClock',
+          titleKey: 'cms.booking.assurances.0.title',
+          bodyKey: 'cms.booking.assurances.0.body',
+        },
+      ],
+    });
+    expect(snapshot.messages.es?.['cms.booking.assurances.0.title']).toBe('Cancelación gratis');
+    expect(snapshot.forms).toEqual({ nameMin: 3, nameMax: 60, emailMax: 200, messageMax: 400 });
+  });
+
+  it('maps navigation with localized labels and the tours menu marker', () => {
+    expect(snapshot.navigation?.headerLinks).toEqual([
+      {
+        labelKey: 'cms.nav.header.0.label',
+        path: '/tours',
+        fragment: undefined,
+        kind: 'tours-menu',
+      },
+      { labelKey: 'cms.nav.header.1.label', path: '/about', fragment: undefined, kind: 'link' },
+    ]);
+    expect(snapshot.messages.es?.['cms.nav.header.1.label']).toBe('Nosotros');
+    expect(snapshot.messages.en?.['cms.nav.planTrip.label']).toBe('Plan your trip');
+    expect(snapshot.navigation?.planTrip.path).toBe('/contact');
+    expect(snapshot.navigation?.footerBrandLinks).toHaveLength(1);
+  });
+
+  it('maps per-tour assurances, SEO keys and footer settings', () => {
+    const page = snapshot.tourPages['a-tour'];
+    expect(page?.assurances?.[0]?.titleKey).toBe('cms.tours.a-tour.assurances.0.title');
+    expect(snapshot.messages.es?.['cms.tours.a-tour.assurances.0.title']).toBe('Seguro');
+    expect(page?.seoTitleKey).toBe('cms.tours.a-tour.seoTitle');
+    expect(page?.seoDescriptionKey).toBeUndefined();
+    expect(snapshot.destinations[0]).toMatchObject({ footerOrder: 2, showInFooter: false });
   });
 });

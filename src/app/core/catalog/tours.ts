@@ -19,6 +19,10 @@ export type CatalogDestination = {
   titleKey: string;
   allLabelKey: string;
   hubPath: `/${string}`;
+  /** Position in the footer columns; unset keeps the catalog order. */
+  footerOrder?: number;
+  /** Hide the destination from the footer when `false`. */
+  showInFooter?: boolean;
   leadKey: string;
   image: string;
   tours: readonly CatalogTour[];

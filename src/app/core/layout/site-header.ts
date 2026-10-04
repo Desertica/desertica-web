@@ -14,7 +14,7 @@ import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
 import { LocaleSwitcher } from './locale-switcher';
 import { CatalogService } from '../catalog/catalog';
-import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
+import { isNavGroup, navItemTrack } from './primary-nav';
 
 @Component({
   selector: 'app-site-header',
@@ -164,9 +164,9 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
             appPlanTripHover
             size="lg"
             class="hidden shrink-0 transition-none lg:inline-flex"
-            [routerLink]="planTrip.path"
+            [routerLink]="planTrip().path"
           >
-            {{ planTrip.labelKey | translate: i18n.locale() }}
+            {{ planTrip().labelKey | translate: i18n.locale() }}
           </a>
 
           <hlm-sheet
@@ -202,10 +202,10 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
                   hlmBtn
                   appPlanTripHover
                   class="mb-2 transition-none"
-                  [routerLink]="planTrip.path"
+                  [routerLink]="planTrip().path"
                   (click)="closeMobileNav(mobileNav)"
                 >
-                  {{ planTrip.labelKey | translate: i18n.locale() }}
+                  {{ planTrip().labelKey | translate: i18n.locale() }}
                 </a>
                 @for (item of mobileNavLinks(); track item.path) {
                   @if (!isGroup(item)) {
@@ -320,7 +320,7 @@ export class SiteHeader {
   private readonly catalog = inject(CatalogService);
   protected readonly navLinks = this.catalog.navLinks;
   protected readonly mobileNavLinks = computed(() => [...this.navLinks()].reverse());
-  protected readonly planTrip = planTripLink;
+  protected readonly planTrip = this.catalog.planTrip;
   protected readonly isGroup = isNavGroup;
   protected readonly navTrack = navItemTrack;
   protected readonly mobileToursOpen = signal(false);

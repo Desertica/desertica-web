@@ -2,6 +2,9 @@ import type { SiteSettings } from './cms-models';
 
 /** Placeholder contact data used until the CMS `site-setting` entry is published. */
 export const DEFAULT_SITE: SiteSettings = {
+  brandName: 'Desértica',
+  legalYear: 2026,
+  shareImage: '',
   email: 'xxxxxx@desertica.pe',
   phone: '+51 9XX XXX XXX',
   whatsapp: '519XXXXXXXX',
@@ -40,7 +43,9 @@ export function withSiteDefaults(site: Partial<SiteSettings> | null | undefined)
   for (const key of Object.keys(DEFAULT_SITE) as (keyof SiteSettings)[]) {
     const value = site?.[key];
     if (typeof value === 'string' && value.trim()) {
-      merged[key] = value;
+      (merged as Record<string, string | number>)[key] = value;
+    } else if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      (merged as Record<string, string | number>)[key] = value;
     }
   }
 

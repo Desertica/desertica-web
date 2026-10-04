@@ -7,10 +7,10 @@ import {
   computed,
   inject,
 } from '@angular/core';
+import { CatalogService } from '../catalog/catalog';
 import { afterNextGsap } from '../animation/gsap';
 import { IntroService } from '../animation/intro';
 import {
-  INTRO_FAILSAFE_MS,
   appendWordmarkDraw,
   prepareWordmarkDraw,
   queryWordmark,
@@ -46,6 +46,7 @@ export class IntroOverlay {
   private readonly destroyRef = inject(DestroyRef);
   private readonly i18n = inject(I18nService);
   private readonly ngZone = inject(NgZone);
+  private readonly style = inject(CatalogService).introStyle();
 
   protected readonly label = computed(() => {
     this.i18n.locale();
@@ -57,7 +58,7 @@ export class IntroOverlay {
     this.ngZone.runOutsideAngular(() => {
       const failsafe = window.setTimeout(() => {
         this.ngZone.run(() => this.intro.complete());
-      }, INTRO_FAILSAFE_MS);
+      }, this.style.failsafeMs);
       this.destroyRef.onDestroy(() => {
         cancelled = true;
         window.clearTimeout(failsafe);
@@ -88,7 +89,7 @@ export class IntroOverlay {
             },
           });
 
-          appendWordmarkDraw(tl, parts);
+          appendWordmarkDraw(tl, parts, this.style);
           tl.to(this.host.nativeElement, { autoAlpha: 0, duration: 0.6, ease: 'power2.out' });
         }, this.host.nativeElement);
       },
