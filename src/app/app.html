@@ -15,6 +15,7 @@
   </div>
 </div>
 <app-whatsapp-fab [inert]="intro.showOverlay()"></app-whatsapp-fab>
+<app-cookie-banner [inert]="intro.showOverlay()" />
 <hlm-toaster [theme]="theme()" [inert]="intro.showOverlay()" />
 @if (intro.showOverlay()) {
   <app-intro-overlay />

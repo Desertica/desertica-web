@@ -7,10 +7,12 @@ import {
 } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HlmToaster } from '@spartan-ng/helm/sonner';
+import { AnalyticsService } from './core/analytics/analytics';
 import { IntroService } from './core/animation/intro';
 import { SmoothScroll } from './core/animation/smooth-scroll';
 import { I18nService } from './core/i18n/i18n';
 import { TranslatePipe } from './core/i18n/translate-pipe';
+import { CookieBanner } from './core/layout/cookie-banner';
 import { IntroOverlay } from './core/layout/intro-overlay';
 import { SiteFooter } from './core/layout/site-footer';
 import { SiteHeader } from './core/layout/site-header';
@@ -28,6 +30,7 @@ import { ThemeService } from './core/theme/theme';
     HlmToaster,
     TranslatePipe,
     IntroOverlay,
+    CookieBanner,
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -42,8 +45,11 @@ export class App {
   protected readonly intro = inject(IntroService);
   protected readonly theme = inject(ThemeService).theme;
   protected readonly i18n = inject(I18nService);
+  private readonly analytics = inject(AnalyticsService);
 
   constructor() {
+    this.analytics.start();
+
     afterNextRender(() => {
       const wrapper = this.host.nativeElement.querySelector('#smooth-wrapper');
       const content = this.host.nativeElement.querySelector('#smooth-content');

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject } from '@angular/core';
+import { AnalyticsService } from '../analytics/analytics';
 import { afterNextGsapUi } from '../animation/gsap-ui';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
@@ -25,6 +26,7 @@ type TipTimeline = {
       rel="noopener noreferrer"
       [attr.aria-label]="'a11y.whatsapp' | translate: i18n.locale()"
       [attr.aria-describedby]="tooltipId"
+      (click)="trackClick()"
       (pointerenter)="play()"
       (pointerleave)="reverse()"
       (focusin)="play()"
@@ -61,6 +63,7 @@ export class WhatsappFab {
 
   protected readonly i18n = inject(I18nService);
   private readonly catalog = inject(CatalogService);
+  private readonly analytics = inject(AnalyticsService);
   protected readonly href = computed(() => this.catalog.contact().whatsapp);
   protected readonly tooltipId = 'whatsapp-fab-tooltip';
 
@@ -112,6 +115,10 @@ export class WhatsappFab {
           );
       }, root);
     });
+  }
+
+  protected trackClick(): void {
+    this.analytics.track('click_whatsapp', { placement: 'floating_button' });
   }
 
   protected play(): void {
