@@ -10,6 +10,7 @@ import {
 import { Router } from '@angular/router';
 import { AnalyticsService, asCurrency } from '../../../core/analytics/analytics';
 import { tourItem } from '../../../core/analytics/items';
+import { PUBLIC_CONFIG } from '../../../core/config/public-config';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
@@ -22,6 +23,7 @@ import { touristTripLd } from '../../../core/seo/json-ld';
 import { usePageMeta } from '../../../core/seo/page-meta';
 import { SeoService } from '../../../core/seo/seo';
 import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
+import { BookingPanel } from '../../booking/booking-panel';
 import { TourAssurances } from './tour-assurances';
 import { TourBook } from './tour-book';
 import { TourFeatures } from './tour-features';
@@ -43,6 +45,7 @@ import { TourVideos } from './tour-videos';
     TourFeatures,
     TourAssurances,
     TourBook,
+    BookingPanel,
     TourTimeline,
     TourFullDetails,
     TourVideos,
@@ -61,6 +64,8 @@ export class TourDetail {
   private readonly catalog = inject(CatalogService);
   protected readonly resolved = computed(() => this.catalog.resolvedTour(this.id()));
   protected readonly hasDetails = tourHasDetails;
+  /** Online booking replaces the WhatsApp form only while the flag is on. */
+  protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
 
   constructor() {
     effect(() => {

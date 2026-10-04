@@ -47,3 +47,9 @@ export function publicConfigFromEnv(env: Record<string, string | undefined>): Pu
     siteUrl: siteUrl || null,
   };
 }
+
+/** `API_URL` is the origin of desertica-api (no `/api`); only the server ever reads it. */
+export function apiUrlFromEnv(env: Record<string, string | undefined>): string | null {
+  const url = env['API_URL']?.trim().replace(/\/+$/, '');
+  return url || null;
+}

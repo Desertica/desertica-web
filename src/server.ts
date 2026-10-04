@@ -9,7 +9,8 @@ import express from 'express';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
-import { publicConfigFromEnv } from './app/core/config/public-config';
+import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
+import { apiProxy } from './api-proxy';
 import { formsProxy } from './forms-proxy';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import {
@@ -53,6 +54,7 @@ const i18n = new I18n({
 app.set('trust proxy', process.env['TRUST_PROXY'] === 'true');
 const cms = cmsConfigFromEnv(process.env);
 const publicConfig = publicConfigFromEnv(process.env);
+const apiUrl = apiUrlFromEnv(process.env);
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
 app.use(legacyRedirects());
@@ -101,7 +103,16 @@ app.use(
     strapiUrl: cms.url,
     token: process.env['STRAPI_FORMS_TOKEN'] ?? null,
     secret: process.env['FORMS_PROXY_SECRET'] ?? null,
+    apiUrl,
+    bookingEngine: publicConfig.bookingEngineEnabled,
+    turnstileSecret: process.env['TURNSTILE_SECRET_KEY']?.trim() || null,
   }),
+);
+
+/** The booking engine's public calls reach desertica-api through here (off until the flag is on). */
+app.use(
+  '/api/public',
+  apiProxy({ apiUrl, enabled: publicConfig.bookingEngineEnabled }),
 );
 
 /**

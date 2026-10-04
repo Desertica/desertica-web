@@ -1,5 +1,9 @@
 import {
+  COMPLAINT_FIELDS,
+  COMPLAINT_FLAGS,
+  COMPLAINT_NUMBERS,
   CONTACT_FIELDS,
+  complaintIsConsistent,
   RESERVATION_FIELDS,
   RESERVATION_NUMBERS,
   sanitize,
@@ -63,5 +67,61 @@ describe('forms validation', () => {
     expect(
       sanitize({ ...reservation, adults: undefined }, RESERVATION_FIELDS, RESERVATION_NUMBERS),
     ).toBeNull();
+  });
+
+  describe('complaints', () => {
+    const complaint = {
+      kind: 'QUEJA',
+      goodType: 'PRODUCT',
+      consumerName: 'Ana Perez',
+      idDocType: 'CE',
+      idDocNumber: '001234567',
+      address: 'Calle 1',
+      email: 'ana@example.com',
+      description: 'Pisco bottle',
+      detail: 'Broken seal',
+      request: 'Replacement',
+    };
+    const clean = (input: unknown) =>
+      sanitize(input, COMPLAINT_FIELDS, COMPLAINT_NUMBERS, COMPLAINT_FLAGS);
+
+    it('accepts every CreateComplaint field and trims text', () => {
+      const data = clean({
+        ...complaint,
+        consumerName: ' Ana Perez ',
+        phone: '+51987654321',
+        bookingRef: 'DES-2026-0001',
+        amountCents: 5000,
+        currency: 'USD',
+        isMinor: true,
+        turnstileToken: 'tt',
+      });
+
+      expect(data).toMatchObject({
+        consumerName: 'Ana Perez',
+        amountCents: 5000,
+        currency: 'USD',
+        isMinor: true,
+        bookingRef: 'DES-2026-0001',
+        turnstileToken: 'tt',
+      });
+      expect(data && complaintIsConsistent(data)).toBe(true);
+    });
+
+    it('requires the legal fields and rejects malformed enums, numbers and flags', () => {
+      for (const missing of ['kind', 'goodType', 'consumerName', 'idDocType', 'idDocNumber', 'address', 'email', 'description', 'detail', 'request']) {
+        expect(clean({ ...complaint, [missing]: '' })).toBeNull();
+      }
+      expect(clean({ ...complaint, goodType: 'OTHER' })).toBeNull();
+      expect(clean({ ...complaint, amountCents: -1, currency: 'USD' })).toBeNull();
+      expect(clean({ ...complaint, amountCents: 10.5, currency: 'USD' })).toBeNull();
+      expect(clean({ ...complaint, isMinor: 'true' })).toBeNull();
+    });
+
+    it('checks the document number against its type and pairs an amount with a currency', () => {
+      expect(complaintIsConsistent(clean(complaint)!)).toBe(true);
+      expect(complaintIsConsistent(clean({ ...complaint, idDocType: 'DNI' })!)).toBe(false);
+      expect(complaintIsConsistent(clean({ ...complaint, amountCents: 100 })!)).toBe(false);
+    });
   });
 });
