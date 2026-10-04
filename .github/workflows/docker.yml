@@ -3,7 +3,7 @@ name: Docker image
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ["v*"]
 
 permissions:
@@ -29,6 +29,7 @@ jobs:
           images: ghcr.io/desertica/desertica-web
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
             type=sha,prefix=sha-
             type=semver,pattern={{version}}
       - uses: docker/build-push-action@v6
