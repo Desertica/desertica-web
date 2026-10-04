@@ -1,3 +1,4 @@
+import { COMPLAINT_LIMITS } from './app/core/forms/complaint-limits';
 import { ID_DOC_TYPES, type IdDocType, isIdDocType, isValidIdDocument } from './app/core/forms/id-document';
 
 export type FieldSpec = {
@@ -42,22 +43,22 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const COMPLAINT_FIELDS: Record<string, FieldSpec> = {
   kind: { max: 10, required: true, enum: ['RECLAMO', 'QUEJA'] },
   goodType: { max: 10, required: true, enum: ['PRODUCT', 'SERVICE'] },
-  consumerName: { max: 120, required: true },
+  consumerName: { max: COMPLAINT_LIMITS.name, required: true },
   idDocType: { max: 10, required: true, enum: ID_DOC_TYPES },
   idDocNumber: { max: 12, required: true },
-  address: { max: 200, required: true },
-  email: { max: 254, required: true, pattern: EMAIL },
-  phone: { max: 32 },
-  bookingRef: { max: 64, pattern: /^[A-Za-z0-9_-]+$/ },
+  address: { max: COMPLAINT_LIMITS.address, required: true },
+  email: { max: COMPLAINT_LIMITS.email, required: true, pattern: EMAIL },
+  phone: { max: COMPLAINT_LIMITS.phone },
+  bookingRef: { max: COMPLAINT_LIMITS.bookingRef, pattern: /^[A-Za-z0-9_-]+$/ },
   currency: { max: 3, enum: ['USD', 'PEN'] },
-  description: { max: 500, required: true },
-  detail: { max: 2000, required: true },
-  request: { max: 1000, required: true },
+  description: { max: COMPLAINT_LIMITS.description, required: true },
+  detail: { max: COMPLAINT_LIMITS.detail, required: true },
+  request: { max: COMPLAINT_LIMITS.request, required: true },
   turnstileToken: { max: 2048 },
 };
 
 export const COMPLAINT_NUMBERS: Record<string, NumberSpec> = {
-  amountCents: { min: 0, max: 1_000_000_000, integer: true },
+  amountCents: { min: 0, max: COMPLAINT_LIMITS.amountCents, integer: true },
 };
 
 export const COMPLAINT_FLAGS: Record<string, FlagSpec> = {

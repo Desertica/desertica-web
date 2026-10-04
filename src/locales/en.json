@@ -479,5 +479,37 @@
       "PENDING": "Pending signature",
       "SIGNED": "Signed"
     }
+  },
+  "complaints": {
+    "title": "Complaints book",
+    "lead": "Use this book to file a complaint (reclamo) or a grievance (queja) about our services. You will receive a copy by email.",
+    "kind": "What do you want to file?",
+    "reclamo": "Complaint (reclamo)",
+    "reclamoHelp": "disagreement about the service or product you contracted.",
+    "queja": "Grievance (queja)",
+    "quejaHelp": "discomfort about customer service that is not about the service or product itself.",
+    "consumer": "Your details",
+    "name": "Full name",
+    "minor": "I am a minor, or I am filing on behalf of a minor.",
+    "good": "What you contracted",
+    "service": "Service",
+    "product": "Product",
+    "bookingRef": "Booking reference (optional)",
+    "amount": "Amount claimed (optional)",
+    "amountError": "Enter a valid amount and choose a currency.",
+    "description": "Description of the product or service",
+    "claim": "Your claim",
+    "detail": "Details of the claim",
+    "request": "What do you ask for?",
+    "legalNote": "Filing a complaint does not prevent you from using other dispute-resolution routes, and it is not a requirement to file a complaint with INDECOPI. We will answer within the legal deadline, which you will see after sending this form.",
+    "submit": "Send",
+    "sending": "Sending…",
+    "doneTitle": "We received your complaint",
+    "doneNumber": "Your complaint number is",
+    "doneDue": "We will reply by",
+    "doneCopy": "We sent a copy to your email.",
+    "errorInvalid": "Please check the fields and try again.",
+    "errorUnavailable": "The complaints book is not available right now. Please write to us at the email in the footer.",
+    "errorGeneric": "We could not send your complaint. Please try again or write to us by email."
   }
 }
