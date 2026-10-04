@@ -7,6 +7,8 @@ import {
   DENIED_CONSENT,
   consentStateFor,
 } from './consent';
+import { DEFAULT_PUBLIC_CONFIG, PUBLIC_CONFIG } from '../config/public-config';
+import { mockApi } from '../../testing/mock-api';
 import type { DataLayerWindow } from './data-layer';
 
 const layer = (): unknown[] => (window as DataLayerWindow).dataLayer ?? [];
@@ -123,5 +125,49 @@ describe('ConsentService', () => {
     TestBed.inject(ConsentService).init();
 
     expect((window as DataLayerWindow).dataLayer).toBeUndefined();
+  });
+
+  describe('anonymous id', () => {
+    it('is created with the first decision, survives later ones and a reload', () => {
+      const consent = TestBed.inject(ConsentService);
+      consent.init();
+      expect(consent.anonymousId()).toBeNull();
+
+      consent.acceptAll();
+      const id = consent.anonymousId();
+      expect(id).toMatch(/^[0-9a-f-]{36}$/);
+      consent.rejectAll();
+      expect(consent.anonymousId()).toBe(id);
+
+      TestBed.resetTestingModule();
+      const again = TestBed.inject(ConsentService);
+      again.init();
+      expect(again.anonymousId()).toBe(id);
+    });
+
+    it('is filed in the API with the choice, only while the booking engine is on', async () => {
+      const mock = mockApi({ 'POST /public/consents': () => ({ status: 204 }) });
+      try {
+        TestBed.inject(ConsentService).acceptAll();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(mock.calls).toHaveLength(0);
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+          providers: [{ provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, bookingEngineEnabled: true } }],
+        });
+        const consent = TestBed.inject(ConsentService);
+        consent.save({ analytics: true, marketing: false });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(mock.calls[0]?.body).toEqual({
+          anonymousId: consent.anonymousId(),
+          categories: { analytics: true, marketing: false },
+          policyVersion: CONSENT_POLICY_VERSION,
+        });
+      } finally {
+        mock.restore();
+      }
+    });
   });
 });

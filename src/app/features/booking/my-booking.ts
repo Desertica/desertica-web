@@ -1,8 +1,6 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  PLATFORM_ID,
   afterNextRender,
   computed,
   inject,
@@ -15,8 +13,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
-import { AnalyticsService, centsToMajor } from '../../core/analytics/analytics';
-import { tourItem } from '../../core/analytics/items';
+import { PurchaseTracker } from '../../core/analytics/purchase';
 import { BookingApi, type PublicBooking } from '../../core/api/booking-api';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
@@ -25,14 +22,11 @@ import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { usePageMeta } from '../../core/seo/page-meta';
 
-const PURCHASE_KEY = 'desertica-purchase:';
-const PAID_STATUSES: readonly string[] = ['CONFIRMED', 'COMPLETED'];
-
 /**
  * Confirmation and "my booking". The e-mailed link carries `?token=`, which is moved into
  * sessionStorage and removed from the address bar; without a token the visitor asks for a new link
- * with the booking reference and e-mail. A confirmed booking publishes the `purchase` event once
- * per amount collected.
+ * with the booking reference and e-mail. The payment options come from the booking itself, so
+ * "Pay now" survives a reload. A confirmed booking publishes `purchase` through `PurchaseTracker`.
  */
 @Component({
   selector: 'app-my-booking',
@@ -57,12 +51,18 @@ const PAID_STATUSES: readonly string[] = ['CONFIRMED', 'COMPLETED'];
             @if (current.meetingPoint) {
               <p class="text-muted-foreground">{{ 'myBooking.meeting' | translate: i18n.locale() }}: {{ current.meetingPoint }}</p>
             }
+            <p class="text-muted-foreground" id="booking-format">{{ 'myBooking.format.' + current.format | translate: i18n.locale() }}</p>
             <p>
               {{ current.adults ?? 0 }} {{ 'tour.adults' | translate: i18n.locale() }}
               @if (current.children) {
                 · {{ current.children }} {{ 'tour.children' | translate: i18n.locale() }}
               }
             </p>
+            @if (current.passengers?.length) {
+              <p class="text-muted-foreground">
+                {{ 'myBooking.passengers' | translate: i18n.locale() }}: {{ passengerNames() }}
+              </p>
+            }
             <dl class="border-border flex flex-col gap-1 rounded-3xl border p-4">
               <div class="flex justify-between"><dt>{{ 'booking.total' | translate: i18n.locale() }}</dt><dd>{{ money(current.totalCents) }}</dd></div>
               <div class="flex justify-between"><dt>{{ 'myBooking.paid' | translate: i18n.locale() }}</dt><dd id="booking-paid">{{ money(current.paidCents) }}</dd></div>
@@ -90,7 +90,12 @@ const PAID_STATUSES: readonly string[] = ['CONFIRMED', 'COMPLETED'];
             <h2 class="font-heading text-xl">{{ 'myBooking.waivers' | translate: i18n.locale() }}</h2>
             <ul class="text-sm">
               @for (waiver of current.waivers; track waiver.token) {
-                <li>{{ waiver.passengerName ?? '—' }} · {{ 'myBooking.waiver.' + waiver.status | translate: i18n.locale() }}</li>
+                <li class="flex flex-wrap items-center gap-x-3">
+                  <span>{{ waiver.passengerName ?? '—' }} · {{ 'myBooking.waiver.' + waiver.status | translate: i18n.locale() }}</span>
+                  @if (waiver.status === 'PENDING' && waiver.token) {
+                    <a class="underline underline-offset-4" [routerLink]="['/waiver', waiver.token]">{{ 'myBooking.signWaiver' | translate: i18n.locale() }}</a>
+                  }
+                </li>
               }
             </ul>
           </section>
@@ -151,10 +156,8 @@ export class MyBooking {
   private readonly flow = inject(BookingFlow);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly document = inject(DOCUMENT);
-  private readonly analytics = inject(AnalyticsService);
+  private readonly purchases = inject(PurchaseTracker);
   private readonly catalog = inject(CatalogService);
-  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
 
   /** Booking reference from the path; absent on `/booking`. */
   readonly reference = input<string>();
@@ -185,10 +188,10 @@ export class MyBooking {
     const at = this.booking()?.startsAt;
     return at ? limaTime(at, this.i18n.locale()) : '';
   });
-  protected readonly canPay = computed(() => {
-    const reference = this.booking()?.reference;
-    return !!reference && (this.flow.remembered(reference)?.paymentOptions.length ?? 0) > 0;
-  });
+  protected readonly passengerNames = computed(() =>
+    (this.booking()?.passengers ?? []).map((person) => `${person.firstName} ${person.lastName}`).join(', '),
+  );
+  protected readonly canPay = computed(() => (this.booking()?.paymentOptions.length ?? 0) > 0);
 
   constructor() {
     usePageMeta(() => ({ title: this.i18n.t('myBooking.title'), noindex: true }));
@@ -237,7 +240,7 @@ export class MyBooking {
 
     const emailed = this.route.snapshot.queryParamMap.get('token');
     if (reference && emailed) {
-      this.flow.rememberToken(reference, emailed);
+      this.flow.remember(reference, { accessToken: emailed });
       await this.router.navigate([], { queryParams: { token: null }, queryParamsHandling: 'merge', replaceUrl: true });
     }
 
@@ -260,44 +263,6 @@ export class MyBooking {
     }
 
     this.booking.set(result.data);
-    this.trackPurchase(result.data);
-  }
-
-  /** One `purchase` per amount actually collected: a later balance payment adds its own. */
-  private trackPurchase(booking: PublicBooking): void {
-    if (!this.browser || !PAID_STATUSES.includes(booking.status) || booking.paidCents <= 0) {
-      return;
-    }
-
-    const storage = this.document.defaultView?.localStorage;
-    let tracked = 0;
-    try {
-      tracked = Number(storage?.getItem(PURCHASE_KEY + booking.reference) ?? 0) || 0;
-    } catch {
-      return;
-    }
-
-    const collected = booking.paidCents - tracked;
-    if (collected <= 0) {
-      return;
-    }
-
-    try {
-      storage?.setItem(PURCHASE_KEY + booking.reference, String(booking.paidCents));
-    } catch {
-      return;
-    }
-
-    const tour = this.catalog.tourById(booking.tourSlug);
-    const variant = this.flow.remembered(booking.reference)?.format;
-    this.analytics.track('purchase', {
-      transaction_id: booking.reference,
-      currency: booking.currency,
-      value: centsToMajor(collected),
-      items: tour
-        ? [{ ...tourItem(tour, this.i18n.t(tour.titleKey), variant), quantity: (booking.adults ?? 0) + (booking.children ?? 0) }]
-        : [{ item_id: booking.tourSlug, item_name: booking.tourSlug }],
-      event_id: booking.reference,
-    });
+    this.purchases.record(result.data);
   }
 }
