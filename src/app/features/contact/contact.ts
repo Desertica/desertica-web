@@ -7,6 +7,7 @@ import {
   DestroyRef,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -28,6 +29,8 @@ import { CatalogService } from '../../core/catalog/catalog';
 import { DEFAULT_FORMS } from '../../core/cms/booking-defaults';
 import { AnalyticsService } from '../../core/analytics/analytics';
 import { FormsApi } from '../../core/cms/forms-api';
+import { PUBLIC_CONFIG } from '../../core/config/public-config';
+import { Turnstile } from '../../core/forms/turnstile';
 import { I18nService } from '../../core/i18n/i18n';
 import { usePageMeta } from '../../core/seo/page-meta';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -61,6 +64,7 @@ export const MESSAGE_MAX = DEFAULT_FORMS.messageMax;
     HlmInput,
     HlmInputGroupImports,
     HlmTextarea,
+    Turnstile,
   ],
   templateUrl: './contact.html',
 })
@@ -70,6 +74,10 @@ export class Contact {
   private readonly forms = inject(FormsApi);
   private readonly analytics = inject(AnalyticsService);
   private readonly sending = signal(false);
+  private readonly turnstile = viewChild(Turnstile);
+  private readonly token = signal<string | null>(null);
+  /** With a Turnstile site key the real challenge replaces the placeholder checkbox. */
+  protected readonly turnstileEnabled = inject(PUBLIC_CONFIG).turnstileSiteKey !== null;
 
   protected readonly i18n = inject(I18nService);
   protected readonly bandImage = inject(CatalogService).mediaImage('contact.band', CONTACT_BAND_IMAGE);
@@ -150,6 +158,18 @@ export class Contact {
     this.messageChars.set(this.form.controls.message.value.length);
   }
 
+  protected onToken(token: string | null): void {
+    this.token.set(token);
+    this.form.controls.captcha.setValue(token !== null);
+  }
+
+  /** A Turnstile token works once, so every attempt needs a fresh challenge. */
+  private resetChallenge(): void {
+    if (this.turnstileEnabled) {
+      this.turnstile()?.reset();
+    }
+  }
+
   protected showError(name: keyof typeof this.form.controls): boolean {
     const control = this.form.controls[name];
     return control.invalid && control.touched;
@@ -192,9 +212,11 @@ export class Contact {
       country: this.countryCode(),
       message: value.message.trim(),
       locale: this.i18n.locale(),
+      ...(this.token() ? { turnstileToken: this.token() as string } : {}),
     });
     this.sending.set(false);
     if (!sent) {
+      this.resetChallenge();
       toast(this.i18n.t('contact.sendError'));
       return;
     }
@@ -202,6 +224,7 @@ export class Contact {
     this.analytics.track('generate_lead', { form: 'contact' });
     toast(this.i18n.t('contact.thanks'));
     this.form.reset();
+    this.resetChallenge();
     this.countryCode.set(DEFAULT_PHONE_COUNTRY);
     this.phoneTouched.set(false);
     this.messageChars.set(0);

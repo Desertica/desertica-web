@@ -52,7 +52,11 @@ export const routes: Routes = [
   content('paracas', 'paracas', 'footer.paracas', 'pages.paracasLead', 'paracas'),
   content('terms', 'terms', 'footer.terms', 'pages.termsLead'),
   content('privacy', 'privacy', 'footer.privacy', 'pages.privacyLead'),
-  content('complaints', 'complaints', 'footer.complaints', 'pages.complaintsLead'),
+  {
+    path: 'complaints',
+    loadComponent: () =>
+      import('./features/complaints/complaints').then((m) => m.ComplaintsBook),
+  },
   content('conduct', 'conduct', 'footer.conduct', 'pages.conductLead'),
   content('legal/mincetur', 'legal-mincetur', 'footer.mincetur', 'pages.minceturLead'),
   // Legacy URL: Express answers it with a permanent redirect; this keeps in-app navigation consistent.

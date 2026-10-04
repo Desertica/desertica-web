@@ -479,5 +479,37 @@
       "PENDING": "Firma pendiente",
       "SIGNED": "Firmado"
     }
+  },
+  "complaints": {
+    "title": "Libro de Reclamaciones",
+    "lead": "Usa este libro para registrar un reclamo o una queja sobre nuestros servicios. Recibirás una copia por correo.",
+    "kind": "¿Qué deseas registrar?",
+    "reclamo": "Reclamo",
+    "reclamoHelp": "disconformidad relacionada con el servicio o producto contratado.",
+    "queja": "Queja",
+    "quejaHelp": "malestar o descontento por la atención al público, no relacionado con el servicio o producto en sí.",
+    "consumer": "Tus datos",
+    "name": "Nombres y apellidos",
+    "minor": "Soy menor de edad, o presento esto en nombre de un menor.",
+    "good": "Lo que contrataste",
+    "service": "Servicio",
+    "product": "Producto",
+    "bookingRef": "Referencia de la reserva (opcional)",
+    "amount": "Monto reclamado (opcional)",
+    "amountError": "Ingresa un monto válido y elige la moneda.",
+    "description": "Descripción del producto o servicio",
+    "claim": "Tu reclamo",
+    "detail": "Detalle del reclamo",
+    "request": "¿Qué pides?",
+    "legalNote": "La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI. Responderemos dentro del plazo legal, que verás al enviar este formulario.",
+    "submit": "Enviar",
+    "sending": "Enviando…",
+    "doneTitle": "Recibimos tu reclamación",
+    "doneNumber": "El número de tu reclamación es",
+    "doneDue": "Te responderemos antes del",
+    "doneCopy": "Te enviamos una copia a tu correo.",
+    "errorInvalid": "Revisa los campos e inténtalo de nuevo.",
+    "errorUnavailable": "El libro de reclamaciones no está disponible ahora. Escríbenos al correo del pie de página.",
+    "errorGeneric": "No pudimos enviar tu reclamación. Inténtalo de nuevo o escríbenos por correo."
   }
 }

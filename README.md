@@ -50,11 +50,12 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/paracas`           | **SSR** (`RenderMode.Server`) | Destination hub: Strapi page + its tours  |
 | `/terms`             | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/privacy`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
-| `/complaints`        | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/complaints`        | **SSR** (`RenderMode.Server`) | Libro de Reclamaciones form (files through the API) |
 | `/conduct`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/legal/mincetur`    | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/experiences/:slug` | Express **301**               | Permanent redirect to `/tours/:slug`      |
 | `/sitemap.xml`, `/robots.txt` | Express          | Built from the live catalog (see `src/seo-routes.ts`) |
+| `/checkout`, `/checkout/payment/:reference`, `/booking[/:reference]` | **SSR** | Booking engine; only with `BOOKING_ENGINE_ENABLED=true` |
 | `/reservations`      | **SSR** (`RenderMode.Server`)    | Plan your trip / reservations placeholder |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
