@@ -47,6 +47,7 @@ export class SiteFooter {
   protected readonly i18n = inject(I18nService);
   protected readonly bounceCenter = BOUNCE_CENTER;
   protected readonly brandLinks = this.catalog.footerBrandLinks;
+  protected readonly brandName = computed(() => this.catalog.site().brandName);
   protected readonly destinations = this.catalog.footerDestinations;
   protected readonly socials = this.catalog.socials;
   protected readonly contact = this.catalog.contact;

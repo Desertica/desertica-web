@@ -93,8 +93,7 @@ src/app/
     experiences/detail/        # SSR placeholder
     reservations/              # CSR placeholder
 src/forms-proxy.ts             # /api/forms/* -> Strapi (validation + rate limit)
-cms/                           # Strapi 5 project (see cms/README.md)
-scripts/build-cms-seed.mjs     # regenerates cms/seed/catalog.json from the static catalog
+scripts/build-cms-seed.mjs     # regenerates the CMS seed (../desertica-cms/seed/catalog.json) from the static catalog
 libs/ui/                       # Spartan helm copies
 public/brand/                  # mark and lockup
 public/legal/                  # MINCETUR distintivo + INDECOPI AvisoVirtual
@@ -103,29 +102,26 @@ public/splashes/               # looping DrawSVG pages (not wired into Angular r
 
 ## Strapi CMS
 
-Everything editable lives in [`cms/`](cms/README.md) (Strapi 5, TypeScript, locales `en`/`es`):
+All content lives in Strapi 5, in its own repository: [Desertica/desertica-cms](https://github.com/Desertica/desertica-cms) (private). Its `CONTRACT.md` lists every field this app reads; `docs/DEPLOY.md` there covers deployment.
 
-| Content type    | Drives                                                                    |
-| --------------- | ------------------------------------------------------------------------- |
-| `destination`   | Destination titles, leads, hub pages, order                               |
-| `tour`          | Catalog, tour pages (itinerary, highlights, gallery, price), featured set |
-| `translation`   | Every UI string (`key` = the i18n key, e.g. `nav.blog`); overrides the JSON catalogs |
-| `media-slot`    | Banners, About video/images, footer stamps (`tours.banner`, `about.trio`, ...) |
-| `page`          | Terms, privacy, complaints, conduct, MINCETUR, products/blog intros, hubs |
-| `blog-post`     | `/blog`                                                                   |
-| `product`       | `/products`                                                               |
-| `site-setting`  | Email, phone, WhatsApp, social links, legal name and RUC                  |
-| `reservation`   | Booking requests sent from the tour page (also opens WhatsApp)            |
-| `contact-message` | Messages from `/contact`                                                |
+| Area in the admin | Drives                                                                         |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `Catalog`         | Destinations and tours (the base tour page is filled per tour), featured set, footer order |
+| `Copy`            | Every UI string, grouped by page and section; overrides `src/locales/*.json`   |
+| `Media`           | Banners, About video and images, footer stamps, home/blog/products heroes      |
+| `Pages`           | Terms, privacy, complaints, conduct, MINCETUR and destination hub copy         |
+| `Blog`, `Shop`    | `/blog` and `/products`                                                        |
+| `Site`            | Contact data, socials, legal entity, **theme** (light/dark palettes, radius, fonts, header height, intro), **booking rules** (deposit, party limits, assurances), **form limits**, **navigation** (header, footer, CTA) |
+| `Inbox`           | Reservations and contact messages sent from the site                           |
 
 ```bash
-npm run cms:install        # once
-cp cms/.env.example cms/.env   # fill the secrets
+git clone https://github.com/Desertica/desertica-cms.git ../desertica-cms
+npm --prefix ../desertica-cms install && cp ../desertica-cms/.env.example ../desertica-cms/.env   # fill the secrets
 npm run cms:dev            # http://localhost:1337/admin (seeds the catalog on first run)
 npm run start:cms          # Angular at :4200 reading Strapi
 ```
 
-The app only talks to Strapi when `STRAPI_URL` is set on the server ([`.env.example`](.env.example)); without it, the bundled static catalog is used. If Strapi is unreachable the last good response is served, and if there is none the static catalog takes over. Text from Strapi is registered as an i18n overlay (`cms.tours.<slug>.title`, ...), so templates keep using the `translate` pipe. Forms go browser -> `/api/forms/*` (Express) -> Strapi, so the browser never needs the CMS URL.
+The app only talks to Strapi when `STRAPI_URL` is set on the server ([`.env.example`](.env.example)); without it, the bundled static catalog and defaults are used. If Strapi is unreachable the last good response is served, and if there is none the static data takes over. Text from Strapi is registered as an i18n overlay (`cms.tours.<slug>.title`, ...), so templates keep using the `translate` pipe. The theme is written into a `<style id="cms-theme">` tag. Forms go browser -> `/api/forms/*` (Express) -> Strapi, so the browser never needs the CMS URL. Deployment of this app: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Spartan/ui
 
@@ -159,5 +155,5 @@ Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client th
 | `npm run serve:ssr:desertica-web` | Serve the Node SSR bundle        |
 | `npm test`                        | Vitest                           |
 | `npm run start:cms`               | Dev server reading Strapi on :1337 |
-| `npm run cms:dev` / `cms:build`   | Strapi dev server / admin build  |
-| `npm run cms:seed`                | Regenerate `cms/seed/catalog.json` |
+| `npm run cms:dev`                 | Strapi dev server (sibling `../desertica-cms`) |
+| `npm run cms:seed`                | Regenerate the CMS seed in `../desertica-cms` |

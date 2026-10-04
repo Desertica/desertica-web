@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Genera el seed del CMS (catalog.json) a partir del catalogo estatico de la app Angular.
 // Uso (desde la raiz del repo):
-//   node scripts/build-cms-seed.mjs                       -> cms/seed/catalog.json
-//   node scripts/build-cms-seed.mjs --out ../desertica-cms/seed/catalog.json
-// Tambien acepta CMS_SEED_OUT. Con el CMS en su propio repo, el JSON resultante se commitea alli.
+//   node scripts/build-cms-seed.mjs                       -> ../desertica-cms/seed/catalog.json
+//   node scripts/build-cms-seed.mjs --out path/to/catalog.json
+// Tambien acepta CMS_SEED_OUT. El CMS vive en su propio repo (Desertica/desertica-cms): el JSON resultante se commitea alli.
 import { buildSync } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -384,7 +384,7 @@ const outArg = outIndex !== -1 ? process.argv[outIndex + 1] : process.env.CMS_SE
 if (outIndex !== -1 && !outArg) {
   throw new Error('--out needs a path');
 }
-const target = resolve(process.cwd(), outArg ?? resolve(root, 'cms/seed/catalog.json'));
+const target = resolve(process.cwd(), outArg ?? resolve(root, '../desertica-cms/seed/catalog.json'));
 mkdirSync(dirname(target), { recursive: true });
 writeFileSync(target, JSON.stringify({ destinations, tours, siteSetting, themeSetting, bookingSetting, formSetting, navigation, translations, mediaSlots, pages }, null, 2) + '\n');
 const pageCounts = {};

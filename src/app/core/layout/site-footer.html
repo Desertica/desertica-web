@@ -23,7 +23,7 @@
       <div class="flex flex-col gap-4">
         <p class="flex items-center gap-2.5">
           <app-brand-mark />
-          <span class="text-foreground font-heading text-xl tracking-tight">Desértica</span>
+          <span class="text-foreground font-heading text-xl tracking-tight">{{ brandName() }}</span>
         </p>
         <ul class="flex flex-col gap-2 text-base">
           @for (link of brandLinks(); track link.path) {
