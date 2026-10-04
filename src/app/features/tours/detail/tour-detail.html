@@ -18,6 +18,22 @@
             {{ key | translate: i18n.locale() }}
           </p>
         }
+        @if (mapUrl(data.page); as map) {
+          <p class="max-w-2xl text-base" id="tour-meeting">
+            <strong>{{ 'tour.meeting' | translate: i18n.locale() }}:</strong>
+            {{ data.page.meetingKey | translate: i18n.locale() }}
+            <a
+              [href]="map"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline underline-offset-4"
+              id="tour-map-link"
+            >
+              {{ 'tour.viewMap' | translate: i18n.locale() }}
+              <span class="sr-only">{{ 'a11y.newTab' | translate: i18n.locale() }}</span>
+            </a>
+          </p>
+        }
       </div>
 
       <div class="flex flex-col gap-4 md:col-start-3 md:row-start-1 md:row-span-2">
@@ -68,5 +84,9 @@
         />
       }
     </div>
+  }
+
+  @if (data.page.faqs?.length) {
+    <app-tour-faqs [faqs]="data.page.faqs ?? []" />
   }
 }
