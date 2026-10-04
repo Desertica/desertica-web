@@ -1,6 +1,6 @@
 # Desertica web
 
-Tourism booking site for desert tours in Ica, Huacachina, Paracas and Nazca (Peru). Angular 21 (standalone, zoneless, SSR/SSG), Tailwind v4, Spartan/ui (`libs/ui`), GSAP, Vitest. Content comes from a Strapi 5 CMS that lives in its own repo, `Desertica/desertica-cms` (clone it next to this one as `../desertica-cms`), with a static fallback. Read `README.md` for routes and `docs/HANDOFF.md` for the current state and open work.
+Tourism booking site for desert tours in Ica, Huacachina, Paracas and Nazca (Peru). Angular 21 (standalone, zoneless, SSR), Tailwind v4, Spartan/ui (`libs/ui`), GSAP, Vitest. Content comes from a Strapi 5 CMS that lives in its own repo, `Desertica/desertica-cms` (clone it next to this one as `../desertica-cms`), with a static fallback. Read `README.md` for routes and `docs/HANDOFF.md` for the current state and open work.
 
 ## Commands
 
@@ -10,7 +10,7 @@ npm start                                  # Angular on :4200, static catalog
 npm run cms:dev                            # Strapi from ../desertica-cms on :1337 (seeds an empty database)
 npm run start:cms                          # Angular reading Strapi (STRAPI_URL=http://localhost:1337)
 npm test                                   # ng test (Vitest)
-npm run build                              # prerender + Node server; add STRAPI_URL to bake CMS content
+npm run build                              # browser bundle + Node SSR server
 ```
 
 Use **Node 22**. On Node 26 about 35 tests fail with `localStorage` undefined, and that is an environment issue, not a code bug.
@@ -29,7 +29,7 @@ Use **Node 22**. On Node 26 about 35 tests fail with `localStorage` undefined, a
 
 - Every user-facing string needs an entry in both `src/locales/en.json` and `es.json`.
 - Match the surrounding code; Prettier config is in `.prettierrc`. New code gets a spec next to it.
-- Rendering modes per route are in `src/app/app.routes.server.ts`. SSG pages freeze CMS content at build time; `/blog`, `/products` and `/tours/:id` for tours added later are rendered per request.
+- Every route renders per request (`src/app/app.routes.server.ts`); content comes from Strapi through the server-side cache, so there is nothing to rebuild after publishing.
 - Do not commit `.cursor/`, `.vscode/` or `.env` files.
 - Commit messages: short imperative subject, then a body when the change needs it. No attribution lines.
 

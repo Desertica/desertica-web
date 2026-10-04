@@ -37,9 +37,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Set the repository variable STRAPI_URL to bake CMS content into prerendered pages.
-          build-args: |
-            STRAPI_URL=${{ vars.STRAPI_URL }}
-            STRAPI_PUBLIC_URL=${{ vars.STRAPI_PUBLIC_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -48,10 +48,7 @@ services:
       - cms-uploads:/opt/app/public/uploads
 
   web:
-    build:
-      context: .
-      args:
-        STRAPI_URL: ""
+    build: .
     restart: unless-stopped
     depends_on:
       cms:

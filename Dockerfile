@@ -6,11 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --no-audit --no-fund
 COPY . .
-# Pages marked for prerender bake CMS content in at build time. Pass the CMS URL to get it
-# (it must be reachable from the build); without it the bundled static catalog is baked in.
-ARG STRAPI_URL=""
-ARG STRAPI_PUBLIC_URL=""
-ENV STRAPI_URL=$STRAPI_URL STRAPI_PUBLIC_URL=$STRAPI_PUBLIC_URL
+# Every route renders per request, so the build does not need the CMS.
 RUN npm run build
 
 # ---- runtime ----

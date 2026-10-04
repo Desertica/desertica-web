@@ -26,8 +26,7 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
 
 ## When content changes show up
 
-- Routes rendered per request (`/blog`, `/products`, tours created after the build) reflect Strapi within `STRAPI_CACHE_TTL_MS`. Settings such as theme, navigation, copy and booking numbers also reach those pages that fast.
-- Prerendered pages (home, tours list, tour pages that existed at build time, About, Contact, legal pages and hubs) bake CMS content in at build time. Pass `STRAPI_URL` as a build argument (`--build-arg STRAPI_URL=...`, or the `STRAPI_URL` repository variable in CI) and rebuild after publishing: add a Strapi webhook on `entry.publish`/`entry.unpublish` that triggers the image build and redeploy.
+Every route is rendered per request and reads Strapi through a server-side cache (`STRAPI_CACHE_TTL_MS`, 30 s by default). A change published in Strapi (copy, theme, navigation, booking numbers, media, tours) is live within that window: no rebuild and no webhook. The build does not need the CMS. If Strapi is unreachable the last good response is served, and the bundled static catalog if there is none.
 
 ## Full stack locally
 
@@ -43,5 +42,4 @@ docker compose up --build
 
 1. Deploy the CMS, create the admin user, edit `Site — Settings`, upload media.
 2. Deploy the site with `NG_ALLOWED_HOSTS`, `STRAPI_URL`, `STRAPI_PUBLIC_URL` and the shared `FORMS_PROXY_SECRET`.
-3. Add the webhook so publishing triggers a rebuild.
-4. Terminate TLS in front of both apps and set `TRUST_PROXY=true`.
+3. Terminate TLS in front of both apps and set `TRUST_PROXY=true`.

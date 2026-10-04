@@ -27,7 +27,7 @@ The first visit to `/admin` asks for an admin user. Contact data in `Site — Se
 
 ## Open work
 
-- Deploy both apps (see `docs/DEPLOY.md` here and in the CMS repo) and point the Strapi publish webhook at the frontend deploy.
+- Deploy both apps (see `docs/DEPLOY.md` here and in the CMS repo). No webhook or rebuild is needed after publishing: pages render per request.
 - Fill real content: media, contact data, legal pages, tours beyond `dune-buggy`.
 - `/experiences/:slug` and `/reservations` are still placeholders. A reservation opens WhatsApp and also stores the request in Strapi.
 - Pre-existing: the initial bundle is over budget; 35 tests fail only on Node 26 (use Node 22).

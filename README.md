@@ -9,7 +9,7 @@ This repository is an **Angular 21** map: routes, render modes, and folders are 
 | Piece                                                | Role                                          |
 | ---------------------------------------------------- | --------------------------------------------- |
 | Angular 21 (standalone, zoneless, 2025 file naming)  | Application framework                         |
-| `@angular/ssr`                                       | Hybrid SSG / SSR / CSR                        |
+| `@angular/ssr`                                       | SSR on every route                            |
 | Tailwind CSS v4                                      | Utility styling                               |
 | Spartan/ui (`@spartan-ng/brain` + helm in `libs/ui`) | Helm copies in `libs/ui`                      |
 | GSAP 3                                               | ScrollSmoother, DrawSVG, SplitText, MorphSVG  |
@@ -26,7 +26,7 @@ Install uses `legacy-peer-deps=true` (see [`.npmrc`](.npmrc)).
 npm install
 npm start                 # http://localhost:4200
 npm test
-npm run build             # prerenders `/` and emits a Node server
+npm run build             # emits the browser bundle and the Node SSR server
 npm run serve:ssr:desertica-web
 ```
 
@@ -36,29 +36,29 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 
 | Route                | Mode                             | Status                                    |
 | -------------------- | -------------------------------- | ----------------------------------------- |
-| `/`                  | **SSG** (`RenderMode.Prerender`) | Wordmark, Why, tour gallery, destinos, CTA |
-| `/tours`             | **SSG** (`RenderMode.Prerender`) | Catalog by Huacachina, Paracas, Nazca     |
-| `/tours/:id`         | **SSG** (`RenderMode.Prerender`) | Tour detail (`dune-buggy` is the first filled page) |
+| `/`                  | **SSR** (`RenderMode.Server`) | Wordmark, Why, tour gallery, destinos, CTA |
+| `/tours`             | **SSR** (`RenderMode.Server`) | Catalog by Huacachina, Paracas, Nazca     |
+| `/tours/:id`         | **SSR** (`RenderMode.Server`) | Tour detail (`dune-buggy` is the first filled page) |
 | `/products`          | **SSR** (`RenderMode.Server`)    | Products from Strapi (empty state until published) |
 | `/products/:slug`    | **SSR** (`RenderMode.Server`)    | Product detail from Strapi                |
-| `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
-| `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
+| `/about`             | **SSR** (`RenderMode.Server`) | About placeholder                         |
+| `/contact`           | **SSR** (`RenderMode.Server`) | Contact placeholder                       |
 | `/blog`              | **SSR** (`RenderMode.Server`)    | Posts from Strapi (empty state until published) |
 | `/blog/:slug`        | **SSR** (`RenderMode.Server`)    | Post detail from Strapi                   |
-| `/nazca`             | **SSG** (`RenderMode.Prerender`) | Destination hub: Strapi page + its tours  |
-| `/huacachina`        | **SSG** (`RenderMode.Prerender`) | Destination hub: Strapi page + its tours  |
-| `/paracas`           | **SSG** (`RenderMode.Prerender`) | Destination hub: Strapi page + its tours  |
-| `/terms`             | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
-| `/privacy`           | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
-| `/complaints`        | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
-| `/conduct`           | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
-| `/legal/mincetur`    | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
+| `/nazca`             | **SSR** (`RenderMode.Server`) | Destination hub: Strapi page + its tours  |
+| `/huacachina`        | **SSR** (`RenderMode.Server`) | Destination hub: Strapi page + its tours  |
+| `/paracas`           | **SSR** (`RenderMode.Server`) | Destination hub: Strapi page + its tours  |
+| `/terms`             | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/privacy`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/complaints`        | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/conduct`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/legal/mincetur`    | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/experiences/:slug` | **SSR** (`RenderMode.Server`)    | Detail placeholder (`slug` from the URL)  |
-| `/reservations`      | **CSR** (`RenderMode.Client`)    | Plan your trip / reservations placeholder |
+| `/reservations`      | **SSR** (`RenderMode.Server`)    | Plan your trip / reservations placeholder |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
 
-SSG pages bake the CMS content in at build time (rebuild after publishing, e.g. from a Strapi webhook). SSR pages (`/blog`, `/products`, `/tours/:id` for tours created after the build) read Strapi per request through a short server-side cache.
+Every route renders per request (`RenderMode.Server`) and reads Strapi through a short server-side cache, so publishing a change needs no rebuild and the build does not depend on the CMS.
 
 ## Architecture
 
@@ -82,11 +82,11 @@ src/app/
     cms/                       # Strapi client, mapper, forms API, site defaults
     seo/page-meta.ts           # title/description per page
   features/
-    landing/                   # SSG home (DrawSVG hero, Why, gallery, destinos, CTA)
-    tours/                     # SSG catalog
-    tours/detail/              # SSG tour page (`/tours/:id`)
-    about/                     # SSG placeholder
-    contact/                   # SSG placeholder
+    landing/                   # Home (DrawSVG hero, Why, gallery, destinos, CTA)
+    tours/                     # Tours catalog
+    tours/detail/              # Tour page (`/tours/:id`)
+    about/                     # Page
+    contact/                   # Page
     content/                   # CMS page (legal, destination hubs)
     blog/                      # Strapi posts (SSR)
     products/                  # Strapi products (SSR)
@@ -151,7 +151,7 @@ Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client th
 | Script                            | Description                      |
 | --------------------------------- | -------------------------------- |
 | `npm start`                       | Dev server with hybrid rendering |
-| `npm run build`                   | Production build + prerender     |
+| `npm run build`                   | Production build (browser + SSR server) |
 | `npm run serve:ssr:desertica-web` | Serve the Node SSR bundle        |
 | `npm test`                        | Vitest                           |
 | `npm run start:cms`               | Dev server reading Strapi on :1337 |
