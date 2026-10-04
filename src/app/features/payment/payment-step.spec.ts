@@ -428,6 +428,11 @@ describe('PaymentStep', () => {
       await settle(fixture);
       expect(root.querySelector('#payment-error')?.textContent).toContain('verification was cancelled');
       expect(root.querySelector('#payment-continue')).not.toBeNull();
+
+      // A message that arrives after the window was closed must not repeat the charge.
+      window.dispatchEvent(new MessageEvent('message', { data: { parameters3DS: { eci: '05' } }, origin: location.origin }));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(mock?.calls.filter((call) => call.path.endsWith('/culqi-charge'))).toHaveLength(1);
     });
   });
 

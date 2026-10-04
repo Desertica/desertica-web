@@ -55,7 +55,7 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/legal/mincetur`    | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/experiences/:slug` | Express **301**               | Permanent redirect to `/tours/:slug`      |
 | `/sitemap.xml`, `/robots.txt` | Express          | Built from the live catalog (see `src/seo-routes.ts`) |
-| `/checkout`, `/checkout/payment/:reference`, `/booking[/:reference]` | **SSR** | Booking engine; only with `BOOKING_ENGINE_ENABLED=true` |
+| `/checkout`, `/checkout/payment/:reference`, `/booking[/:reference]`, `/pay/:token`, `/waiver/:token`, `/payment/3ds` | **SSR** | Booking engine and the e-mailed links (payment link, waiver, 3DS return); only with `BOOKING_ENGINE_ENABLED=true` |
 | `/reservations`      | **SSR** (`RenderMode.Server`)    | Plan your trip / reservations placeholder |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
