@@ -37,7 +37,7 @@
           }
         </ul>
         <ul class="flex flex-wrap items-center gap-3">
-          @for (social of socials; track social.href) {
+          @for (social of socials(); track social.href) {
             <li>
               <a
                 [href]="social.href"
@@ -53,7 +53,7 @@
         </ul>
       </div>
 
-      @for (destination of destinations; track destination.all.path) {
+      @for (destination of destinations(); track destination.all.path) {
         <div class="flex flex-col gap-3">
           <p class="text-foreground text-sm font-medium tracking-wide uppercase">
             {{ destination.titleKey | translate: i18n.locale() }}
@@ -115,17 +115,17 @@
         <p class="text-foreground text-sm font-medium tracking-wide uppercase">
           {{ 'footer.contact' | translate: i18n.locale() }}
         </p>
-        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact.mailto">{{
-          contact.email
+        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().mailto">{{
+          contact().email
         }}</a>
-        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact.tel">{{
-          contact.phone
+        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel">{{
+          contact().phone
         }}</a>
       </div>
 
       <div class="order-3 flex flex-col gap-3 lg:items-end">
         <div class="flex flex-wrap items-center gap-3 lg:justify-end">
-          @for (stamp of stamps; track stamp.path) {
+          @for (stamp of stamps(); track stamp.path) {
             <a [routerLink]="stamp.path" class="bg-card block overflow-hidden rounded-none">
               @if (stamp.optimized) {
                 <img
@@ -161,7 +161,7 @@
           }}</a>
         }
       </nav>
-      <p>© {{ legal.year }} {{ legal.name }} · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal.ruc }}</p>
+      <p>© {{ legal().year }} {{ legal().name }} · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }}</p>
     </div>
   </div>
 </footer>

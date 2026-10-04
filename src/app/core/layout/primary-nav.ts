@@ -1,4 +1,4 @@
-import { TOURS_PATH, tourDestinations, tourPath } from '../catalog/tours';
+import { type CatalogDestination, TOURS_PATH, tourDestinations, tourPath } from '../catalog/tours';
 
 export interface NavLink {
   labelKey: string;
@@ -31,34 +31,38 @@ export function navItemTrack(item: Pick<NavLink, 'path' | 'fragment'>): string {
   return item.fragment ? `${item.path}#${item.fragment}` : item.path;
 }
 
-const toursNavGroup: NavGroup = {
-  labelKey: 'nav.tours',
-  path: TOURS_PATH,
-  children: [
-    {
-      labelKey: 'nav.toursAll',
-      path: TOURS_PATH,
-      descriptionKey: 'nav.toursAllDesc',
-    },
-  ],
-  columns: tourDestinations.map((destination) => ({
-    headingKey: destination.titleKey,
+export function buildPrimaryNavLinks(destinations: readonly CatalogDestination[]): readonly NavItem[] {
+  const toursNavGroup: NavGroup = {
+    labelKey: 'nav.tours',
     path: TOURS_PATH,
-    fragment: destination.id,
-    children: destination.tours.map((tour) => ({
-      labelKey: tour.titleKey,
-      path: tourPath(tour.id),
-      descriptionKey: tour.descriptionKey,
+    children: [
+      {
+        labelKey: 'nav.toursAll',
+        path: TOURS_PATH,
+        descriptionKey: 'nav.toursAllDesc',
+      },
+    ],
+    columns: destinations.map((destination) => ({
+      headingKey: destination.titleKey,
+      path: TOURS_PATH,
+      fragment: destination.id,
+      children: destination.tours.map((tour) => ({
+        labelKey: tour.titleKey,
+        path: tourPath(tour.id),
+        descriptionKey: tour.descriptionKey,
+      })),
     })),
-  })),
-};
+  };
 
-export const primaryNavLinks: readonly NavItem[] = [
-  toursNavGroup,
-  { labelKey: 'nav.products', path: '/products' },
-  { labelKey: 'nav.about', path: '/about' },
-  { labelKey: 'nav.contact', path: '/contact' },
-];
+  return [
+    toursNavGroup,
+    { labelKey: 'nav.products', path: '/products' },
+    { labelKey: 'nav.about', path: '/about' },
+    { labelKey: 'nav.contact', path: '/contact' },
+  ];
+}
+
+export const primaryNavLinks: readonly NavItem[] = buildPrimaryNavLinks(tourDestinations);
 
 /** Desktop visual order is LTR (Tours … Contact). Mobile stacks the same items top→bottom as desktop right→left. */
 export const mobilePrimaryNavLinks: readonly NavItem[] = [...primaryNavLinks].reverse();
@@ -68,6 +72,7 @@ export const planTripLink = {
   path: TOURS_PATH,
 } as const;
 
-export function toursNavColumns(): readonly NavColumn[] {
-  return toursNavGroup.columns ?? [];
+export function toursNavColumns(links: readonly NavItem[] = primaryNavLinks): readonly NavColumn[] {
+  const group = links.find((item): item is NavGroup => isNavGroup(item) && item.path === TOURS_PATH);
+  return group?.columns ?? [];
 }

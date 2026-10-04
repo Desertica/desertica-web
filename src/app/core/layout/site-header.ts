@@ -1,5 +1,5 @@
 import { ScrollStrategy, ScrollStrategyOptions } from '@angular/cdk/overlay';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronDown, lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
@@ -13,13 +13,8 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
 import { LocaleSwitcher } from './locale-switcher';
-import {
-  isNavGroup,
-  mobilePrimaryNavLinks,
-  navItemTrack,
-  planTripLink,
-  primaryNavLinks,
-} from './primary-nav';
+import { CatalogService } from '../catalog/catalog';
+import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
 
 @Component({
   selector: 'app-site-header',
@@ -57,7 +52,7 @@ import {
             [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
           >
             <ul hlmNavigationMenuList>
-              @for (item of navLinks; track item.path) {
+              @for (item of navLinks(); track item.path) {
                 <li hlmNavigationMenuItem>
                   @if (isGroup(item)) {
                     <button type="button" hlmNavigationMenuTrigger align="center">
@@ -212,7 +207,7 @@ import {
                 >
                   {{ planTrip.labelKey | translate: i18n.locale() }}
                 </a>
-                @for (item of mobileNavLinks; track item.path) {
+                @for (item of mobileNavLinks(); track item.path) {
                   @if (!isGroup(item)) {
                     <a
                       [routerLink]="item.path"
@@ -322,8 +317,9 @@ export class SiteHeader {
   protected readonly menuScroll: ScrollStrategy = this.scrollStrategies.noop();
   protected readonly theme = inject(ThemeService);
   protected readonly i18n = inject(I18nService);
-  protected readonly navLinks = primaryNavLinks;
-  protected readonly mobileNavLinks = mobilePrimaryNavLinks;
+  private readonly catalog = inject(CatalogService);
+  protected readonly navLinks = this.catalog.navLinks;
+  protected readonly mobileNavLinks = computed(() => [...this.navLinks()].reverse());
   protected readonly planTrip = planTripLink;
   protected readonly isGroup = isNavGroup;
   protected readonly navTrack = navItemTrack;

@@ -7,7 +7,13 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:desertica-web": "node dist/desertica-web/server/server.mjs"
+    "serve:ssr:desertica-web": "node dist/desertica-web/server/server.mjs",
+    "start:cms": "STRAPI_URL=http://localhost:1337 ng serve",
+    "cms:install": "npm --prefix cms install",
+    "cms:dev": "npm --prefix cms run develop",
+    "cms:build": "npm --prefix cms run build",
+    "cms:start": "npm --prefix cms run start",
+    "cms:seed": "node scripts/build-cms-seed.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.7",
@@ -31,6 +37,7 @@
     "gsap": "^3.15.0",
     "i18n": "^0.15.4",
     "libphonenumber-js": "^1.13.13",
+    "marked": "^18.0.14",
     "rxjs": "~7.8.0",
     "tailwind-merge": "^3.5.0",
     "tslib": "^2.3.0"

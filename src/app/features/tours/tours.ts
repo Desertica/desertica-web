@@ -3,7 +3,8 @@ import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
-import { TOURS_BANNER_IMAGE, TOURS_CLOSER_IMAGE, tourDestinations, tourPath } from '../../core/catalog/tours';
+import { CatalogService } from '../../core/catalog/catalog';
+import { TOURS_BANNER_IMAGE, TOURS_CLOSER_IMAGE, tourPath } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { PhotoCta } from '../../core/layout/photo-cta';
@@ -24,9 +25,10 @@ export class Tours {
   });
 
   protected readonly i18n = inject(I18nService);
-  protected readonly destinations = tourDestinations;
-  protected readonly bannerImage = TOURS_BANNER_IMAGE;
-  protected readonly closerImage = TOURS_CLOSER_IMAGE;
+  private readonly catalog = inject(CatalogService);
+  protected readonly destinations = this.catalog.destinations;
+  protected readonly bannerImage = this.catalog.mediaImage('tours.banner', TOURS_BANNER_IMAGE);
+  protected readonly closerImage = this.catalog.mediaImage('tours.closer', TOURS_CLOSER_IMAGE);
   protected readonly detailPath = tourPath;
 
   constructor() {

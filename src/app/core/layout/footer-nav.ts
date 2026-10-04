@@ -1,8 +1,7 @@
-import {
-  destinationById,
-  FOOTER_DESTINATION_IDS,
-  tourPath,
-} from '../catalog/tours';
+import { type CatalogDestination, FOOTER_DESTINATION_IDS, tourDestinations, tourPath } from '../catalog/tours';
+import type { SiteSettings } from '../cms/cms-models';
+import type { MediaSlot } from '../cms/cms-models';
+import { contactFromSite, DEFAULT_SITE } from '../cms/site-defaults';
 import {
   simpleFacebook,
   simpleGooglemaps,
@@ -46,71 +45,63 @@ export const footerBrandLinks: readonly FooterLink[] = [
   { labelKey: 'nav.contact', path: '/contact' },
 ];
 
-export const footerDestinations: readonly FooterDestination[] = FOOTER_DESTINATION_IDS.map(
-  (id) => {
-    const destination = destinationById(id);
-    return {
+/** Footer columns follow `FOOTER_DESTINATION_IDS`; destinations added in the CMS come last. */
+export function buildFooterDestinations(
+  destinations: readonly CatalogDestination[],
+): readonly FooterDestination[] {
+  const rank = (id: string): number => {
+    const index = FOOTER_DESTINATION_IDS.indexOf(id);
+    return index === -1 ? FOOTER_DESTINATION_IDS.length : index;
+  };
+
+  return [...destinations]
+    .sort((a, b) => rank(a.id) - rank(b.id))
+    .map((destination) => ({
       titleKey: destination.titleKey,
       all: { labelKey: destination.allLabelKey, path: destination.hubPath },
       children: destination.tours.map((tour) => ({
         labelKey: tour.titleKey,
         path: tourPath(tour.id),
       })),
-    };
-  },
-);
+    }));
+}
 
-export const footerSocials: readonly FooterSocial[] = [
-  {
-    labelKey: 'footer.social.instagram',
-    href: 'https://www.instagram.com/desertica',
-    svg: simpleInstagram,
-  },
-  {
-    labelKey: 'footer.social.facebook',
-    href: 'https://www.facebook.com/desertica',
-    svg: simpleFacebook,
-  },
-  {
-    labelKey: 'footer.social.tiktok',
-    href: 'https://www.tiktok.com/@desertica',
-    svg: simpleTiktok,
-  },
-  {
-    labelKey: 'footer.social.youtube',
-    href: 'https://www.youtube.com/@desertica',
-    svg: simpleYoutube,
-  },
-  {
-    labelKey: 'footer.social.linkedin',
-    href: 'https://www.linkedin.com/company/desertica',
-    svg: simpleLinkedin,
-  },
-  {
-    labelKey: 'footer.social.google',
-    href: 'https://maps.google.com/?q=Desertica',
-    svg: simpleGooglemaps,
-  },
-  {
-    labelKey: 'footer.social.tripadvisor',
-    href: 'https://www.tripadvisor.com/desertica',
-    svg: simpleTripadvisor,
-  },
+export const footerDestinations: readonly FooterDestination[] =
+  buildFooterDestinations(tourDestinations);
+
+const SOCIAL_LINKS: readonly {
+  id: 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'linkedin' | 'google' | 'tripadvisor';
+  labelKey: string;
+  svg: string;
+}[] = [
+  { id: 'instagram', labelKey: 'footer.social.instagram', svg: simpleInstagram },
+  { id: 'facebook', labelKey: 'footer.social.facebook', svg: simpleFacebook },
+  { id: 'tiktok', labelKey: 'footer.social.tiktok', svg: simpleTiktok },
+  { id: 'youtube', labelKey: 'footer.social.youtube', svg: simpleYoutube },
+  { id: 'linkedin', labelKey: 'footer.social.linkedin', svg: simpleLinkedin },
+  { id: 'google', labelKey: 'footer.social.google', svg: simpleGooglemaps },
+  { id: 'tripadvisor', labelKey: 'footer.social.tripadvisor', svg: simpleTripadvisor },
 ];
 
-export const footerContact = {
-  email: 'xxxxxx@desertica.pe',
-  phone: '+51 9XX XXX XXX',
-  mailto: 'mailto:xxxxxx@desertica.pe',
-  tel: 'tel:+519XXXXXXXX',
-  whatsapp: 'https://wa.me/519XXXXXXXX',
-} as const;
+export function buildFooterSocials(site: SiteSettings): readonly FooterSocial[] {
+  return SOCIAL_LINKS.filter((item) => site[item.id]).map((item) => ({
+    labelKey: item.labelKey,
+    href: site[item.id],
+    svg: item.svg,
+  }));
+}
+
+export const footerSocials: readonly FooterSocial[] = buildFooterSocials(DEFAULT_SITE);
+
+export const footerContact = contactFromSite(DEFAULT_SITE);
+
+export const FOOTER_LEGAL_YEAR = 2026;
 
 export const footerLegalEntity = {
-  year: 2026,
-  name: 'XXXXXXXXXXXX S.A.C.',
-  ruc: 'XXXXXXXXXXX',
-} as const;
+  year: FOOTER_LEGAL_YEAR,
+  name: DEFAULT_SITE.legalName,
+  ruc: DEFAULT_SITE.ruc,
+};
 
 export const footerLegalLinks: readonly FooterLink[] = [
   { labelKey: 'footer.terms', path: '/terms' },
@@ -118,8 +109,9 @@ export const footerLegalLinks: readonly FooterLink[] = [
   { labelKey: 'footer.conduct', path: '/conduct' },
 ];
 
-export const footerStamps: readonly FooterStamp[] = [
+const STAMPS: readonly (FooterStamp & { slot: string })[] = [
   {
+    slot: 'footer.stamp.mincetur',
     src: '/legal/mincetur-agencia.png',
     width: 223,
     height: 320,
@@ -128,6 +120,7 @@ export const footerStamps: readonly FooterStamp[] = [
     optimized: true,
   },
   {
+    slot: 'footer.stamp.complaints',
     src: '/legal/libro-reclamaciones.png',
     width: 209,
     height: 320,
@@ -136,3 +129,9 @@ export const footerStamps: readonly FooterStamp[] = [
     optimized: true,
   },
 ];
+
+export function buildFooterStamps(media: Readonly<Record<string, MediaSlot>>): readonly FooterStamp[] {
+  return STAMPS.map(({ slot, ...stamp }) => ({ ...stamp, src: media[slot]?.image ?? stamp.src }));
+}
+
+export const footerStamps: readonly FooterStamp[] = buildFooterStamps({});

@@ -8,6 +8,8 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
+import { cmsConfigFromEnv } from './app/core/cms/cms-config';
+import { formsProxy } from './forms-proxy';
 import {
   catalogs,
   DEFAULT_LOCALE,
@@ -67,6 +69,21 @@ app.use((req, res, next) => {
     next();
   });
 });
+
+/**
+ * Contact and reservation forms are validated here and forwarded to Strapi, so the browser never
+ * needs the CMS URL or CORS access.
+ */
+const cms = cmsConfigFromEnv(process.env);
+app.set('trust proxy', process.env['TRUST_PROXY'] === 'true');
+app.use(
+  '/api/forms',
+  formsProxy({
+    strapiUrl: cms.url,
+    token: process.env['STRAPI_FORMS_TOKEN'] ?? null,
+    secret: process.env['FORMS_PROXY_SECRET'] ?? null,
+  }),
+);
 
 /**
  * Serve static files from /browser

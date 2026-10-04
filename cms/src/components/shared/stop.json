@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_shared_stops",
+  "info": {
+    "displayName": "Stop",
+    "icon": "clock"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "body": {
+      "type": "text"
+    },
+    "expandedBody": {
+      "type": "text"
+    }
+  }
+}

@@ -53,15 +53,24 @@ export function resolveLocale(options: {
   return DEFAULT_LOCALE;
 }
 
-export function translate(key: string, locale: AppLocale): string {
-  const value = lookup(catalogs[locale], key);
-  if (typeof value === 'string') {
-    return value;
+export type Messages = Readonly<Record<string, string>>;
+export type MessageOverlay = Readonly<Partial<Record<AppLocale, Messages>>>;
+
+export const EMPTY_OVERLAY: MessageOverlay = {};
+
+/**
+ * Resolves a message key. CMS messages (`overlay`) win over the bundled JSON catalogs, and the
+ * default locale is the fallback for both.
+ */
+export function translate(key: string, locale: AppLocale, overlay: MessageOverlay = EMPTY_OVERLAY): string {
+  const own = overlay[locale]?.[key] || lookup(catalogs[locale], key);
+  if (typeof own === 'string' && own) {
+    return own;
   }
 
   if (locale !== DEFAULT_LOCALE) {
-    const fallback = lookup(catalogs[DEFAULT_LOCALE], key);
-    if (typeof fallback === 'string') {
+    const fallback = overlay[DEFAULT_LOCALE]?.[key] || lookup(catalogs[DEFAULT_LOCALE], key);
+    if (typeof fallback === 'string' && fallback) {
       return fallback;
     }
   }

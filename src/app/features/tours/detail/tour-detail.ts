@@ -10,10 +10,11 @@ import {
 } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { resolvedTour, tourHasDetails } from '../../../core/catalog/tour-pages';
+import { tourHasDetails } from '../../../core/catalog/tour-pages';
 import { TOURS_PATH } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
@@ -53,14 +54,15 @@ export class TourDetail {
 
   readonly id = input.required<string>();
   protected readonly i18n = inject(I18nService);
-  protected readonly resolved = computed(() => resolvedTour(this.id()));
+  private readonly catalog = inject(CatalogService);
+  protected readonly resolved = computed(() => this.catalog.resolvedTour(this.id()));
   protected readonly hasDetails = tourHasDetails;
 
   constructor() {
     effect(() => {
       const id = this.id();
       untracked(() => {
-        if (!resolvedTour(id)) {
+        if (!this.catalog.resolvedTour(id)) {
           void this.router.navigateByUrl(TOURS_PATH);
         }
       });

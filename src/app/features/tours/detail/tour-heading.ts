@@ -9,7 +9,8 @@ import {
 } from '@ng-icons/lucide';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { TourPage } from '../../../core/catalog/tour-pages';
-import { CatalogTour, destinationById, TOURS_PATH } from '../../../core/catalog/tours';
+import { CatalogService } from '../../../core/catalog/catalog';
+import { CatalogTour, TOURS_PATH } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 
@@ -73,7 +74,11 @@ export class TourHeading {
   readonly page = input.required<TourPage>();
   protected readonly i18n = inject(I18nService);
   protected readonly toursPath = TOURS_PATH;
-  protected readonly destination = computed(() => destinationById(this.tour().destination));
+  private readonly catalog = inject(CatalogService);
+  protected readonly destination = computed(() => {
+    const tour = this.tour();
+    return this.catalog.tourDestination(tour) ?? { id: tour.destination, titleKey: '' };
+  });
   protected readonly languageChip = computed(() =>
     this.page()
       .languages.map((code) => code.toUpperCase())

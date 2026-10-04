@@ -1,5 +1,6 @@
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } from '@angular/core';
+import { CatalogService } from '../../core/catalog/catalog';
 import { afterNextGsap } from '../../core/animation/gsap';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
 import { ABOUT_ARCHIVE_IMAGES } from './about-media';
@@ -52,7 +53,11 @@ export class AboutArchive {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly smooth = inject(SmoothScroll);
   private readonly destroyRef = inject(DestroyRef);
-  protected readonly frames = ARCHIVE_FRAMES;
+  private readonly catalog = inject(CatalogService);
+  protected readonly frames = ARCHIVE_FRAMES.map((frame) => ({
+    ...frame,
+    image: this.catalog.mediaImage(`about.archive.${frame.id}`, frame.image),
+  }));
 
   constructor() {
     let cancelled = false;

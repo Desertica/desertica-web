@@ -1,5 +1,6 @@
+import { inject } from '@angular/core';
 import { PrerenderFallback, RenderMode, ServerRoute } from '@angular/ssr';
-import { catalogTours } from './core/catalog/tours';
+import { CatalogService } from './core/catalog/catalog';
 
 export const serverRoutes: ServerRoute[] = [
   { path: '', renderMode: RenderMode.Prerender },
@@ -9,13 +10,16 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender,
     fallback: PrerenderFallback.Server,
     async getPrerenderParams() {
-      return catalogTours.map((tour) => ({ id: tour.id }));
+      const catalog = inject(CatalogService);
+      await catalog.init();
+      return catalog.tours().map((tour) => ({ id: tour.id }));
     },
   },
-  { path: 'products', renderMode: RenderMode.Prerender },
+  { path: 'products', renderMode: RenderMode.Server },
+  { path: 'products/:slug', renderMode: RenderMode.Server },
   { path: 'about', renderMode: RenderMode.Prerender },
   { path: 'contact', renderMode: RenderMode.Prerender },
-  { path: 'blog', renderMode: RenderMode.Prerender },
+  { path: 'blog', renderMode: RenderMode.Server },
   { path: 'blog/:slug', renderMode: RenderMode.Server },
   { path: 'nazca', renderMode: RenderMode.Prerender },
   { path: 'huacachina', renderMode: RenderMode.Prerender },

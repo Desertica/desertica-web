@@ -10,7 +10,7 @@
     class="rounded-none object-cover object-[50%_40%]"
   />
 
-  @if (hasPosts) {
+  @if (hasPosts()) {
     <div
       class="blog-banner-overlay pointer-events-none absolute inset-0 flex flex-col items-center justify-end p-6 text-center md:p-8"
     >
@@ -45,10 +45,10 @@
   }
 </section>
 
-@if (hasPosts) {
+@if (hasPosts()) {
   <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
     <div class="grid gap-8 text-left md:grid-cols-2 lg:grid-cols-3">
-      @for (post of posts; track post.slug; let first = $first) {
+      @for (post of posts(); track post.slug; let first = $first) {
         <a class="group block" [routerLink]="postPath(post.slug)">
           <img
             [ngSrc]="post.cover.url"

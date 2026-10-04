@@ -39,22 +39,26 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/`                  | **SSG** (`RenderMode.Prerender`) | Wordmark, Why, tour gallery, destinos, CTA |
 | `/tours`             | **SSG** (`RenderMode.Prerender`) | Catalog by Huacachina, Paracas, Nazca     |
 | `/tours/:id`         | **SSG** (`RenderMode.Prerender`) | Tour detail (`dune-buggy` is the first filled page) |
-| `/products`          | **SSG** (`RenderMode.Prerender`) | Products hub placeholder                  |
+| `/products`          | **SSR** (`RenderMode.Server`)    | Products from Strapi (empty state until published) |
+| `/products/:slug`    | **SSR** (`RenderMode.Server`)    | Product detail from Strapi                |
 | `/about`             | **SSG** (`RenderMode.Prerender`) | About placeholder                         |
 | `/contact`           | **SSG** (`RenderMode.Prerender`) | Contact placeholder                       |
-| `/blog`              | **SSG** (`RenderMode.Prerender`) | Blog placeholder                          |
-| `/nazca`             | **SSG** (`RenderMode.Prerender`) | Nazca hub placeholder                     |
-| `/huacachina`        | **SSG** (`RenderMode.Prerender`) | Huacachina hub placeholder                |
-| `/paracas`           | **SSG** (`RenderMode.Prerender`) | Paracas hub placeholder                   |
-| `/terms`             | **SSG** (`RenderMode.Prerender`) | Terms placeholder                         |
-| `/privacy`           | **SSG** (`RenderMode.Prerender`) | Privacy placeholder                       |
-| `/complaints`        | **SSG** (`RenderMode.Prerender`) | Complaints book placeholder               |
-| `/conduct`           | **SSG** (`RenderMode.Prerender`) | ESNNA code of conduct placeholder         |
-| `/legal/mincetur`    | **SSG** (`RenderMode.Prerender`) | MINCETUR registration placeholder         |
+| `/blog`              | **SSR** (`RenderMode.Server`)    | Posts from Strapi (empty state until published) |
+| `/blog/:slug`        | **SSR** (`RenderMode.Server`)    | Post detail from Strapi                   |
+| `/nazca`             | **SSG** (`RenderMode.Prerender`) | Destination hub: Strapi page + its tours  |
+| `/huacachina`        | **SSG** (`RenderMode.Prerender`) | Destination hub: Strapi page + its tours  |
+| `/paracas`           | **SSG** (`RenderMode.Prerender`) | Destination hub: Strapi page + its tours  |
+| `/terms`             | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
+| `/privacy`           | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
+| `/complaints`        | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
+| `/conduct`           | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
+| `/legal/mincetur`    | **SSG** (`RenderMode.Prerender`) | Legal page from Strapi (`page` entry)     |
 | `/experiences/:slug` | **SSR** (`RenderMode.Server`)    | Detail placeholder (`slug` from the URL)  |
 | `/reservations`      | **CSR** (`RenderMode.Client`)    | Plan your trip / reservations placeholder |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
+
+SSG pages bake the CMS content in at build time (rebuild after publishing, e.g. from a Strapi webhook). SSR pages (`/blog`, `/products`, `/tours/:id` for tours created after the build) read Strapi per request through a short server-side cache.
 
 ## Architecture
 
@@ -74,20 +78,54 @@ src/app/
     models/experience.ts
     models/reservation.ts
     services/experiences.ts    # empty list / getBySlug
+    catalog/catalog.ts         # CatalogService: Strapi content with static fallback
+    cms/                       # Strapi client, mapper, forms API, site defaults
+    seo/page-meta.ts           # title/description per page
   features/
     landing/                   # SSG home (DrawSVG hero, Why, gallery, destinos, CTA)
     tours/                     # SSG catalog
     tours/detail/              # SSG tour page (`/tours/:id`)
     about/                     # SSG placeholder
     contact/                   # SSG placeholder
-    placeholder/               # SSG empty pages (blog, destinos, legal)
+    content/                   # CMS page (legal, destination hubs)
+    blog/                      # Strapi posts (SSR)
+    products/                  # Strapi products (SSR)
     experiences/detail/        # SSR placeholder
     reservations/              # CSR placeholder
+src/forms-proxy.ts             # /api/forms/* -> Strapi (validation + rate limit)
+cms/                           # Strapi 5 project (see cms/README.md)
+scripts/build-cms-seed.mjs     # regenerates cms/seed/catalog.json from the static catalog
 libs/ui/                       # Spartan helm copies
 public/brand/                  # mark and lockup
 public/legal/                  # MINCETUR distintivo + INDECOPI AvisoVirtual
 public/splashes/               # looping DrawSVG pages (not wired into Angular routes)
 ```
+
+## Strapi CMS
+
+Everything editable lives in [`cms/`](cms/README.md) (Strapi 5, TypeScript, locales `en`/`es`):
+
+| Content type    | Drives                                                                    |
+| --------------- | ------------------------------------------------------------------------- |
+| `destination`   | Destination titles, leads, hub pages, order                               |
+| `tour`          | Catalog, tour pages (itinerary, highlights, gallery, price), featured set |
+| `translation`   | Every UI string (`key` = the i18n key, e.g. `nav.blog`); overrides the JSON catalogs |
+| `media-slot`    | Banners, About video/images, footer stamps (`tours.banner`, `about.trio`, ...) |
+| `page`          | Terms, privacy, complaints, conduct, MINCETUR, products/blog intros, hubs |
+| `blog-post`     | `/blog`                                                                   |
+| `product`       | `/products`                                                               |
+| `site-setting`  | Email, phone, WhatsApp, social links, legal name and RUC                  |
+| `reservation`   | Booking requests sent from the tour page (also opens WhatsApp)            |
+| `contact-message` | Messages from `/contact`                                                |
+
+```bash
+npm run cms:install        # once
+cp cms/.env.example cms/.env   # fill the secrets
+npm run cms:dev            # http://localhost:1337/admin (seeds the catalog on first run)
+npm run start:cms          # Angular at :4200 reading Strapi
+```
+
+The app only talks to Strapi when `STRAPI_URL` is set on the server ([`.env.example`](.env.example)); without it, the bundled static catalog is used. If Strapi is unreachable the last good response is served, and if there is none the static catalog takes over. Text from Strapi is registered as an i18n overlay (`cms.tours.<slug>.title`, ...), so templates keep using the `translate` pipe. Forms go browser -> `/api/forms/*` (Express) -> Strapi, so the browser never needs the CMS URL.
 
 ## Spartan/ui
 
@@ -120,3 +158,6 @@ Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client th
 | `npm run build`                   | Production build + prerender     |
 | `npm run serve:ssr:desertica-web` | Serve the Node SSR bundle        |
 | `npm test`                        | Vitest                           |
+| `npm run start:cms`               | Dev server reading Strapi on :1337 |
+| `npm run cms:dev` / `cms:build`   | Strapi dev server / admin build  |
+| `npm run cms:seed`                | Regenerate `cms/seed/catalog.json` |

@@ -16,12 +16,13 @@ import { afterNextGsap } from '../../core/animation/gsap';
 import { IntroService } from '../../core/animation/intro';
 import { PlanTripHover } from '../../core/animation/plan-trip-hover';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
+import { CatalogService } from '../../core/catalog/catalog';
 import {
   appendWordmarkDraw,
   prepareWordmarkDraw,
   queryWordmark,
 } from '../../core/animation/wordmark-intro';
-import { HOME_HERO_IMAGE, tourDestinations } from '../../core/catalog/tours';
+import { HOME_HERO_IMAGE } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { HorizGallery } from '../../core/layout/horiz-gallery';
@@ -56,8 +57,9 @@ export class Landing {
 
   protected readonly i18n = inject(I18nService);
   protected readonly planTrip = planTripLink;
-  protected readonly heroImage = HOME_HERO_IMAGE;
-  protected readonly destinations = tourDestinations;
+  private readonly catalog = inject(CatalogService);
+  protected readonly heroImage = this.catalog.mediaImage('home.hero', HOME_HERO_IMAGE);
+  protected readonly destinations = this.catalog.destinations;
   protected readonly destRatio = 4 / 5;
   protected readonly reserveBtnClass = `${buttonVariants({ size: 'lg' })} w-fit self-start`;
   protected readonly pitchBeats = [
