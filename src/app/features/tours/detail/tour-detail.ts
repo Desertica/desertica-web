@@ -15,16 +15,17 @@ import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { tourHasDetails } from '../../../core/catalog/tour-pages';
+import { meetingMapUrl, tourHasDetails } from '../../../core/catalog/tour-pages';
 import { type CatalogTour, TOURS_PATH, tourPath } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
-import { touristTripLd } from '../../../core/seo/json-ld';
+import { faqLd, touristTripLd } from '../../../core/seo/json-ld';
 import { usePageMeta } from '../../../core/seo/page-meta';
 import { SeoService } from '../../../core/seo/seo';
 import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
 import { BookingPanel } from '../../booking/booking-panel';
 import { TourAssurances } from './tour-assurances';
+import { TourFaqs } from './tour-faqs';
 import { TourBook } from './tour-book';
 import { TourFeatures } from './tour-features';
 import { TourFullDetails } from './tour-full-details';
@@ -44,6 +45,7 @@ import { TourVideos } from './tour-videos';
     TourHeading,
     TourFeatures,
     TourAssurances,
+    TourFaqs,
     TourBook,
     BookingPanel,
     TourTimeline,
@@ -64,6 +66,7 @@ export class TourDetail {
   private readonly catalog = inject(CatalogService);
   protected readonly resolved = computed(() => this.catalog.resolvedTour(this.id()));
   protected readonly hasDetails = tourHasDetails;
+  protected readonly mapUrl = meetingMapUrl;
   /** Online booking replaces the WhatsApp form only while the flag is on. */
   protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
 
@@ -112,7 +115,27 @@ export class TourDetail {
                 price: tour.priceFrom,
                 currency: asCurrency(this.catalog.booking().currencyCode),
                 inLanguage: page.languages,
+                ...(page.latitude !== undefined && page.longitude !== undefined
+                  ? {
+                      meetingPoint: {
+                        name: this.i18n.t(page.meetingKey),
+                        latitude: page.latitude,
+                        longitude: page.longitude,
+                      },
+                    }
+                  : {}),
               }),
+              // The questions are rendered on the page by `TourFaqs`, as Google requires.
+              ...(page.faqs?.length
+                ? [
+                    faqLd(
+                      page.faqs.map((faq) => ({
+                        question: this.i18n.t(faq.questionKey),
+                        answer: this.i18n.t(faq.answerKey),
+                      })),
+                    ),
+                  ]
+                : []),
             ]
           : [],
       };

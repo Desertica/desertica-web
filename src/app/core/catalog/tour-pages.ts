@@ -22,6 +22,11 @@ export type TourVideo = {
   mp4?: string;
 };
 
+export type TourFaq = {
+  questionKey: string;
+  answerKey: string;
+};
+
 export type TourPage = {
   gallery: readonly string[];
   leadKey: string;
@@ -43,6 +48,14 @@ export type TourPage = {
   seoTitleKey?: string;
   seoDescriptionKey?: string;
   itineraryFile?: string;
+  /** Meeting point coordinates (WGS84), for `geo` in the JSON-LD and the map link. */
+  latitude?: number;
+  longitude?: number;
+  /** Map link of the meeting point; falls back to a link built from the coordinates. */
+  meetingPointUrl?: string;
+  faqs?: readonly TourFaq[];
+  /** i18n key of the Markdown waiver text each passenger signs. */
+  waiverBodyKey?: string;
 };
 
 const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string => {
@@ -201,4 +214,18 @@ export function tourHasDetails(page: TourPage): boolean {
       page.packKeys.length ||
       page.termsSummaryKey,
   );
+}
+
+/**
+ * Map link for the meeting point: the CMS link when there is one, otherwise a Google Maps search
+ * built from the coordinates (the documented `maps/search/?api=1&query=` form).
+ */
+export function meetingMapUrl(page: TourPage): string | null {
+  if (page.meetingPointUrl) {
+    return page.meetingPointUrl;
+  }
+
+  return page.latitude !== undefined && page.longitude !== undefined
+    ? `https://www.google.com/maps/search/?api=1&query=${page.latitude},${page.longitude}`
+    : null;
 }
