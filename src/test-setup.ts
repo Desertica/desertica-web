@@ -1,5 +1,13 @@
 import { settleMotion } from './app/testing/settle-motion';
 
+/** jsdom has no ResizeObserver; form fields call it while rendering and would throw. */
+class ResizeObserverStub {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+globalThis.ResizeObserver ??= ResizeObserverStub;
+
 /**
  * Runs before every spec. Specs can share one jsdom worker, so browser state set by one test
  * (locale cookie, stored theme, intro flag) must not leak into the next.
