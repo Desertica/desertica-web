@@ -413,7 +413,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Renovar el token de acceso */
+        /**
+         * Renovar el token de acceso
+         * @description Lee la cookie `desertica_refresh`, la rota y devuelve un token de acceso nuevo con una cookie nueva.
+         *     Reutilizar un refresh ya rotado revoca todas las sesiones del usuario.
+         */
         post: operations["refreshSession"];
         delete?: never;
         options?: never;
@@ -430,7 +434,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Cerrar sesión (revoca el refresh token) */
+        /**
+         * Cerrar sesión
+         * @description Revoca el refresh token de la cookie `desertica_refresh` y la borra.
+         */
         post: operations["logout"];
         delete?: never;
         options?: never;
@@ -716,6 +723,46 @@ export interface paths {
         head?: never;
         /** Editar notas, datos de contacto o pasajeros */
         patch: operations["updateBooking"];
+        trace?: never;
+    };
+    "/bookings/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cotizar una reserva manual
+         * @description Igual que la cotización pública, pero admite un precio acordado (`overrideTotalCents`, requiere `bookings:override`).
+         */
+        post: operations["createStaffQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{id}/cancellation-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ver cuánto se reembolsaría antes de cancelar
+         * @description Calcula el reembolso con la política vigente al reservar, sin cambiar nada.
+         */
+        get: operations["getCancellationQuote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/bookings/{id}/cancel": {
@@ -1204,7 +1251,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publicar una nueva versión de un documento legal */
+        /**
+         * Publicar una nueva versión de un documento legal
+         * @description Trae la página `cmsSlug` del CMS en el idioma `locale` y guarda un snapshot inmutable de su texto
+         *     (un trigger de la base impide modificarlo o borrarlo). La versión es la siguiente de `(kind, locale)`.
+         *     Responde 422 si el CMS no tiene esa página y 503 si el CMS no responde.
+         */
         post: operations["publishLegalDocument"];
         delete?: never;
         options?: never;
@@ -1314,7 +1366,7 @@ export interface paths {
         get: operations["getSettings"];
         /**
          * Guardar ajustes operativos
-         * @description Tope de reembolso del operador, duración del bloqueo de cupo, plantillas de email y similares.
+         * @description Solo cambia las claves enviadas. Las claves conocidas se validan por rango.
          */
         put: operations["saveSettings"];
         post?: never;
@@ -1472,6 +1524,9 @@ export interface components {
             id: string;
             /** Format: uuid */
             tourRefId: string;
+            tourSlug: string;
+            /** @description Título del tour en el idioma de la petición (`Accept-Language`) con respaldo al inglés. */
+            tourTitle: string;
             /** Format: date-time */
             startsAt: string;
             capacity: number;
@@ -1582,6 +1637,7 @@ export interface components {
             startsAt: string;
             language: string;
             format: components["schemas"]["TourFormat"];
+            /** @description Cupos libres; 0 significa agotada. */
             seatsLeft: number;
             meetingPoint?: string | null;
             price: {
@@ -1686,6 +1742,8 @@ export interface components {
             notes?: string;
             locale?: string;
             attribution?: components["schemas"]["Attribution"];
+            /** @description Identificador anónimo del visitante (el mismo del consentimiento de cookies). Permite saber si hubo consentimiento de marketing al enviar eventos desde el servidor. */
+            anonymousId?: string;
             turnstileToken?: string;
         };
         CreateManualBooking: {
@@ -1727,6 +1785,7 @@ export interface components {
             /** Format: date-time */
             startsAt: string;
             tourSlug: string;
+            tourTitle: string;
             customerName: string;
             adults?: number;
             children?: number;
@@ -1739,7 +1798,10 @@ export interface components {
         Booking: components["schemas"]["BookingSummary"] & {
             customer?: components["schemas"]["Customer"];
             depositCents?: number | null;
+            /** @description Devuelto efectivamente por la pasarela o a mano. */
             refundedCents?: number;
+            /** @description Reembolsos calculados (cancelación, cambio de precio) que aún no se ejecutaron. */
+            refundDueCents?: number;
             billing?: components["schemas"]["Billing"];
             notes?: string | null;
             locale?: string;
@@ -1773,6 +1835,12 @@ export interface components {
             paidCents: number;
             pendingCents: number;
             depositCents?: number | null;
+            format: components["schemas"]["TourFormat"];
+            passengers?: {
+                firstName: string;
+                lastName: string;
+            }[];
+            paymentOptions: components["schemas"]["PaymentOptions"];
             cancellationTiers?: {
                 hoursBefore?: number;
                 refundPercent?: number;
@@ -1790,16 +1858,17 @@ export interface components {
                 pdfUrl?: string;
             }[];
         };
+        /** @description Pasarelas y tipos de pago disponibles para la moneda y el saldo de la reserva (vacío si no queda saldo). */
+        PaymentOptions: {
+            /** @enum {string} */
+            provider: "STRIPE" | "CULQI";
+            kinds: components["schemas"]["PaymentKind"][];
+        }[];
         PublicBookingCreated: {
             booking: components["schemas"]["PublicBooking"];
             /** @description Se envía como `X-Booking-Token` en las llamadas siguientes y por email. */
             accessToken: string;
-            /** @description Pasarelas disponibles para la moneda de la reserva. */
-            paymentOptions?: {
-                /** @enum {string} */
-                provider: "STRIPE" | "CULQI";
-                kinds: components["schemas"]["PaymentKind"][];
-            }[];
+            paymentOptions?: components["schemas"]["PaymentOptions"];
         };
         CreatePaymentRequest: {
             kind: components["schemas"]["PaymentKind"];
@@ -1865,7 +1934,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             bookingId: string;
-            bookingReference?: string;
+            bookingReference: string;
             provider: components["schemas"]["PaymentProvider"];
             method: components["schemas"]["PaymentMethod"];
             kind: components["schemas"]["PaymentKind"];
@@ -1885,6 +1954,10 @@ export interface components {
             id: string;
             /** Format: uuid */
             paymentId: string;
+            /** Format: uuid */
+            bookingId: string;
+            bookingReference: string;
+            currency: components["schemas"]["Currency"];
             amountCents: number;
             reason: string;
             /** @enum {string} */
@@ -1900,6 +1973,9 @@ export interface components {
             id: string;
             /** Format: uuid */
             paymentId: string;
+            /** Format: uuid */
+            bookingId: string;
+            bookingReference: string;
             provider: components["schemas"]["PaymentProvider"];
             providerRef?: string;
             status: components["schemas"]["DisputeStatus"];
@@ -1917,6 +1993,9 @@ export interface components {
             id: string;
             /** Format: uuid */
             bookingId: string;
+            bookingReference: string;
+            /** @description Nombre o razón social del receptor del comprobante. */
+            customerName: string;
             /** Format: uuid */
             paymentId?: string | null;
             docType: components["schemas"]["DocumentType"];
@@ -1972,7 +2051,16 @@ export interface components {
             minAge?: number | null;
             minHeightCm?: number | null;
         };
+        /**
+         * @description Versión publicada de un documento legal. Al publicar se guarda un snapshot inmutable del texto
+         *     traído del CMS (título, Markdown y su hash); es la evidencia de lo que aceptó el cliente. El texto
+         *     no se devuelve aquí: la web lo muestra desde el CMS y `contentHash` permite comprobar que coincide.
+         */
         LegalDocument: {
+            /** @description Título de la página en el CMS al publicar. */
+            title: string;
+            /** @description SHA-256 (hex) de título y texto del snapshot. */
+            contentHash: string;
             /** Format: uuid */
             id: string;
             kind: components["schemas"]["LegalDocumentKind"];
@@ -2018,7 +2106,6 @@ export interface components {
         };
         Session: {
             accessToken: string;
-            refreshToken: string;
             /** @description Segundos de vigencia del token de acceso. */
             expiresIn: number;
             user: components["schemas"]["User"];
@@ -2090,6 +2177,57 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        StaffQuoteRequest: components["schemas"]["QuoteRequest"] & {
+            overrideTotalCents?: number;
+        };
+        CancellationQuote: {
+            currency: components["schemas"]["Currency"];
+            /** @description Total cobrado hasta ahora. */
+            paidCents: number;
+            refundCents: number;
+            refundPercent: number;
+            /** @description Tramo de la política aplicado. */
+            tier?: {
+                hoursBefore?: number;
+                refundPercent?: number;
+            } | null;
+            policyVersion?: number | null;
+            /** @description Por qué no corresponde reembolso, si es el caso. */
+            reason?: string | null;
+        };
+        /** @description Ajustes operativos con su valor por defecto. Se permiten claves adicionales. */
+        Settings: {
+            /**
+             * @description Porcentaje del total que se cobra como depósito.
+             * @default 30
+             */
+            depositPercent?: number;
+            /**
+             * @description Duración del bloqueo de cupo.
+             * @default 15
+             */
+            holdMinutes?: number;
+            /**
+             * @description Tope de reembolso de un operador sin `payments:refund-any`.
+             * @default 20000
+             */
+            operatorRefundLimitCents?: number;
+            /**
+             * @description Días hábiles para responder un reclamo (a confirmar con el abogado).
+             * @default 15
+             */
+            complaintDueDays?: number;
+        } & {
+            [key: string]: unknown;
+        };
+        SettingsInput: {
+            depositPercent?: number;
+            holdMinutes?: number;
+            operatorRefundLimitCents?: number;
+            complaintDueDays?: number;
+        } & {
+            [key: string]: unknown;
+        };
         Manifest: {
             departure: components["schemas"]["Departure"];
             passengers: {
@@ -2148,7 +2286,14 @@ export interface components {
         IdempotencyKey: string;
     };
     requestBodies: never;
-    headers: never;
+    headers: {
+        /**
+         * @description `desertica_refresh=<token>; HttpOnly; Secure; SameSite=Strict; Path=/api/auth`. El navegador la
+         *     envía solo a `/api/auth/*`; el SPA nunca lee el refresh token. Al cerrar sesión se emite vacía y
+         *     con `Max-Age=0`.
+         */
+        RefreshCookie: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
@@ -2264,6 +2409,7 @@ export interface operations {
                     /** Format: uuid */
                     departureId: string;
                     seats: number;
+                    turnstileToken?: string;
                 };
             };
         };
@@ -2277,6 +2423,7 @@ export interface operations {
                     "application/json": components["schemas"]["Hold"];
                 };
             };
+            404: components["responses"]["Error"];
             /** @description Sin cupo suficiente */
             409: {
                 headers: {
@@ -2394,7 +2541,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
-            404: components["responses"]["Error"];
         };
     };
     createBookingStripeIntent: {
@@ -2778,9 +2924,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Sesión */
+            /** @description Sesión. El refresh token viaja solo en la cookie `desertica_refresh`. */
             200: {
                 headers: {
+                    "Set-Cookie": components["headers"]["RefreshCookie"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2798,17 +2945,12 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    refreshToken: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Sesión renovada */
             200: {
                 headers: {
+                    "Set-Cookie": components["headers"]["RefreshCookie"];
                     [name: string]: unknown;
                 };
                 content: {
@@ -2825,17 +2967,12 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    refreshToken: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Cerrada */
             204: {
                 headers: {
+                    "Set-Cookie": components["headers"]["RefreshCookie"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -2959,6 +3096,7 @@ export interface operations {
                     "application/json": components["schemas"]["TourRef"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     listDepartures: {
@@ -3065,6 +3203,7 @@ export interface operations {
                     "application/json": components["schemas"]["Departure"];
                 };
             };
+            404: components["responses"]["Error"];
             /** @description La capacidad nueva es menor que los asientos vendidos */
             409: {
                 headers: {
@@ -3096,6 +3235,7 @@ export interface operations {
                     "application/json": components["schemas"]["Manifest"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     cancelDeparture: {
@@ -3207,6 +3347,7 @@ export interface operations {
                     "application/json": components["schemas"]["PriceRule"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     deactivatePriceRule: {
@@ -3227,6 +3368,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            404: components["responses"]["Error"];
         };
     };
     listBlackouts: {
@@ -3293,6 +3435,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            404: components["responses"]["Error"];
         };
     };
     listCancellationPolicies: {
@@ -3353,6 +3496,13 @@ export interface operations {
                 to?: string;
                 /** @description Busca por referencia, nombre, correo o documento. */
                 q?: string;
+                source?: "WEB" | "MANUAL";
+                currency?: components["schemas"]["Currency"];
+                customerId?: string;
+                /** @description UNPAID = sin pagos; PARTIAL = pagó algo pero queda saldo; PAID = sin saldo. */
+                paymentStatus?: "UNPAID" | "PARTIAL" | "PAID";
+                /** @description PENDING = al menos un descargo sin firmar. */
+                waiverStatus?: components["schemas"]["WaiverStatus"];
             };
             header?: never;
             path?: never;
@@ -3398,6 +3548,7 @@ export interface operations {
                     "application/json": components["schemas"]["Booking"];
                 };
             };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -3448,6 +3599,59 @@ export interface operations {
                     "application/json": components["schemas"]["Booking"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    createStaffQuote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffQuoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Cotización */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Quote"];
+                };
+            };
+            403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    getCancellationQuote: {
+        parameters: {
+            query?: {
+                refund?: "POLICY" | "FULL" | "NONE";
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cálculo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CancellationQuote"];
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     cancelBooking: {
@@ -3478,6 +3682,7 @@ export interface operations {
                     "application/json": components["schemas"]["Booking"];
                 };
             };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -3516,6 +3721,7 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -3546,6 +3752,8 @@ export interface operations {
                     "application/json": components["schemas"]["Booking"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     createPaymentLink: {
@@ -3578,6 +3786,8 @@ export interface operations {
                     "application/json": components["schemas"]["PaymentLink"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     recordManualPayment: {
@@ -3616,6 +3826,7 @@ export interface operations {
                     "application/json": components["schemas"]["Payment"];
                 };
             };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -4076,6 +4287,7 @@ export interface operations {
                     "application/json": components["schemas"]["Customer"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     updateCustomer: {
@@ -4102,6 +4314,7 @@ export interface operations {
                     "application/json": components["schemas"]["Customer"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     eraseCustomer: {
@@ -4171,6 +4384,7 @@ export interface operations {
                     "application/json": components["schemas"]["Complaint"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     answerComplaint: {
@@ -4199,6 +4413,8 @@ export interface operations {
                     "application/json": components["schemas"]["Complaint"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     listWaivers: {
@@ -4304,6 +4520,7 @@ export interface operations {
                     "application/json": components["schemas"]["User"];
                 };
             };
+            409: components["responses"]["Error"];
         };
     };
     updateUser: {
@@ -4335,6 +4552,7 @@ export interface operations {
                     "application/json": components["schemas"]["User"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     listRoles: {
@@ -4469,9 +4687,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["Settings"];
                 };
             };
         };
@@ -4485,9 +4701,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["SettingsInput"];
             };
         };
         responses: {
@@ -4497,11 +4711,10 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["Settings"];
                 };
             };
+            422: components["responses"]["Error"];
         };
     };
     listBlockedIdentities: {

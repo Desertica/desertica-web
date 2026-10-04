@@ -58,6 +58,8 @@ export const routes: Routes = [
       import('./features/complaints/complaints').then((m) => m.ComplaintsBook),
   },
   content('conduct', 'conduct', 'footer.conduct', 'pages.conductLead'),
+  content('cancellation', 'cancellation', 'footer.cancellation', 'pages.cancellationLead'),
+  content('cookies', 'cookies', 'footer.cookies', 'pages.cookiesLead'),
   content('legal/mincetur', 'legal-mincetur', 'footer.mincetur', 'pages.minceturLead'),
   // Legacy URL: Express answers it with a permanent redirect; this keeps in-app navigation consistent.
   { path: 'experiences/:slug', redirectTo: 'tours/:slug' },
@@ -77,6 +79,22 @@ export const routes: Routes = [
     canMatch: [bookingEngineGuard],
     loadComponent: () =>
       import('./features/booking/checkout-payment').then((m) => m.CheckoutPayment),
+  },
+  {
+    path: 'pay/:token',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () => import('./features/payment/pay-link').then((m) => m.PayLink),
+  },
+  {
+    path: 'waiver/:token',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () => import('./features/waiver/waiver').then((m) => m.Waiver),
+  },
+  {
+    path: 'payment/3ds',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () =>
+      import('./features/payment/three-ds-return').then((m) => m.ThreeDsReturn),
   },
   {
     path: 'booking',

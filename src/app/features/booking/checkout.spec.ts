@@ -135,15 +135,12 @@ describe('Checkout', () => {
     });
     expect((call?.body as { passengers: unknown[] }).passengers).toHaveLength(3);
     expect(call?.body).not.toHaveProperty('attribution');
+    expect(call?.body).not.toHaveProperty('anonymousId');
     expect(call?.body).not.toHaveProperty('turnstileToken');
 
     expect(router.url).toBe('/checkout/payment/DES-2026-0001');
     expect(flow.hold()).toBeNull();
-    expect(flow.remembered('DES-2026-0001')).toEqual({
-      accessToken: 'access-1',
-      paymentOptions: [{ provider: 'STRIPE', kinds: ['FULL', 'DEPOSIT'] }],
-      format: 'PRIVATE',
-    });
+    expect(flow.remembered('DES-2026-0001')).toEqual({ accessToken: 'access-1' });
     expect(track).toHaveBeenCalledWith('begin_checkout', {
       currency: 'USD',
       value: 158,
@@ -165,6 +162,20 @@ describe('Checkout', () => {
     expect(mock.calls.find((item) => item.path === '/public/bookings')?.body).toMatchObject({
       attribution: { landingPath: expect.any(String) },
     });
+  });
+
+  it('sends the cookie-consent id as anonymousId so the API can match the consent record', async () => {
+    const consent = TestBed.inject(ConsentService);
+    consent.init();
+    consent.save({ analytics: false, marketing: false });
+    const id = consent.anonymousId();
+    expect(id).toMatch(/^[0-9a-f-]{36}$/);
+    const { fixture, form } = await mount();
+    fill(form);
+
+    await submit(fixture, fixture);
+
+    expect(mock.calls.find((item) => item.path === '/public/bookings')?.body).toMatchObject({ anonymousId: id });
   });
 
   it('sends a factura with a RUC and requires an address', async () => {

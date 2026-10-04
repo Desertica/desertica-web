@@ -49,6 +49,8 @@ export const LEGAL_DOCUMENTS: Schemas['LegalDocument'][] = (['TERMS', 'PRIVACY',
     locale: 'en',
     version: index + 2,
     cmsSlug: kind.toLowerCase(),
+    title: kind,
+    contentHash: `hash-${kind}`,
     publishedAt: '2026-01-01T00:00:00.000Z',
   }),
 );
@@ -67,6 +69,12 @@ export function publicBooking(overrides: Partial<Schemas['PublicBooking']> = {})
     paidCents: 0,
     pendingCents: 15800,
     depositCents: 3160,
+    format: 'SHARED',
+    passengers: [{ firstName: 'Ana', lastName: 'Quispe' }],
+    paymentOptions: [
+      { provider: 'STRIPE', kinds: ['FULL', 'DEPOSIT'] },
+      { provider: 'CULQI', kinds: ['FULL', 'DEPOSIT'] },
+    ],
     cancellationTiers: [{ hoursBefore: 48, refundPercent: 100 }],
     ...overrides,
   };

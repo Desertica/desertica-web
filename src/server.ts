@@ -141,6 +141,13 @@ app.use(
  */
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'private, no-cache');
+  // E-mailed links carry a credential in the path (`/pay/:token`, `/waiver/:token`, `/booking/:ref`
+  // after the token moves to the session) and those pages load the payment gateways' scripts: no
+  // Referer may leave with it.
+  if (/^\/(pay|waiver|booking|checkout|payment)(\/|$)/.test(req.path)) {
+    res.setHeader('Referrer-Policy', 'no-referrer');
+  }
+
   res.vary('Cookie');
   if (process.env['ROBOTS_DISALLOW_ALL'] === 'true') {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');

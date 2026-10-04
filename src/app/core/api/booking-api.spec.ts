@@ -124,4 +124,42 @@ describe('BookingApi against the mocked contract', () => {
     }) as typeof fetch;
     expect(await api.legalDocuments('es')).toEqual({ ok: false, status: 0, message: 'network' });
   });
+
+  it('addresses payments by booking (header token) or by payment link (path token)', async () => {
+    setup({
+      'POST /public/bookings/*/payments/stripe-intent': () => ({ status: 201, body: { paymentId: 'p1' } }),
+      'POST /public/bookings/*/payments/culqi-charge': () => ({ status: 201, body: { paymentId: 'p2', status: 'SUCCEEDED' } }),
+      'POST /public/payment-links/*/stripe-intent': () => ({ status: 201, body: { paymentId: 'p3' } }),
+      'POST /public/payment-links/*/culqi-charge': () => ({ status: 201, body: { paymentId: 'p4', status: 'SUCCEEDED' } }),
+    });
+    const booking = { type: 'booking', reference: 'DES-1', accessToken: 'tok' } as const;
+    const link = { type: 'link', token: 'lnk' } as const;
+
+    await api.stripeIntent(booking, 'DEPOSIT', 'key-1');
+    await api.culqiCharge(booking, { kind: 'FULL', token: 'tkn', email: 'a@b.co' }, 'key-2');
+    await api.stripeIntent(link, 'FULL', 'key-3');
+    await api.culqiCharge(link, { kind: 'FULL', token: 'tkn', email: 'a@b.co' }, 'key-4');
+
+    const [stripe, culqi, linkStripe, linkCulqi] = mock.calls;
+    expect(stripe).toMatchObject({ path: '/public/bookings/DES-1/payments/stripe-intent', body: { kind: 'DEPOSIT' } });
+    expect(stripe?.headers.get('x-booking-token')).toBe('tok');
+    expect(stripe?.headers.get('idempotency-key')).toBe('key-1');
+    expect(culqi?.body).toEqual({ kind: 'FULL', token: 'tkn', email: 'a@b.co' });
+    expect(linkStripe?.path).toBe('/public/payment-links/lnk/stripe-intent');
+    expect(linkStripe?.headers.get('x-booking-token')).toBeNull();
+    expect(linkCulqi?.body).toEqual({ token: 'tkn', email: 'a@b.co' });
+  });
+
+  it('reads and signs a waiver and reads a payment link', async () => {
+    setup({
+      'GET /public/waivers/*': () => ({ body: { status: 'PENDING', version: 2, tourSlug: 'dune-buggy', startsAt: '2026-12-01T14:00:00.000Z' } }),
+      'POST /public/waivers/*/sign': () => ({ body: { status: 'SIGNED', version: 2, tourSlug: 'dune-buggy', startsAt: '2026-12-01T14:00:00.000Z' } }),
+      'GET /public/payment-links/*': () => ({ status: 410, body: { message: 'expired' } }),
+    });
+
+    expect((await api.waiver('w1')).ok).toBe(true);
+    const signed = await api.signWaiver('w1', { signerName: 'Ana', signerDocType: 'DNI', signerDocNumber: '12345678', accepted: true });
+    expect(signed.ok && signed.data.status).toBe('SIGNED');
+    expect(await api.paymentLink('l1')).toMatchObject({ ok: false, status: 410 });
+  });
 });

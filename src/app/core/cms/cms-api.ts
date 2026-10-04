@@ -33,6 +33,7 @@ const POPULATE: Readonly<Record<string, Record<string, string>>> = {
     'populate[excluded]': 'true',
     'populate[pack]': 'true',
     'populate[notes]': 'true',
+    'populate[faqs]': 'true',
     'populate[assurances]': 'true',
     'populate[itinerary][populate][0]': 'image',
     'populate[videos][populate][0]': 'poster',

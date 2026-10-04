@@ -12,6 +12,8 @@ export type PublicConfig = {
   bookingEngineEnabled: boolean;
   /** Cloudflare Turnstile site key; `null` leaves the forms without the challenge. */
   turnstileSiteKey: string | null;
+  /** Culqi public key (`pk_test_…` / `pk_live_…`); `null` hides Culqi at the payment step. */
+  culqiPublicKey: string | null;
   /** Public origin of the site, used for canonical, hreflang, sitemap and JSON-LD. */
   siteUrl: string | null;
 };
@@ -20,6 +22,7 @@ export const DEFAULT_PUBLIC_CONFIG: PublicConfig = {
   gtmId: null,
   bookingEngineEnabled: false,
   turnstileSiteKey: null,
+  culqiPublicKey: null,
   siteUrl: null,
 };
 
@@ -39,11 +42,14 @@ export function publicConfigForServer(env: Record<string, string | undefined>): 
 
 export function publicConfigFromEnv(env: Record<string, string | undefined>): PublicConfig {
   const gtm = env['GTM_ID']?.trim();
+  const culqi = env['CULQI_PUBLIC_KEY']?.trim();
   const siteUrl = env['SITE_URL']?.trim().replace(/\/+$/, '');
   return {
     gtmId: gtm && /^GTM-[A-Z0-9]+$/.test(gtm) ? gtm : null,
     bookingEngineEnabled: env['BOOKING_ENGINE_ENABLED']?.trim().toLowerCase() === 'true',
     turnstileSiteKey: env['TURNSTILE_SITE_KEY']?.trim() || null,
+    // Public keys only: a secret key (`sk_…`) pasted here by mistake must never reach the browser.
+    culqiPublicKey: culqi && /^pk_(test|live)_[A-Za-z0-9]+$/.test(culqi) ? culqi : null,
     siteUrl: siteUrl || null,
   };
 }

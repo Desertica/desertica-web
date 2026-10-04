@@ -35,6 +35,8 @@ export function touristTripLd(input: {
   price: number;
   currency: string;
   inLanguage: readonly string[];
+  /** Where the tour starts; becomes the trip's `itinerary` Place with its coordinates. */
+  meetingPoint?: { name: string; latitude: number; longitude: number };
 }): JsonLd {
   return {
     '@context': CONTEXT,
@@ -45,6 +47,19 @@ export function touristTripLd(input: {
     image: input.image,
     provider: { '@id': input.organizationId },
     inLanguage: input.inLanguage,
+    ...(input.meetingPoint
+      ? {
+          itinerary: {
+            '@type': 'Place',
+            name: input.meetingPoint.name,
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: input.meetingPoint.latitude,
+              longitude: input.meetingPoint.longitude,
+            },
+          },
+        }
+      : {}),
     offers: {
       '@type': 'Offer',
       url: input.url,
