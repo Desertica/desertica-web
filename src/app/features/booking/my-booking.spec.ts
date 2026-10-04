@@ -47,10 +47,11 @@ describe('MyBooking', () => {
     return harness;
   };
 
-  const confirmed = (paidCents: number) => ({
+  const confirmed = (paidCents: number, format: 'SHARED' | 'PRIVATE' = 'SHARED') => ({
     'GET /public/bookings/*': () => ({
       body: publicBooking({
         status: 'CONFIRMED',
+        format,
         paidCents,
         pendingCents: 15800 - paidCents,
         waivers: [{ token: 'w1', passengerName: 'Ana Perez', status: 'PENDING' }],
@@ -73,54 +74,71 @@ describe('MyBooking', () => {
     expect(root.textContent).toContain('Pending');
     expect(root.textContent).toContain('48 hours before the tour: 100% refund');
     expect(root.textContent).toContain('Ana Perez · Pending signature');
+    expect(root.querySelector('a[href="/waiver/w1"]')).not.toBeNull();
+    expect(root.querySelector('#booking-format')?.textContent).toContain('Shared tour');
+    expect(root.textContent).toContain('Ana Quispe');
     expect(root.querySelector('a[href="https://files.example/b.pdf"]')?.textContent).toBe('B001-00000012');
   });
 
-  it('publishes purchase once per collected amount, with transaction id, value and currency', async () => {
-    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 't', paymentOptions: [], format: 'PRIVATE' });
+  it('publishes purchase once per confirmed payment, numbered <reference>-<n>', async () => {
+    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 't' });
 
-    await open('/booking/DES-2026-0001', confirmed(3160));
+    await open('/booking/DES-2026-0001', confirmed(3160, 'PRIVATE'));
     expect(track).toHaveBeenCalledTimes(1);
     expect(track).toHaveBeenCalledWith('purchase', {
-      transaction_id: 'DES-2026-0001',
+      transaction_id: 'DES-2026-0001-1',
       currency: 'USD',
       value: 31.6,
       items: [expect.objectContaining({ item_id: 'dune-buggy', item_variant: 'PRIVATE', quantity: 2 })],
-      event_id: 'DES-2026-0001',
+      event_id: 'DES-2026-0001-1',
     });
 
     mock?.restore();
     await open('/booking', {});
-    await open('/booking/DES-2026-0001', confirmed(3160));
+    await open('/booking/DES-2026-0001', confirmed(3160, 'PRIVATE'));
     expect(track).toHaveBeenCalledTimes(1);
 
     mock?.restore();
     await open('/booking', {});
-    await open('/booking/DES-2026-0001', confirmed(15800));
+    await open('/booking/DES-2026-0001', confirmed(15800, 'PRIVATE'));
     expect(track).toHaveBeenCalledTimes(2);
-    expect(track).toHaveBeenLastCalledWith('purchase', expect.objectContaining({ transaction_id: 'DES-2026-0001', value: 126.4, currency: 'USD' }));
+    // The balance is the second payment: its own id, so GA4 and Meta do not drop it as a repeat.
+    expect(track).toHaveBeenLastCalledWith(
+      'purchase',
+      expect.objectContaining({
+        transaction_id: 'DES-2026-0001-2',
+        event_id: 'DES-2026-0001-2',
+        value: 126.4,
+        currency: 'USD',
+      }),
+    );
   });
 
   it('does not publish purchase while the booking is unpaid', async () => {
-    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 't', paymentOptions: [], format: 'SHARED' });
+    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 't' });
     await open('/booking/DES-2026-0001', { 'GET /public/bookings/*': () => ({ body: publicBooking() }) });
 
     expect(track).not.toHaveBeenCalled();
   });
 
-  it('offers the way back to payment only for a pending booking this browser can pay', async () => {
-    TestBed.inject(BookingFlow).remember('DES-2026-0001', {
-      accessToken: 't',
-      paymentOptions: [{ provider: 'STRIPE', kinds: ['FULL'] }],
-      format: 'SHARED',
-    });
+  it('offers "pay now" from the options the API returns, also after a reload', async () => {
+    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 't' });
     await open('/booking/DES-2026-0001', { 'GET /public/bookings/*': () => ({ body: publicBooking() }) });
 
     expect(harness.routeNativeElement?.querySelector('a[href="/checkout/payment/DES-2026-0001"]')).not.toBeNull();
   });
 
+  it('hides "pay now" when the API offers no payment option', async () => {
+    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 't' });
+    await open('/booking/DES-2026-0001', {
+      'GET /public/bookings/*': () => ({ body: publicBooking({ paymentOptions: [] }) }),
+    });
+
+    expect(harness.routeNativeElement?.querySelector('a[href="/checkout/payment/DES-2026-0001"]')).toBeNull();
+  });
+
   it('asks for a new link when the token is rejected and answers the same either way', async () => {
-    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 'stale', paymentOptions: [], format: 'SHARED' });
+    TestBed.inject(BookingFlow).remember('DES-2026-0001', { accessToken: 'stale' });
     await open('/booking/DES-2026-0001', {
       'GET /public/bookings/*': () => ({ status: 401, body: { statusCode: 401, error: 'Unauthorized', message: 'no' } }),
       'POST /public/bookings/access': () => ({ status: 202 }),

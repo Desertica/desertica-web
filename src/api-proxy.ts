@@ -13,24 +13,33 @@ export type ApiProxyOptions = {
   windowMs?: number;
 };
 
-type Route = { method: string; pattern: RegExp; write: boolean };
+/** `query`: the route takes URL parameters. Every other route is forwarded without its query string. */
+type Route = { method: string; pattern: RegExp; write: boolean; query?: boolean };
 
 const ID = '[A-Za-z0-9_-]{1,128}';
 
 /**
- * The only API operations a browser may reach. Payments stay out until Ola 2, and complaints and
- * contact messages go through `/api/forms/*` where they are validated first.
+ * The only API operations a browser may reach. Complaints and contact messages go through
+ * `/api/forms/*` where they are validated first. Operations whose path carries a secret token (payment
+ * links, waivers) count as writes for the rate limit, which keeps guessing a token expensive.
  */
 const ROUTES: readonly Route[] = [
-  { method: 'GET', pattern: /^\/tours\/[a-z0-9-]{1,120}\/availability$/, write: false },
+  { method: 'GET', pattern: /^\/tours\/[a-z0-9-]{1,120}\/availability$/, write: false, query: true },
   { method: 'POST', pattern: /^\/quotes$/, write: false },
   { method: 'POST', pattern: /^\/holds$/, write: true },
   { method: 'DELETE', pattern: new RegExp(`^/holds/${ID}$`), write: true },
   { method: 'POST', pattern: /^\/bookings$/, write: true },
   { method: 'POST', pattern: /^\/bookings\/access$/, write: true },
   { method: 'GET', pattern: new RegExp(`^/bookings/${ID}$`), write: false },
-  { method: 'GET', pattern: /^\/legal-documents\/current$/, write: false },
+  { method: 'GET', pattern: /^\/legal-documents\/current$/, write: false, query: true },
   { method: 'POST', pattern: /^\/consents$/, write: true },
+  { method: 'POST', pattern: new RegExp(`^/bookings/${ID}/payments/stripe-intent$`), write: true },
+  { method: 'POST', pattern: new RegExp(`^/bookings/${ID}/payments/culqi-charge$`), write: true },
+  { method: 'GET', pattern: new RegExp(`^/payment-links/${ID}$`), write: true },
+  { method: 'POST', pattern: new RegExp(`^/payment-links/${ID}/stripe-intent$`), write: true },
+  { method: 'POST', pattern: new RegExp(`^/payment-links/${ID}/culqi-charge$`), write: true },
+  { method: 'GET', pattern: new RegExp(`^/waivers/${ID}$`), write: true },
+  { method: 'POST', pattern: new RegExp(`^/waivers/${ID}/sign$`), write: true },
 ];
 
 const FORWARDED_HEADERS = ['idempotency-key', 'x-booking-token', 'accept-language'] as const;
@@ -81,7 +90,9 @@ export function apiProxy(options: ApiProxyOptions): express.Router {
     }
 
     try {
-      const upstream = await fetch(`${options.apiUrl}/api/public${req.url}`, {
+      const queryAt = req.url.indexOf('?');
+      const query = route.query && queryAt !== -1 ? req.url.slice(queryAt) : '';
+      const upstream = await fetch(`${options.apiUrl}/api/public${path}${query}`, {
         method: req.method,
         headers,
         body: hasBody ? JSON.stringify(req.body ?? {}) : undefined,

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiClient } from './api-client';
-import type { components } from './schema';
+import type { components, paths } from './schema';
 
 type Schemas = components['schemas'];
 
@@ -15,7 +15,36 @@ export type CreatePublicBooking = Schemas['CreatePublicBooking'];
 export type PublicBooking = Schemas['PublicBooking'];
 export type PublicBookingCreated = Schemas['PublicBookingCreated'];
 export type LegalDocument = Schemas['LegalDocument'];
-export type PaymentOption = NonNullable<PublicBookingCreated['paymentOptions']>[number];
+export type PaymentOption = PublicBooking['paymentOptions'][number];
+export type PaymentKind = Schemas['PaymentKind'];
+export type StripeIntent = Schemas['StripeIntent'];
+export type CulqiChargeResult = Schemas['CulqiChargeResult'];
+export type PaymentLinkInfo = Schemas['PaymentLinkInfo'];
+export type WaiverForm = Schemas['WaiverForm'];
+export type SignWaiver = NonNullable<
+  paths['/public/waivers/{token}/sign']['post']['requestBody']
+>['content']['application/json'];
+
+/**
+ * What a payment is made against: a booking (the visitor holds its access token) or a payment link
+ * from an e-mail (the link token itself is the credential).
+ */
+export type PayTarget =
+  | { type: 'booking'; reference: string; accessToken: string }
+  | { type: 'link'; token: string };
+
+/**
+ * Culqi's 3DS step needs the device id and the browser's authentication parameters on a second
+ * charge. The contract's `CulqiChargeRequest` has neither yet (see "Contract change requests" in
+ * the PR), so they travel as extra properties that the typed client would otherwise reject.
+ */
+export type CulqiChargeInput = {
+  kind: PaymentKind;
+  token: string;
+  email: string;
+  deviceId?: string;
+  authentication3DS?: Record<string, unknown>;
+};
 
 export type ApiFailure = {
   ok: false;
@@ -124,5 +153,80 @@ export class BookingApi {
     return settle(
       this.api.GET('/public/legal-documents/current', { params: { query: { locale } } }),
     );
+  }
+
+  /** The same token goes in the header for bookings and in the path for payment links. */
+  stripeIntent(
+    target: PayTarget,
+    kind: PaymentKind,
+    idempotencyKey: string,
+  ): Promise<ApiResult<StripeIntent>> {
+    if (target.type === 'link') {
+      return settle(
+        this.api.POST('/public/payment-links/{token}/stripe-intent', {
+          params: { path: { token: target.token }, header: { 'Idempotency-Key': idempotencyKey } },
+        }),
+      );
+    }
+
+    return settle(
+      this.api.POST('/public/bookings/{reference}/payments/stripe-intent', {
+        body: { kind },
+        params: {
+          path: { reference: target.reference },
+          header: { 'Idempotency-Key': idempotencyKey },
+        },
+        headers: { 'X-Booking-Token': target.accessToken },
+      }),
+    );
+  }
+
+  culqiCharge(
+    target: PayTarget,
+    input: CulqiChargeInput,
+    idempotencyKey: string,
+  ): Promise<ApiResult<CulqiChargeResult>> {
+    const header = { 'Idempotency-Key': idempotencyKey };
+    if (target.type === 'link') {
+      const { kind: _kind, ...body } = input;
+      return settle(
+        this.api.POST('/public/payment-links/{token}/culqi-charge', {
+          body,
+          params: { path: { token: target.token }, header },
+        }),
+      );
+    }
+
+    return settle(
+      this.api.POST('/public/bookings/{reference}/payments/culqi-charge', {
+        body: input,
+        params: { path: { reference: target.reference }, header },
+        headers: { 'X-Booking-Token': target.accessToken },
+      }),
+    );
+  }
+
+  paymentLink(token: string): Promise<ApiResult<PaymentLinkInfo>> {
+    return settle(
+      this.api.GET('/public/payment-links/{token}', { params: { path: { token } } }),
+    );
+  }
+
+  waiver(token: string): Promise<ApiResult<WaiverForm>> {
+    return settle(this.api.GET('/public/waivers/{token}', { params: { path: { token } } }));
+  }
+
+  signWaiver(token: string, body: SignWaiver): Promise<ApiResult<WaiverForm>> {
+    return settle(
+      this.api.POST('/public/waivers/{token}/sign', { body, params: { path: { token } } }),
+    );
+  }
+
+  recordConsent(body: {
+    anonymousId: string;
+    categories: Record<string, boolean>;
+    policyVersion: number;
+  }): Promise<ApiResult<void>> {
+    return settle(this.api.POST('/public/consents', { body }));
   }
 }

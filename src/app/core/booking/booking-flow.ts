@@ -5,7 +5,6 @@ import {
   type ApiResult,
   type Currency,
   type Hold,
-  type PaymentOption,
   type Quote,
   type TourFormat,
 } from '../api/booking-api';
@@ -25,11 +24,7 @@ export type BookingSelection = {
 };
 
 /** Kept for the rest of the visit so a reload on the payment or booking page still works. */
-export type RememberedBooking = {
-  accessToken: string;
-  paymentOptions: PaymentOption[];
-  format: TourFormat;
-};
+export type RememberedBooking = { accessToken: string };
 
 const CHECKOUT_KEY = 'desertica-checkout';
 const BOOKING_KEY = 'desertica-booking:';
@@ -120,17 +115,6 @@ export class BookingFlow {
 
   remembered(reference: string): RememberedBooking | null {
     return this.read<RememberedBooking>(BOOKING_KEY + reference);
-  }
-
-  /** Stores a token that arrived through the e-mailed link. */
-  rememberToken(reference: string, accessToken: string): void {
-    const current = this.remembered(reference);
-    this.remember(reference, {
-      paymentOptions: [],
-      format: 'SHARED',
-      ...current,
-      accessToken,
-    });
   }
 
   private startClock(): void {

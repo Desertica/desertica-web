@@ -44,7 +44,8 @@
     "openMenu": "Abrir menú",
     "chooseLanguage": "Idioma",
     "whatsapp": "WhatsApp",
-    "intro": "Cargando Desértica"
+    "intro": "Cargando Desértica",
+    "newTab": "(se abre en una pestaña nueva)"
   },
   "whatsapp": {
     "tooltip": "Escríbenos"
@@ -82,6 +83,8 @@
     "privacyLead": "Tratamiento de datos personales.",
     "complaintsLead": "Libro de reclamaciones.",
     "conductLead": "Código de conducta contra la explotación sexual de niñas, niños y adolescentes en el turismo.",
+    "cancellationLead": "Política de cancelación y reembolso.",
+    "cookiesLead": "Qué cookies usamos y para qué.",
     "minceturLead": "Registro de agencia de viajes y turismo ante MINCETUR."
   },
   "contact": {
@@ -130,6 +133,8 @@
     "terms": "Términos",
     "privacy": "Privacidad",
     "conduct": "Código de conducta ESNNA",
+    "cancellation": "Política de cancelación",
+    "cookies": "Política de cookies",
     "complaints": "Libro de reclamaciones",
     "mincetur": "Registro MINCETUR",
     "minceturAlt": "Agencia de viajes y turismo registrada, MINCETUR",
@@ -238,7 +243,10 @@
       "cancelBody": "Hasta 24 horas antes del tour",
       "price": "Precio final:",
       "priceBody": "Impuestos y cargos de reserva incluidos"
-    }
+    },
+    "meeting": "Punto de encuentro",
+    "viewMap": "Ver en el mapa",
+    "faqs": "Preguntas frecuentes"
   },
   "tours": {
     "duneBuggy": {
@@ -439,18 +447,37 @@
     "missing": "No encontramos esta reserva en este navegador. Usa tu referencia y correo para abrirla.",
     "gateway": "Medio de pago",
     "provider": {
-      "STRIPE": "Tarjeta (Stripe, USD)",
-      "CULQI": "Tarjeta o billetera (Culqi)"
+      "STRIPE": "Apple Pay, Google Pay o tarjeta (USD)",
+      "CULQI": "Tarjeta (Culqi)"
     },
     "kind": {
       "FULL": "Monto total",
       "DEPOSIT": "Depósito",
       "BALANCE": "Saldo pendiente"
     },
-    "continue": "Continuar",
+    "continue": "Continuar al pago",
     "noOptions": "Aún no hay medios de pago disponibles para esta reserva.",
-    "placeholder": "El pago en línea estará disponible pronto. Tu reserva quedó guardada y te contactaremos para completar el pago.",
-    "viewBooking": "Ver mi reserva"
+    "viewBooking": "Ver mi reserva",
+    "pay": "Pagar",
+    "successTitle": "Pago recibido",
+    "successBody": "Gracias. Tu pago está confirmado y tu reserva se actualizó. También te enviamos el detalle por correo.",
+    "pendingTitle": "Estamos confirmando tu pago",
+    "pendingBody": "El pago se procesó en tu tarjeta, pero nuestro sistema aún no lo confirma. No pagues de nuevo: recibirás un correo apenas se confirme, y puedes revisar \"Mi reserva\" en unos minutos.",
+    "processing": "Procesando tu pago…",
+    "confirming": "Confirmando tu pago con nosotros…",
+    "walletLabel": "Paga con Apple Pay o Google Pay",
+    "cardLabel": "Paga con tarjeta",
+    "errorGateway": "No se pudo cargar el formulario de pago. Revisa tu conexión e inténtalo de nuevo.",
+    "errorDeclined": "El pago no se completó.",
+    "errorCancelled": "Se canceló la verificación. Puedes intentarlo de nuevo.",
+    "errorUnavailable": "Este pago ya no está disponible. Abre \"Mi reserva\" para ver el estado actual.",
+    "errorGeneric": "No pudimos iniciar el pago. Inténtalo de nuevo.",
+    "nothingDue": "Esta reserva no tiene saldo pendiente.",
+    "linkLoading": "Cargando tu enlace de pago…",
+    "linkMissing": "Este enlace de pago no es válido. Revisa el enlace de tu correo.",
+    "linkGone": "Este enlace de pago venció o ya se usó. Puedes abrir tu reserva para ver su estado.",
+    "linkError": "No pudimos cargar este enlace de pago. Inténtalo de nuevo.",
+    "threeDsReturn": "Completando la verificación con tu banco…"
   },
   "myBooking": {
     "title": "Mi reserva",
@@ -478,7 +505,13 @@
     "waiver": {
       "PENDING": "Firma pendiente",
       "SIGNED": "Firmado"
-    }
+    },
+    "format": {
+      "SHARED": "Tour compartido",
+      "PRIVATE": "Tour privado"
+    },
+    "passengers": "Pasajeros",
+    "signWaiver": "Firmar descargo"
   },
   "complaints": {
     "title": "Libro de Reclamaciones",
@@ -511,5 +544,28 @@
     "errorInvalid": "Revisa los campos e inténtalo de nuevo.",
     "errorUnavailable": "El libro de reclamaciones no está disponible ahora. Escríbenos al correo del pie de página.",
     "errorGeneric": "No pudimos enviar tu reclamación. Inténtalo de nuevo o escríbenos por correo."
+  },
+  "waiver": {
+    "title": "Descargo de responsabilidad",
+    "loading": "Cargando el descargo…",
+    "missing": "Este enlace del descargo no es válido o venció.",
+    "loadError": "No pudimos cargar el descargo. Inténtalo de nuevo.",
+    "passenger": "Pasajero",
+    "minAge": "Edad mínima (años)",
+    "minHeight": "Estatura mínima",
+    "version": "Versión del descargo",
+    "thanks": "Gracias. Tu descargo quedó firmado y guardado.",
+    "alreadySigned": "Este descargo ya está firmado.",
+    "noText": "El texto de este descargo aún no está disponible en línea. Contáctanos antes del tour.",
+    "minor": "Firmo en nombre de un menor",
+    "minorHint": "Escribe tu propio nombre y documento como madre, padre o tutor legal.",
+    "signerName": "Nombre completo de quien firma",
+    "emergencyName": "Contacto de emergencia (opcional)",
+    "emergencyPhone": "Teléfono de emergencia (opcional)",
+    "medical": "Notas médicas: alergias, condiciones, medicación (opcional)",
+    "accept": "He leído y acepto este descargo.",
+    "sign": "Firmar descargo",
+    "errorSigned": "Este descargo ya fue firmado.",
+    "errorGeneric": "No pudimos guardar tu firma. Inténtalo de nuevo."
   }
 }
