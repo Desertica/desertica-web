@@ -2,6 +2,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { DEFAULT_PUBLIC_CONFIG, PUBLIC_CONFIG } from '../config/public-config';
 import { AnalyticsService, asCurrency, centsToMajor } from './analytics';
+import { isCredentialUrl } from './gtm';
 import { ConsentService } from './consent';
 import type { DataLayerWindow } from './data-layer';
 
@@ -35,6 +36,25 @@ describe('AnalyticsService', () => {
     expect(gtmScripts().map((script) => script.src)).toEqual([
       'https://www.googletagmanager.com/gtm.js?id=GTM-TEST1',
     ]);
+  });
+
+  it('keeps the container off pages whose URL carries a credential from an e-mailed link', () => {
+    expect(isCredentialUrl({ pathname: '/pay/abc', search: '' })).toBe(true);
+    expect(isCredentialUrl({ pathname: '/waiver/abc', search: '' })).toBe(true);
+    expect(isCredentialUrl({ pathname: '/booking/DES-1', search: '?token=abc' })).toBe(true);
+    expect(isCredentialUrl({ pathname: '/booking/DES-1', search: '' })).toBe(false);
+    expect(isCredentialUrl({ pathname: '/tours/dune-buggy', search: '?lang=es' })).toBe(false);
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, gtmId: 'GTM-TEST1' } }],
+    });
+    window.history.pushState({}, '', '/booking/DES-1?token=abc');
+    try {
+      TestBed.inject(AnalyticsService).start();
+      expect(gtmScripts()).toHaveLength(0);
+    } finally {
+      window.history.pushState({}, '', '/');
+    }
   });
 
   it('does not grant anything by itself: tags stay blocked until the visitor consents', () => {

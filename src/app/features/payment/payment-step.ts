@@ -53,6 +53,8 @@ export type PaymentOutcome =
   /** The gateway took the payment but the API has not reported it yet (or the target cannot be read). */
   | { status: 'pending' };
 
+type ThreeDsOutcome = { parameters: Record<string, unknown> } | 'cancelled' | 'failed';
+
 type Phase = 'choose' | 'ready' | 'processing' | 'confirming' | 'success' | 'pending';
 
 const SITE_TITLE = 'Desértica';
@@ -227,6 +229,8 @@ export class PaymentStep {
   private culqi: CulqiGlobals | null = null;
   private deviceId: string | undefined;
   private stopCulqi: (() => void) | null = null;
+  /** Ends a 3DS challenge that is waiting for the bank (window closed or page left). */
+  private endThreeDS: (() => void) | null = null;
   private readonly keys = new Map<string, string>();
   private destroyed = false;
 
@@ -253,6 +257,7 @@ export class PaymentStep {
       this.destroyed = true;
       this.teardownStripe();
       this.stopCulqi?.();
+      this.endThreeDS?.();
       this.culqi?.threeDS.reset();
     });
   }
@@ -413,10 +418,7 @@ export class PaymentStep {
         showLoading: true,
         showIcon: true,
         // Closing the 3DS window ends this attempt; the visitor can try again.
-        closeModalAction: () => {
-          this.fail('payment.errorCancelled');
-          culqi.threeDS.reset();
-        },
+        closeModalAction: () => this.endThreeDS?.(),
       };
       this.deviceId = await culqi.threeDS.generateDevice();
       this.culqi = culqi;
@@ -516,26 +518,40 @@ export class PaymentStep {
       card: { email: token.email },
     };
 
-    const parameters = await new Promise<Record<string, unknown> | null>((resolve) => {
+    const outcome = await new Promise<ThreeDsOutcome>((resolve) => {
       const listener = (event: MessageEvent): void => {
         if (event.origin !== origin) {
           return;
         }
 
         const data = event.data as { parameters3DS?: Record<string, unknown>; error?: unknown } | null;
-        if (data?.parameters3DS || data?.error) {
-          view?.removeEventListener('message', listener);
-          resolve(data.parameters3DS ?? null);
+        if (data?.parameters3DS) {
+          finish({ parameters: data.parameters3DS });
+        } else if (data?.error) {
+          finish('failed');
         }
       };
+      // One way out for every path (message, closed window, page destroyed), so no listener outlives
+      // the attempt and a late message can never repeat a charge.
+      const finish = (result: ThreeDsOutcome): void => {
+        view?.removeEventListener('message', listener);
+        this.endThreeDS = null;
+        resolve(result);
+      };
+      this.endThreeDS = () => finish('cancelled');
       view?.addEventListener('message', listener);
       culqi.threeDS.initAuthentication(token.id);
     });
     culqi.threeDS.reset();
-    if (!parameters) {
+    if (outcome === 'cancelled') {
+      return this.fail('payment.errorCancelled');
+    }
+
+    if (outcome === 'failed') {
       return this.fail('payment.errorDeclined');
     }
 
+    const parameters = outcome.parameters;
     const retry = await this.api.culqiCharge(
       this.target(),
       { kind, token: token.id, email: token.email, deviceId: this.deviceId, authentication3DS: parameters },
