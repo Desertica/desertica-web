@@ -15,7 +15,6 @@ import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { BrandMark } from './brand-mark';
-import { FOOTER_LEGAL_YEAR, footerBrandLinks, footerLegalLinks } from './footer-nav';
 
 const BOUNCE_DOWN = 'M0,0C0,0,464,156,1139,156S2278,0,2278,0';
 const BOUNCE_CENTER = 'M0,0C0,0,464,0,1139,0s1139,0,1139,0';
@@ -43,20 +42,20 @@ export class SiteFooter {
   private readonly router = inject(Router);
   private readonly smooth = inject(SmoothScroll);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly catalog = inject(CatalogService);
 
   protected readonly i18n = inject(I18nService);
   protected readonly bounceCenter = BOUNCE_CENTER;
-  protected readonly brandLinks = footerBrandLinks;
-  private readonly catalog = inject(CatalogService);
+  protected readonly brandLinks = this.catalog.footerBrandLinks;
   protected readonly destinations = this.catalog.footerDestinations;
   protected readonly socials = this.catalog.socials;
   protected readonly contact = this.catalog.contact;
   protected readonly legal = computed(() => ({
-    year: FOOTER_LEGAL_YEAR,
+    year: this.catalog.site().legalYear,
     name: this.catalog.site().legalName,
     ruc: this.catalog.site().ruc,
   }));
-  protected readonly legalLinks = footerLegalLinks;
+  protected readonly legalLinks = this.catalog.footerLegalLinks;
   protected readonly stamps = this.catalog.footerStamps;
   protected readonly email = new FormControl('', {
     nonNullable: true,

@@ -75,11 +75,11 @@ export class TourDetail {
         return;
       }
 
-      const name = this.i18n.t(data.tour.titleKey);
+      const name = this.i18n.t(data.page.seoTitleKey ?? data.tour.titleKey);
       this.title.setTitle(`${name} | ${this.i18n.t('meta.title')}`);
       this.meta.updateTag({
         name: 'description',
-        content: this.i18n.t(data.page.leadKey),
+        content: this.i18n.t(data.page.seoDescriptionKey ?? data.page.leadKey),
       });
     });
 

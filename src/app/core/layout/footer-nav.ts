@@ -1,6 +1,5 @@
 import { type CatalogDestination, FOOTER_DESTINATION_IDS, tourDestinations, tourPath } from '../catalog/tours';
-import type { SiteSettings } from '../cms/cms-models';
-import type { MediaSlot } from '../cms/cms-models';
+import type { CmsNavLink, MediaSlot, SiteSettings } from '../cms/cms-models';
 import { contactFromSite, DEFAULT_SITE } from '../cms/site-defaults';
 import {
   simpleFacebook,
@@ -45,18 +44,25 @@ export const footerBrandLinks: readonly FooterLink[] = [
   { labelKey: 'nav.contact', path: '/contact' },
 ];
 
-/** Footer columns follow `FOOTER_DESTINATION_IDS`; destinations added in the CMS come last. */
+/**
+ * Footer columns follow `footerOrder` from the CMS. Destinations without one fall back to
+ * `FOOTER_DESTINATION_IDS`, then to catalog order. `showInFooter: false` hides a destination.
+ */
 export function buildFooterDestinations(
   destinations: readonly CatalogDestination[],
 ): readonly FooterDestination[] {
-  const rank = (id: string): number => {
+  const fallbackRank = (id: string): number => {
     const index = FOOTER_DESTINATION_IDS.indexOf(id);
     return index === -1 ? FOOTER_DESTINATION_IDS.length : index;
   };
+  const rank = (destination: CatalogDestination): number =>
+    destination.footerOrder ?? fallbackRank(destination.id);
 
-  return [...destinations]
-    .sort((a, b) => rank(a.id) - rank(b.id))
-    .map((destination) => ({
+  return destinations
+    .filter((destination) => destination.showInFooter !== false)
+    .map((destination, index) => ({ destination, index }))
+    .sort((a, b) => rank(a.destination) - rank(b.destination) || a.index - b.index)
+    .map(({ destination }) => ({
       titleKey: destination.titleKey,
       all: { labelKey: destination.allLabelKey, path: destination.hubPath },
       children: destination.tours.map((tour) => ({
@@ -64,6 +70,14 @@ export function buildFooterDestinations(
         path: tourPath(tour.id),
       })),
     }));
+}
+
+export function footerLinksFrom(links: readonly CmsNavLink[]): readonly FooterLink[] {
+  return links.map((link) => ({
+    labelKey: link.labelKey,
+    path: link.path,
+    ...(link.fragment ? { fragment: link.fragment } : {}),
+  }));
 }
 
 export const footerDestinations: readonly FooterDestination[] =
@@ -95,10 +109,10 @@ export const footerSocials: readonly FooterSocial[] = buildFooterSocials(DEFAULT
 
 export const footerContact = contactFromSite(DEFAULT_SITE);
 
-export const FOOTER_LEGAL_YEAR = 2026;
+export const FOOTER_LEGAL_YEAR = DEFAULT_SITE.legalYear;
 
 export const footerLegalEntity = {
-  year: FOOTER_LEGAL_YEAR,
+  year: DEFAULT_SITE.legalYear,
   name: DEFAULT_SITE.legalName,
   ruc: DEFAULT_SITE.ruc,
 };

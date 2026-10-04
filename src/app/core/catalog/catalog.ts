@@ -8,6 +8,8 @@ import {
   makeStateKey,
   signal,
 } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
+import { withBookingDefaults, withFormDefaults, withIntroDefaults } from '../cms/booking-defaults';
 import { CmsApi } from '../cms/cms-api';
 import type { BlogPost, CmsPage, CmsSnapshot, MediaSlot, Product } from '../cms/cms-models';
 import { contactFromSite, withSiteDefaults } from '../cms/site-defaults';
@@ -17,8 +19,12 @@ import {
   buildFooterDestinations,
   buildFooterSocials,
   buildFooterStamps,
+  footerBrandLinks,
+  footerLegalLinks,
+  footerLinksFrom,
 } from '../layout/footer-nav';
-import { buildPrimaryNavLinks } from '../layout/primary-nav';
+import { buildPrimaryNavLinks, planTripLink } from '../layout/primary-nav';
+import { CmsThemeStyles } from '../theme/cms-theme';
 import { tourPage, type TourPage } from './tour-pages';
 import { type CatalogDestination, type CatalogTour, tourDestinations } from './tours';
 
@@ -34,6 +40,8 @@ export class CatalogService {
   private readonly api = inject(CmsApi);
   private readonly i18n = inject(I18nService);
   private readonly transfer = inject(TransferState);
+  private readonly themeStyles = inject(CmsThemeStyles);
+  private readonly meta = inject(Meta);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly snapshot = signal<CmsSnapshot | null>(null);
 
@@ -48,7 +56,23 @@ export class CatalogService {
   readonly site = computed(() => withSiteDefaults(this.snapshot()?.site));
   readonly contact = computed(() => contactFromSite(this.site()));
   readonly socials = computed(() => buildFooterSocials(this.site()));
-  readonly navLinks = computed(() => buildPrimaryNavLinks(this.destinations()));
+  readonly navLinks = computed(() =>
+    buildPrimaryNavLinks(this.destinations(), this.snapshot()?.navigation?.headerLinks),
+  );
+  readonly planTrip = computed<{ labelKey: string; path: string }>(
+    () => this.snapshot()?.navigation?.planTrip ?? planTripLink,
+  );
+  readonly footerBrandLinks = computed(() => {
+    const links = this.snapshot()?.navigation?.footerBrandLinks;
+    return links?.length ? footerLinksFrom(links) : footerBrandLinks;
+  });
+  readonly footerLegalLinks = computed(() => {
+    const links = this.snapshot()?.navigation?.footerLegalLinks;
+    return links?.length ? footerLinksFrom(links) : footerLegalLinks;
+  });
+  readonly booking = computed(() => withBookingDefaults(this.snapshot()?.booking));
+  readonly forms = computed(() => withFormDefaults(this.snapshot()?.forms));
+  readonly introStyle = computed(() => withIntroDefaults(this.snapshot()?.theme?.intro));
   readonly footerDestinations = computed(() => buildFooterDestinations(this.destinations()));
   readonly footerStamps = computed(() => buildFooterStamps(this.snapshot()?.media ?? {}));
   readonly posts = computed<readonly BlogPost[]>(() => this.snapshot()?.posts ?? []);
@@ -130,6 +154,16 @@ export class CatalogService {
   private apply(snapshot: CmsSnapshot): void {
     this.snapshot.set(snapshot);
     this.i18n.setOverlay(snapshot.messages);
+    this.themeStyles.apply(snapshot.theme);
+
+    const site = this.site();
+    if (site.brandName) {
+      this.meta.updateTag({ property: 'og:site_name', content: site.brandName });
+    }
+
+    if (site.shareImage) {
+      this.meta.updateTag({ property: 'og:image', content: site.shareImage });
+    }
   }
 
   private fallbackImage(kind: 'destination' | 'tour', slug: string): string {

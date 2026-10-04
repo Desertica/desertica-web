@@ -8,18 +8,27 @@ import type {
 } from '../catalog/tour-pages';
 import type { CatalogDestination, CatalogTour } from '../catalog/tours';
 import { LOCALES, type AppLocale } from '../i18n/catalogs';
-import type {
-  BlogPost,
-  CmsPage,
-  CmsSnapshot,
-  LocalizedFields,
-  MediaSlot,
-  Product,
-  SiteSettings,
+import {
+  PALETTE_TOKENS,
+  type BlogPost,
+  type BookingSettings,
+  type CmsNavLink,
+  type CmsNavigation,
+  type CmsPage,
+  type CmsSnapshot,
+  type FormSettings,
+  type LocalizedFields,
+  type MediaSlot,
+  type PaletteToken,
+  type Product,
+  type SiteSettings,
+  type ThemePalette,
+  type ThemeSettings,
 } from './cms-models';
 
 export type RawEntry = Record<string, unknown>;
 export type RawByLocale = Readonly<Record<AppLocale, readonly RawEntry[]>>;
+export type RawSingleByLocale = Readonly<Record<AppLocale, RawEntry | null>>;
 
 /** Raw Strapi payloads. A missing collection (`undefined`) means "keep the static default". */
 export type CmsRaw = {
@@ -31,6 +40,10 @@ export type CmsRaw = {
   posts?: RawByLocale;
   products?: RawByLocale;
   site?: RawEntry | null;
+  theme?: RawEntry | null;
+  forms?: RawEntry | null;
+  booking?: RawSingleByLocale;
+  navigation?: RawSingleByLocale;
 };
 
 export type MapOptions = {
@@ -90,6 +103,8 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       assign(target, tourKey(slug, 'description'), text(entry['description']));
       assign(target, tourKey(slug, 'lead'), text(entry['lead']) ?? text(entry['description']));
       assign(target, tourKey(slug, 'termsSummary'), text(entry['termsSummary']));
+      assign(target, tourKey(slug, 'seoTitle'), text(entry['seoTitle']));
+      assign(target, tourKey(slug, 'seoDescription'), text(entry['seoDescription']));
       assign(target, tourKey(slug, 'meeting'), text(entry['meeting']));
     }
 
@@ -109,6 +124,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
     ]);
 
     const gallery = mediaList(base['gallery'], options.mediaBase, stringList(base['galleryUrls']));
+    const tourAssurances = features(`cms.tours.${slug}`, 'assurances', byLocale, messages);
     tourPages[slug] = {
       gallery: gallery.length ? gallery : [image, image, image],
       leadKey: tourKey(slug, 'lead'),
@@ -117,7 +133,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       meetingKey: tourKey(slug, 'meeting'),
       languages: languages(base['languages']),
       format: format(base['format']),
-      practices: features(slug, 'practices', byLocale, messages),
+      practices: features(`cms.tours.${slug}`, 'practices', byLocale, messages),
       itinerary: stops(slug, byLocale, messages, options.mediaBase, image),
       videos: videos(base['videos'], options.mediaBase),
       includedKeys: items(slug, 'included', byLocale, messages),
@@ -129,6 +145,11 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
           ? tourKey(slug, 'termsSummary')
           : undefined,
       itineraryFile: media(base['itineraryFile']) ?? text(base['itineraryFileUrl']),
+      assurances: tourAssurances.length ? tourAssurances : undefined,
+      seoTitleKey: hasText(byLocale, 'seoTitle') ? tourKey(slug, 'seoTitle') : undefined,
+      seoDescriptionKey: hasText(byLocale, 'seoDescription')
+        ? tourKey(slug, 'seoDescription')
+        : undefined,
     };
   }
 
@@ -162,6 +183,8 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
         text(base['imageUrl']) ??
         options.fallbackImage('destination', slug),
       tours,
+      footerOrder: num(base['footerOrder']),
+      showInFooter: base['showInFooter'] !== false,
       ...{ order: num(base['order']) ?? 0 },
     } as CatalogDestination);
   }
@@ -241,7 +264,11 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   return {
     destinations,
     tourPages,
-    site: raw.site ? mapSite(raw.site) : null,
+    site: raw.site ? mapSite(raw.site, options.mediaBase) : null,
+    theme: raw.theme ? mapTheme(raw.theme) : null,
+    booking: mapBooking(raw.booking, messages),
+    forms: raw.forms ? mapForms(raw.forms) : null,
+    navigation: mapNavigation(raw.navigation, messages),
     messages,
     media: mediaSlots,
     pages,
@@ -250,9 +277,12 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   };
 }
 
-export function mapSite(entry: RawEntry): SiteSettings {
+export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteSettings {
   const field = (name: keyof SiteSettings): string => text(entry[name]) ?? '';
   return {
+    brandName: field('brandName'),
+    legalYear: num(entry['legalYear']) ?? 0,
+    shareImage: mediaUrl(entry['shareImage'], mediaBase) ?? text(entry['shareImageUrl']) ?? '',
     email: field('email'),
     phone: field('phone'),
     whatsapp: field('whatsapp').replace(/\D/g, ''),
@@ -266,6 +296,127 @@ export function mapSite(entry: RawEntry): SiteSettings {
     legalName: field('legalName'),
     ruc: field('ruc'),
   };
+}
+
+function palette(value: unknown): ThemePalette {
+  const entry = asRecord(value) ?? {};
+  const result: ThemePalette = {};
+  for (const token of Object.keys(PALETTE_TOKENS) as PaletteToken[]) {
+    const color = text(entry[token]);
+    if (color) {
+      result[token] = color;
+    }
+  }
+
+  return result;
+}
+
+export function mapTheme(entry: RawEntry): ThemeSettings {
+  return {
+    light: palette(entry['light']),
+    dark: palette(entry['dark']),
+    radius: text(entry['radius']),
+    fontSans: text(entry['fontSans']),
+    fontHeading: text(entry['fontHeading']),
+    headerHeightSm: text(entry['headerHeightSm']),
+    headerHeightMd: text(entry['headerHeightMd']),
+    headerHeightLg: text(entry['headerHeightLg']),
+    intro: compact({
+      enabled: typeof entry['introEnabled'] === 'boolean' ? entry['introEnabled'] : undefined,
+      accent: text(entry['introAccent']),
+      restScale: num(entry['introRestScale']),
+      failsafeMs: num(entry['introFailsafeMs']),
+    }),
+  };
+}
+
+export function mapForms(entry: RawEntry): FormSettings {
+  return {
+    nameMin: num(entry['nameMin']) ?? 0,
+    nameMax: num(entry['nameMax']) ?? 0,
+    emailMax: num(entry['emailMax']) ?? 0,
+    messageMax: num(entry['messageMax']) ?? 0,
+  };
+}
+
+function mapBooking(
+  raw: RawSingleByLocale | undefined,
+  messages: Record<AppLocale, Record<string, string>>,
+): BookingSettings | null {
+  const base = raw?.en ?? raw?.es;
+  if (!raw || !base) {
+    return null;
+  }
+
+  const byLocale: Grouped = {};
+  for (const locale of LOCALES) {
+    const entry = raw[locale];
+    if (entry) {
+      byLocale[locale] = entry;
+    }
+  }
+
+  return {
+    depositRate: num(base['depositRate']) ?? 0,
+    adultsMin: num(base['adultsMin']) ?? 0,
+    adultsDefault: num(base['adultsDefault']) ?? 0,
+    childrenMin: num(base['childrenMin']) ?? 0,
+    childrenDefault: num(base['childrenDefault']) ?? 0,
+    peopleMax: num(base['peopleMax']) ?? 0,
+    currencyCode: text(base['currencyCode']) ?? '',
+    assurances: features('cms.booking', 'assurances', byLocale, messages),
+  };
+}
+
+const NAV_LISTS = {
+  headerLinks: 'header',
+  footerBrandLinks: 'footerBrand',
+  footerLegalLinks: 'footerLegal',
+} as const;
+
+function mapNavigation(
+  raw: RawSingleByLocale | undefined,
+  messages: Record<AppLocale, Record<string, string>>,
+): CmsNavigation | null {
+  const base = raw?.en ?? raw?.es;
+  if (!raw || !base) {
+    return null;
+  }
+
+  const links = (field: keyof typeof NAV_LISTS): CmsNavLink[] => {
+    const list = asList(base[field]) ?? [];
+    return list.map((item, index) => {
+      const key = `cms.nav.${NAV_LISTS[field]}.${index}.label`;
+      for (const locale of LOCALES) {
+        assign(messages[locale], key, text(asList(raw[locale]?.[field])?.[index]?.['label']));
+      }
+
+      return {
+        labelKey: key,
+        path: text(item['path']) ?? '/',
+        fragment: text(item['fragment']),
+        kind: item['kind'] === 'tours-menu' ? 'tours-menu' : 'link',
+      };
+    });
+  };
+
+  for (const locale of LOCALES) {
+    assign(messages[locale], 'cms.nav.planTrip.label', text(raw[locale]?.['planTripLabel']));
+  }
+
+  return {
+    headerLinks: links('headerLinks'),
+    footerBrandLinks: links('footerBrandLinks'),
+    footerLegalLinks: links('footerLegalLinks'),
+    planTrip: {
+      labelKey: 'cms.nav.planTrip.label',
+      path: text(base['planTripPath']) ?? '/tours',
+    },
+  };
+}
+
+function hasText(byLocale: Grouped, field: string): boolean {
+  return LOCALES.some((locale) => !!text(byLocale[locale]?.[field]));
 }
 
 type Grouped = Partial<Record<AppLocale, RawEntry>>;
@@ -305,14 +456,14 @@ function localized<T>(byLocale: Grouped, map: (entry: RawEntry) => T): Localized
 }
 
 function features(
-  slug: string,
-  field: 'practices',
+  prefixBase: string,
+  field: 'practices' | 'assurances',
   byLocale: Grouped,
   messages: Record<AppLocale, Record<string, string>>,
 ): TourFeature[] {
   const base = asList(byLocale.en?.[field]) ?? asList(byLocale.es?.[field]) ?? [];
   return base.map((item, index) => {
-    const prefix = `cms.tours.${slug}.${field}.${index}`;
+    const prefix = `${prefixBase}.${field}.${index}`;
     for (const locale of LOCALES) {
       const entry = asList(byLocale[locale]?.[field])?.[index];
       assign(messages[locale], `${prefix}.title`, text(entry?.['title']));

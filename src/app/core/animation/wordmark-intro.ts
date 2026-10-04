@@ -6,6 +6,13 @@ export const INTRO_WHITE = '#ffffff';
 export const INTRO_REST_SCALE = 0.85;
 export const INTRO_FAILSAFE_MS = 12_000;
 
+export type WordmarkStyle = { accent: string; restScale: number };
+
+export const DEFAULT_WORDMARK_STYLE: WordmarkStyle = {
+  accent: INTRO_OLIVE,
+  restScale: INTRO_REST_SCALE,
+};
+
 export type WordmarkParts = {
   marks: NodeListOf<Element>;
   letters: NodeListOf<Element>;
@@ -37,15 +44,16 @@ export function paintWordmarkRest(
     header?: Element | null;
     fab?: Element | null;
   } = {},
+  style: WordmarkStyle = DEFAULT_WORDMARK_STYLE,
 ): void {
   gsap.set([parts.marks, parts.letters], {
     drawSVG: '100%',
     fill: 'currentColor',
     stroke: 'currentColor',
   });
-  gsap.set(parts.counters, { drawSVG: '100%', fill: INTRO_OLIVE, stroke: INTRO_OLIVE });
+  gsap.set(parts.counters, { drawSVG: '100%', fill: style.accent, stroke: style.accent });
   if (extras.stage) {
-    gsap.set(extras.stage, { opacity: 1, scale: INTRO_REST_SCALE });
+    gsap.set(extras.stage, { opacity: 1, scale: style.restScale });
   }
   if (extras.copy) {
     gsap.set(extras.copy, { autoAlpha: 1, y: 0 });
@@ -83,7 +91,11 @@ export function prepareWordmarkDraw(
   }
 }
 
-export function appendWordmarkDraw(tl: GsapTimeline, parts: WordmarkParts): void {
+export function appendWordmarkDraw(
+  tl: GsapTimeline,
+  parts: WordmarkParts,
+  style: WordmarkStyle = DEFAULT_WORDMARK_STYLE,
+): void {
   if (parts.bird) {
     tl.fromTo(parts.bird, { drawSVG: 0 }, { drawSVG: '100%', duration: 2.4 });
   }
@@ -103,5 +115,5 @@ export function appendWordmarkDraw(tl: GsapTimeline, parts: WordmarkParts): void
       '-=0.55',
     )
     .to(parts.letters, { fill: INTRO_WHITE, duration: 0.4, stagger: 0.05, ease: 'power1.out' }, '-=0.35')
-    .to(parts.counters, { fill: INTRO_OLIVE, stroke: INTRO_OLIVE, duration: 0.35, ease: 'none' }, '-=0.35');
+    .to(parts.counters, { fill: style.accent, stroke: style.accent, duration: 0.35, ease: 'none' }, '-=0.35');
 }

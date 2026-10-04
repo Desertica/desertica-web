@@ -17,6 +17,7 @@ import {
   ReactiveFormsModule,
   ValidationErrors,
   Validators,
+  ValidatorFn,
 } from '@angular/forms';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronDown } from '@ng-icons/lucide';
@@ -33,6 +34,7 @@ import { CatalogTour } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { CatalogService } from '../../../core/catalog/catalog';
+import { DEFAULT_BOOKING } from '../../../core/cms/booking-defaults';
 import { FormsApi } from '../../../core/cms/forms-api';
 import {
   buildTourWhatsappHref,
@@ -42,20 +44,25 @@ import {
   startOfLocalDay,
 } from './tour-whatsapp';
 
-export const TOUR_ADULTS_MIN = 1;
-export const TOUR_ADULTS_DEFAULT = 1;
-export const TOUR_CHILDREN_MIN = 0;
-export const TOUR_CHILDREN_DEFAULT = 0;
-export const TOUR_PEOPLE_MAX = 12;
-export const TOUR_DEPOSIT_RATE = 0.2;
+export const TOUR_ADULTS_MIN = DEFAULT_BOOKING.adultsMin;
+export const TOUR_ADULTS_DEFAULT = DEFAULT_BOOKING.adultsDefault;
+export const TOUR_CHILDREN_MIN = DEFAULT_BOOKING.childrenMin;
+export const TOUR_CHILDREN_DEFAULT = DEFAULT_BOOKING.childrenDefault;
+export const TOUR_PEOPLE_MAX = DEFAULT_BOOKING.peopleMax;
+export const TOUR_DEPOSIT_RATE = DEFAULT_BOOKING.depositRate;
 
 export type TourPayment = 'full' | 'deposit';
 
 type PartyKind = 'adults' | 'children';
 
-export function tourDuePrice(unitPrice: number, payment: TourPayment, people = 1): number {
+export function tourDuePrice(
+  unitPrice: number,
+  payment: TourPayment,
+  people = 1,
+  depositRate = TOUR_DEPOSIT_RATE,
+): number {
   const total = unitPrice * Math.max(people, 1);
-  return payment === 'deposit' ? Math.round(total * TOUR_DEPOSIT_RATE) : total;
+  return payment === 'deposit' ? Math.round(total * depositRate) : total;
 }
 
 function paymentValue(value: unknown): TourPayment | null {
@@ -70,10 +77,12 @@ function paymentValue(value: unknown): TourPayment | null {
   return null;
 }
 
-function partyMaxValidator(control: AbstractControl): ValidationErrors | null {
-  const adults = Number(control.get('adults')?.value ?? 0);
-  const children = Number(control.get('children')?.value ?? 0);
-  return adults + children > TOUR_PEOPLE_MAX ? { party: true } : null;
+function partyMaxValidator(max: number): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const adults = Number(control.get('adults')?.value ?? 0);
+    const children = Number(control.get('children')?.value ?? 0);
+    return adults + children > max ? { party: true } : null;
+  };
 }
 
 @Component({
@@ -313,6 +322,7 @@ export class TourBook {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly catalog = inject(CatalogService);
+  protected readonly booking = this.catalog.booking();
   private readonly forms = inject(FormsApi);
 
   readonly tour = input.required<CatalogTour>();
@@ -322,13 +332,13 @@ export class TourBook {
   protected readonly formatPickerDate = formatPickerDate;
   protected readonly showFormat = computed(() => this.page().format === 'both');
   protected readonly payment = signal<TourPayment>('full');
-  protected readonly partySize = signal(TOUR_ADULTS_DEFAULT + TOUR_CHILDREN_DEFAULT);
+  protected readonly partySize = signal(this.booking.adultsDefault + this.booking.childrenDefault);
   protected readonly fullPrice = computed(() => this.tour().priceFrom * this.partySize());
   protected readonly depositPrice = computed(() =>
-    tourDuePrice(this.tour().priceFrom, 'deposit', this.partySize()),
+    tourDuePrice(this.tour().priceFrom, 'deposit', this.partySize(), this.booking.depositRate),
   );
   protected readonly duePrice = computed(() =>
-    tourDuePrice(this.tour().priceFrom, this.payment(), this.partySize()),
+    tourDuePrice(this.tour().priceFrom, this.payment(), this.partySize(), this.booking.depositRate),
   );
   protected readonly payOptionClass =
     'border-transparent bg-input/50 hover:bg-input/80 flex w-full cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 [&:has([data-checked=true])]:border-primary';
@@ -342,20 +352,20 @@ export class TourBook {
         nonNullable: true,
         validators: [Validators.required],
       }),
-      adults: new FormControl(TOUR_ADULTS_DEFAULT, {
+      adults: new FormControl(this.booking.adultsDefault, {
         nonNullable: true,
         validators: [
           Validators.required,
-          Validators.min(TOUR_ADULTS_MIN),
-          Validators.max(TOUR_PEOPLE_MAX),
+          Validators.min(this.booking.adultsMin),
+          Validators.max(this.booking.peopleMax),
         ],
       }),
-      children: new FormControl(TOUR_CHILDREN_DEFAULT, {
+      children: new FormControl(this.booking.childrenDefault, {
         nonNullable: true,
         validators: [
           Validators.required,
-          Validators.min(TOUR_CHILDREN_MIN),
-          Validators.max(TOUR_PEOPLE_MAX),
+          Validators.min(this.booking.childrenMin),
+          Validators.max(this.booking.peopleMax),
         ],
       }),
       format: new FormControl<Exclude<TourFormat, 'both'>>('shared', {
@@ -367,7 +377,7 @@ export class TourBook {
         validators: [Validators.required],
       }),
     },
-    { validators: [partyMaxValidator] },
+    { validators: [partyMaxValidator(this.booking.peopleMax)] },
   );
 
   constructor() {
@@ -404,15 +414,15 @@ export class TourBook {
   }
 
   protected canDecAdults(): boolean {
-    return this.form.controls.adults.value > TOUR_ADULTS_MIN;
+    return this.form.controls.adults.value > this.booking.adultsMin;
   }
 
   protected canDecChildren(): boolean {
-    return this.form.controls.children.value > TOUR_CHILDREN_MIN;
+    return this.form.controls.children.value > this.booking.childrenMin;
   }
 
   protected canIncParty(): boolean {
-    return this.form.controls.adults.value + this.form.controls.children.value < TOUR_PEOPLE_MAX;
+    return this.form.controls.adults.value + this.form.controls.children.value < this.booking.peopleMax;
   }
 
   private syncParty(): void {
@@ -424,7 +434,7 @@ export class TourBook {
     const children = this.form.controls.children.value;
     if (kind === 'adults') {
       const next = adults + delta;
-      if (next < TOUR_ADULTS_MIN || next + children > TOUR_PEOPLE_MAX) {
+      if (next < this.booking.adultsMin || next + children > this.booking.peopleMax) {
         return;
       }
 
@@ -433,7 +443,7 @@ export class TourBook {
     }
 
     const next = children + delta;
-    if (next < TOUR_CHILDREN_MIN || adults + next > TOUR_PEOPLE_MAX) {
+    if (next < this.booking.childrenMin || adults + next > this.booking.peopleMax) {
       return;
     }
 
@@ -497,7 +507,7 @@ export class TourBook {
       adults: controls.adults.value,
       children: controls.children.value,
       payment: controls.payment.value,
-      amount: tourDuePrice(this.tour().priceFrom, controls.payment.value, people),
+      amount: tourDuePrice(this.tour().priceFrom, controls.payment.value, people, this.booking.depositRate),
       locale: this.i18n.locale(),
     });
   }
@@ -516,7 +526,7 @@ export class TourBook {
       children: String(this.form.controls.children.value),
       format: this.i18n.t(`tour.${format}`),
       payment: this.i18n.t(payment === 'deposit' ? 'tour.payLater' : 'tour.payFull'),
-      amount: String(tourDuePrice(this.tour().priceFrom, payment, people)),
+      amount: String(tourDuePrice(this.tour().priceFrom, payment, people, this.booking.depositRate)),
     });
   }
 

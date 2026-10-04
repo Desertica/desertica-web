@@ -9,6 +9,7 @@ import {
   type MapOptions,
   type RawByLocale,
   type RawEntry,
+  type RawSingleByLocale,
 } from './cms-mapper';
 import type { CmsSnapshot } from './cms-models';
 
@@ -32,6 +33,7 @@ const POPULATE: Readonly<Record<string, Record<string, string>>> = {
     'populate[excluded]': 'true',
     'populate[pack]': 'true',
     'populate[notes]': 'true',
+    'populate[assurances]': 'true',
     'populate[itinerary][populate][0]': 'image',
     'populate[videos][populate][0]': 'poster',
     'populate[videos][populate][1]': 'webm',
@@ -45,6 +47,14 @@ const POPULATE: Readonly<Record<string, Record<string, string>>> = {
   pages: { 'populate[heroImage]': 'true' },
   'blog-posts': { 'populate[cover]': 'true' },
   products: { 'populate[image]': 'true', 'populate[gallery]': 'true' },
+  'site-setting': { 'populate[shareImage]': 'true' },
+  'theme-setting': { 'populate[light]': 'true', 'populate[dark]': 'true' },
+  'booking-setting': { 'populate[assurances]': 'true' },
+  navigation: {
+    'populate[headerLinks]': 'true',
+    'populate[footerBrandLinks]': 'true',
+    'populate[footerLegalLinks]': 'true',
+  },
 };
 const MAX_PAGES = 20;
 
@@ -108,8 +118,20 @@ export class CmsApi {
   }
 
   private async fetchSnapshot(base: string, options: MapOptions): Promise<CmsSnapshot | null> {
-    const [destinations, tours, translations, mediaSlots, pages, posts, products, site] =
-      await Promise.all([
+    const [
+      destinations,
+      tours,
+      translations,
+      mediaSlots,
+      pages,
+      posts,
+      products,
+      site,
+      theme,
+      forms,
+      booking,
+      navigation,
+    ] = await Promise.all([
         this.collection(base, 'destinations', { sort: 'order:asc' }),
         this.collection(base, 'tours', { sort: 'order:asc' }),
         this.collection(base, 'translations', { sort: 'key:asc' }),
@@ -118,6 +140,10 @@ export class CmsApi {
         this.collection(base, 'blog-posts', { sort: 'publishedDate:desc' }),
         this.collection(base, 'products', { sort: 'order:asc' }),
         this.single(base, 'site-setting'),
+        this.single(base, 'theme-setting'),
+        this.single(base, 'form-setting'),
+        this.singleByLocale(base, 'booking-setting'),
+        this.singleByLocale(base, 'navigation'),
       ]);
 
     const raw: CmsRaw = {
@@ -129,6 +155,10 @@ export class CmsApi {
       posts,
       products,
       site,
+      theme,
+      forms,
+      booking,
+      navigation,
     };
     const reachable = Object.values(raw).some((value) => value !== undefined);
     return reachable ? mapCms(raw, options) : null;
@@ -178,13 +208,35 @@ export class CmsApi {
     return result;
   }
 
-  private async single(base: string, path: string): Promise<RawEntry | null | undefined> {
+  private async single(
+    base: string,
+    path: string,
+    locale?: AppLocale,
+  ): Promise<RawEntry | null | undefined> {
     try {
-      const body = await this.get<{ data?: RawEntry | null }>(base, path, {});
+      const body = await this.get<{ data?: RawEntry | null }>(base, path, {
+        ...POPULATE[path],
+        ...(locale ? { locale } : {}),
+      });
       return body.data ?? null;
     } catch {
       return undefined;
     }
+  }
+
+  /** A localized single type: one entry per language, or `undefined` when the CMS lacks it. */
+  private async singleByLocale(
+    base: string,
+    path: string,
+  ): Promise<RawSingleByLocale | undefined> {
+    const entries = await Promise.all(LOCALES.map((locale) => this.single(base, path, locale)));
+    if (entries.every((entry) => entry === undefined)) {
+      return undefined;
+    }
+
+    return Object.fromEntries(
+      LOCALES.map((locale, index) => [locale, entries[index] ?? null]),
+    ) as unknown as RawSingleByLocale;
   }
 
   private get<T>(base: string, path: string, query: Record<string, string>): Promise<T> {

@@ -26,7 +26,6 @@ import { HOME_HERO_IMAGE } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { HorizGallery } from '../../core/layout/horiz-gallery';
-import { planTripLink } from '../../core/layout/primary-nav';
 import { WordmarkSvg } from '../../core/layout/wordmark-svg';
 
 @Component({
@@ -56,8 +55,8 @@ export class Landing {
   private bindClose: (() => void) | undefined;
 
   protected readonly i18n = inject(I18nService);
-  protected readonly planTrip = planTripLink;
   private readonly catalog = inject(CatalogService);
+  protected readonly planTrip = this.catalog.planTrip;
   protected readonly heroImage = this.catalog.mediaImage('home.hero', HOME_HERO_IMAGE);
   protected readonly destinations = this.catalog.destinations;
   protected readonly destRatio = 4 / 5;
@@ -228,7 +227,7 @@ export class Landing {
               },
             });
 
-            appendWordmarkDraw(tl, parts);
+            appendWordmarkDraw(tl, parts, this.catalog.introStyle());
             tl.add(() => {
               stage.classList.add('hero-rest');
             })

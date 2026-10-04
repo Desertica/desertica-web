@@ -1,4 +1,6 @@
+import { tourDestinations } from '../catalog/tours';
 import {
+  buildFooterDestinations,
   footerContact,
   footerDestinations,
   footerLegalEntity,
@@ -56,5 +58,19 @@ describe('footer nav', () => {
         expect.stringContaining('<title>Tripadvisor</title>'),
       ]),
     );
+  });
+});
+
+describe('footer destinations from CMS settings', () => {
+  it('honours footerOrder and showInFooter', () => {
+    const [huacachina, paracas, nazca] = tourDestinations;
+    expect(huacachina && paracas && nazca).toBeTruthy();
+    const result = buildFooterDestinations([
+      { ...huacachina!, footerOrder: 3 },
+      { ...paracas!, footerOrder: 1, showInFooter: false },
+      { ...nazca!, footerOrder: 2 },
+    ]);
+
+    expect(result.map((item) => item.all.path)).toEqual(['/nazca', '/huacachina']);
   });
 });
