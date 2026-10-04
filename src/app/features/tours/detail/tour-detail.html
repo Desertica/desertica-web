@@ -1,5 +1,5 @@
 @if (resolved(); as data) {
-  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+  <div class="mx-auto max-w-6xl px-4 pt-10 sm:px-6 sm:pt-14">
     <app-tour-heading [tour]="data.tour" [page]="data.page" />
 
     <app-tour-gallery
@@ -8,60 +8,57 @@
       [title]="data.tour.titleKey | translate: i18n.locale()"
     />
 
-    <div class="mt-10 grid gap-y-12 md:grid-cols-3 md:items-start md:gap-x-3">
-      <div class="flex flex-col gap-6 md:col-span-2">
+    <div class="mt-8 grid gap-8 md:grid-cols-3 md:items-start md:gap-x-3">
+      <div class="flex flex-col gap-4 md:col-span-2">
         <p class="text-muted-foreground max-w-2xl text-base sm:text-lg">
           {{ data.page.leadKey | translate: i18n.locale() }}
         </p>
-        @if (data.page.lead2Key) {
+        @for (key of data.page.descriptionKeys; track key) {
           <p class="text-muted-foreground max-w-2xl text-base sm:text-lg">
-            {{ data.page.lead2Key | translate: i18n.locale() }}
+            {{ key | translate: i18n.locale() }}
           </p>
         }
       </div>
 
-      <app-tour-book
-        class="md:sticky md:top-[calc(var(--header-h)+1.5rem)] md:col-start-3 md:row-start-1 md:row-span-6"
-        [tour]="data.tour"
-        [page]="data.page"
-      />
-
-      @if (data.page.highlights.length) {
-        <app-tour-features
-          class="md:col-span-2 md:col-start-1"
-          headingKey="tour.highlights"
-          [items]="data.page.highlights"
+      <div class="flex flex-col gap-4 md:col-start-3 md:row-start-1 md:row-span-2">
+        <app-tour-book
+          class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
+          [tour]="data.tour"
+          [page]="data.page"
         />
-      }
+        <app-tour-assurances />
+        @if (data.page.itineraryFile; as file) {
+          <a hlmBtn class="w-full" [href]="file" download>
+            <ng-icon name="lucideDownload" />
+            {{ 'tour.downloadItinerary' | translate: i18n.locale() }}
+          </a>
+        }
+      </div>
 
       @if (data.page.itinerary.length) {
-        <app-tour-timeline class="md:col-span-2 md:col-start-1" [stops]="data.page.itinerary" />
+        <app-tour-timeline class="md:col-span-2" [stops]="data.page.itinerary" />
+      }
+    </div>
+  </div>
+
+  @if (data.page.practices.length) {
+    <app-tour-features headingKey="tour.practices" [items]="data.page.practices" />
+  }
+
+  @if (hasDetails(data.page) || data.page.videos.length) {
+    <div
+      class="mx-auto grid max-w-6xl gap-8 px-4 pt-8 pb-12 sm:px-6 sm:pt-10 md:grid-cols-2 md:items-start md:gap-x-6"
+    >
+      @if (hasDetails(data.page)) {
+        <app-tour-full-details [page]="data.page" />
       }
 
-      @if (data.page.practices.length) {
-        <app-tour-features
-          class="md:col-span-2 md:col-start-1"
-          headingKey="tour.practices"
-          [items]="data.page.practices"
-        />
-      }
-
-      @if (
-        data.page.includedKeys.length ||
-        data.page.excludedKeys.length ||
-        data.page.packKeys.length ||
-        data.page.notesKeys.length
-      ) {
-        <app-tour-notes class="md:col-span-2 md:col-start-1" [page]="data.page" />
-      }
-
-      @if (data.page.portraits.length) {
-        <app-tour-portraits
-          class="md:col-span-2 md:col-start-1"
-          [photos]="data.page.portraits"
+      @if (data.page.videos.length) {
+        <app-tour-videos
+          [clips]="data.page.videos"
           [title]="data.tour.titleKey | translate: i18n.locale()"
         />
       }
     </div>
-  </div>
+  }
 }

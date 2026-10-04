@@ -46,6 +46,7 @@ export type BlogPost = {
   featured: boolean;
   i18n: LocalizedFields<{
     title: string;
+    category: string;
     excerpt: string;
     content: string;
     seoDescription: string;

@@ -18,7 +18,7 @@ describe('CatalogService without a CMS', () => {
     expect(catalog.enabled()).toBe(false);
     expect(catalog.tours().map((tour) => tour.id)).toEqual(catalogTours.map((tour) => tour.id));
     expect(catalog.featuredTours().every((tour) => tour.featured)).toBe(true);
-    expect(catalog.resolvedTour('dune-buggy')?.page.highlights.length).toBeGreaterThan(0);
+    expect(catalog.resolvedTour('dune-buggy')?.page.practices.length).toBeGreaterThan(0);
     expect(catalog.resolvedTour('nope')).toBeUndefined();
     expect(catalog.contact().whatsapp).toBe('https://wa.me/519XXXXXXXX');
     expect(catalog.mediaImage('tours.banner', 'fallback.jpg')).toBe('fallback.jpg');

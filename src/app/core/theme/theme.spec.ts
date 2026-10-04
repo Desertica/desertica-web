@@ -2,12 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { THEME_STORAGE_KEY, ThemeService } from './theme';
 
 describe('ThemeService', () => {
-  let mediaMatches = false;
-  let mediaListener: ((event: MediaQueryListEvent) => void) | undefined;
-
   beforeEach(() => {
-    mediaMatches = false;
-    mediaListener = undefined;
     localStorage.removeItem(THEME_STORAGE_KEY);
     document.documentElement.classList.remove('dark');
     document.documentElement.style.colorScheme = '';
@@ -16,14 +11,10 @@ describe('ThemeService', () => {
       writable: true,
       configurable: true,
       value: (query: string) => ({
-        matches: mediaMatches,
+        matches: true,
         media: query,
-        addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
-          mediaListener = listener;
-        },
-        removeEventListener: () => {
-          mediaListener = undefined;
-        },
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
         addListener: () => undefined,
         removeListener: () => undefined,
         dispatchEvent: () => false,
@@ -40,15 +31,14 @@ describe('ThemeService', () => {
     document.documentElement.style.colorScheme = '';
   });
 
-  it('follows the system scheme without writing localStorage', () => {
-    mediaMatches = true;
-
+  it('defaults to light even when the system scheme is dark', () => {
     const service = TestBed.inject(ThemeService);
 
-    expect(service.theme()).toBe('dark');
-    expect(service.isDark()).toBe(true);
+    expect(service.theme()).toBe('light');
+    expect(service.isDark()).toBe(false);
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(document.documentElement.style.colorScheme).toBe('light');
   });
 
   it('uses a stored preference over the system scheme', () => {
@@ -71,23 +61,5 @@ describe('ThemeService', () => {
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     expect(document.documentElement.style.colorScheme).toBe('dark');
-  });
-
-  it('ignores system changes after the user picks a theme', () => {
-    const service = TestBed.inject(ThemeService);
-    service.toggle();
-
-    mediaListener?.({ matches: false } as MediaQueryListEvent);
-
-    expect(service.theme()).toBe('dark');
-  });
-
-  it('follows system changes when nothing is stored', () => {
-    const service = TestBed.inject(ThemeService);
-
-    mediaListener?.({ matches: true } as MediaQueryListEvent);
-
-    expect(service.theme()).toBe('dark');
-    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
   });
 });

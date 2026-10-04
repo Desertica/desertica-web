@@ -3,129 +3,56 @@
   background-image: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 62%);
 }
 
-.about-banner-overlay :is(h1, h2) {
+.about-banner-overlay h1 {
   font-family: var(--font-heading);
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-wrap: balance;
-}
-
-.about-banner-overlay h1 {
   font-size: clamp(1.75rem, 4vw, 3rem);
 }
 
-.about-banner-overlay h2 {
-  font-size: clamp(1.35rem, 3vw, 2.25rem);
-}
-
-.about-split-line {
-  overflow: hidden;
-}
-
-.about-quote-stack {
-  display: flex;
-  max-width: 52rem;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.about-quote-line {
-  margin: 0;
-  text-align: center;
-}
-
-.about-quote-plate {
-  display: inline-block;
-  overflow: hidden;
-  padding: 0.14em 0.48em 0.2em;
-  transform-origin: left center;
-  font-family: var(--font-heading);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  line-height: 1.15;
-  text-wrap: balance;
-}
-
-.about-quote-plate-a {
-  background: var(--foreground);
-  color: var(--background);
-  font-size: clamp(1.85rem, 6vw, 3.75rem);
-}
-
-.about-quote-plate-b {
-  background: #5a6b3e;
-  color: #f4efe4;
-  font-size: clamp(1.15rem, 3.2vw, 2rem);
-}
-
-.about-ribbon {
-  overflow: hidden;
-  background: var(--background);
-}
-
-.about-ribbon-pin {
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  padding-block: 3.25rem 2.5rem;
-}
-
-.about-ribbon-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
-
-.about-ribbon-unit {
-  margin: 0;
-  padding-inline: 2.5rem;
-  font-family: var(--font-heading);
-  font-size: clamp(2.4rem, 8vw, 6.25rem);
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .about-map-scene {
+  box-sizing: border-box;
   background-color: var(--background);
+  padding-block: 4.5rem;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
 }
 
 .about-map-layer {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: calc(100svh - var(--header-h) - 9rem);
 }
 
-.about-map-copy {
+.about-map-who,
+.about-map-origin {
   position: absolute;
   z-index: 4;
-  top: 50%;
-  left: clamp(1rem, 4vw, 3.5rem);
-  max-width: min(28rem, 38vw);
-  transform: translateY(-50%);
+  max-width: min(26rem, 34vw);
   pointer-events: none;
   color: var(--foreground);
 }
 
-@media (max-width: 767px) {
-  .about-map-copy {
-    top: 1.25rem;
-    left: 1rem;
-    right: 1rem;
-    max-width: none;
-    transform: none;
-  }
+.about-map-who {
+  top: clamp(0.5rem, 3vh, 2rem);
+  right: clamp(1rem, 4vw, 3.5rem);
+  text-align: right;
+}
+
+.about-map-origin {
+  bottom: clamp(0.5rem, 4vh, 2.5rem);
+  left: clamp(1rem, 4vw, 3.5rem);
 }
 
 .about-map-stage {
   box-sizing: border-box;
   width: 100%;
-  height: calc(100svh - var(--header-h));
+  height: calc(100svh - var(--header-h) - 9rem);
   padding-block: 0.75rem;
+  padding-inline: clamp(0.5rem, 2vw, 1.5rem);
 }
 
 .about-trio-layer {
@@ -135,6 +62,44 @@
   min-height: calc(100svh - var(--header-h));
   opacity: 0;
   visibility: hidden;
+}
+
+@media (max-width: 767px) {
+  .about-map-scene {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .about-map-layer {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    gap: 1.5rem;
+  }
+
+  .about-map-who,
+  .about-map-origin {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    max-width: 36rem;
+    text-align: start;
+  }
+
+  .about-map-stage {
+    height: min(70svh, 32rem);
+    padding-inline: 0;
+  }
+
+  .about-trio-layer {
+    position: relative;
+    inset: auto;
+    min-height: min(70svh, 28rem);
+    margin-top: 1.5rem;
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

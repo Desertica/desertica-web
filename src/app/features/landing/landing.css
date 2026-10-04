@@ -1,5 +1,5 @@
 .hero-intro {
-  background: #5a6b3e;
+  background: var(--primary);
   color: #ffffff;
 }
 
@@ -9,6 +9,10 @@
 
 .wordmark-stage {
   transform-origin: center center;
+}
+
+[data-hero-photo] {
+  object-position: center 40%;
 }
 
 .dest-card {
@@ -23,6 +27,17 @@
 .dest-overlay {
   color: #fff;
   background-image: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 62%);
+}
+
+.hero-overlay {
+  color: #fff;
+  background-image: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.88) 0%,
+    rgb(0 0 0 / 0.78) 42%,
+    rgb(0 0 0 / 0.45) 62%,
+    transparent 84%
+  );
 }
 
 .dest-overlay [data-slot='card-title'] {

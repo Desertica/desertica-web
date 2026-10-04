@@ -17,8 +17,8 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 import { BrandMark } from './brand-mark';
 import { FOOTER_LEGAL_YEAR, footerBrandLinks, footerLegalLinks } from './footer-nav';
 
-const BOUNCE_DOWN = 'M0-0.3C0-0.3,464,156,1139,156S2278-0.3,2278-0.3V683H0V-0.3z';
-const BOUNCE_CENTER = 'M0-0.3C0-0.3,464,0,1139,0s1139-0.3,1139-0.3V683H0V-0.3z';
+const BOUNCE_DOWN = 'M0,0C0,0,464,156,1139,156S2278,0,2278,0';
+const BOUNCE_CENTER = 'M0,0C0,0,464,0,1139,0s1139,0,1139,0';
 const MIN_BOUNCE_VELOCITY = 200;
 
 @Component({

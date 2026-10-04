@@ -22,19 +22,38 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   languages: ['es', 'en'],
   imageUrl: 'https://img/tour.jpg',
   galleryUrls: ['https://img/g1.jpg'],
-  portraitUrls: [],
   image: null,
   gallery: [{ url: '/uploads/g.jpg' }],
-  portraits: [],
   destination: { slug: 'huacachina' },
   title: locale === 'en' ? `Title ${slug}` : `Titulo ${slug}`,
   description: locale === 'en' ? 'Short' : 'Corto',
   lead: locale === 'en' ? 'Lead' : null,
-  lead2: null,
+  termsSummary: locale === 'en' ? 'Summary' : null,
+  itineraryFileUrl: '/files/itinerary.pdf',
   meeting: locale === 'en' ? 'Meet' : 'Punto',
-  highlights: [{ icon: 'lucideCar', title: locale === 'en' ? 'Buggy' : 'Buggy ES', body: 'Body' }],
-  practices: [],
-  itinerary: [{ time: '15:50', title: 'Meet', body: 'At the oasis' }],
+  paragraphs: [{ text: locale === 'en' ? 'First' : 'Primero' }],
+  expandedParagraphs: [{ text: 'Long' }],
+  practices: [{ icon: 'lucideCar', title: locale === 'en' ? 'Buggy' : 'Buggy ES', body: 'Body' }],
+  itinerary: [
+    {
+      image: { url: '/uploads/stop.jpg' },
+      imageUrl: null,
+      title: 'Meet',
+      body: 'At the oasis',
+      expandedBody: locale === 'en' ? 'More' : null,
+    },
+    { image: null, imageUrl: null, title: 'Dunes', body: 'Ride', expandedBody: null },
+  ],
+  videos: [
+    {
+      poster: null,
+      posterUrl: 'https://img/poster.jpg',
+      webm: null,
+      webmUrl: '/v.webm',
+      mp4: { url: '/uploads/v.mp4' },
+      mp4Url: null,
+    },
+  ],
   included: [{ text: 'Guide' }],
   excluded: [],
   pack: [],
@@ -110,23 +129,48 @@ describe('mapCms', () => {
     expect(snapshot.messages.en?.['cms.destinations.huacachina.lead']).toBe('Dunes');
   });
 
-  it('maps tour pages, falling back to the description when lead is empty', () => {
+  it('maps tour pages to the key-based model', () => {
     const page = snapshot.tourPages['a-tour'];
     expect(page?.gallery).toEqual(['https://cms.test/uploads/g.jpg']);
     expect(page?.leadKey).toBe('cms.tours.a-tour.lead');
     expect(snapshot.messages.es?.['cms.tours.a-tour.lead']).toBe('Corto');
-    expect(page?.lead2Key).toBeUndefined();
-    expect(page?.highlights).toEqual([
+    expect(page?.descriptionKeys).toEqual(['cms.tours.a-tour.paragraphs.0']);
+    expect(snapshot.messages.es?.['cms.tours.a-tour.paragraphs.0']).toBe('Primero');
+    expect(page?.expandedDescriptionKeys).toEqual(['cms.tours.a-tour.expandedParagraphs.0']);
+    expect(page?.practices).toEqual([
       {
         icon: 'lucideCar',
-        titleKey: 'cms.tours.a-tour.highlights.0.title',
-        bodyKey: 'cms.tours.a-tour.highlights.0.body',
+        titleKey: 'cms.tours.a-tour.practices.0.title',
+        bodyKey: 'cms.tours.a-tour.practices.0.body',
       },
     ]);
-    expect(page?.itinerary[0]?.time).toBe('15:50');
     expect(page?.includedKeys).toEqual(['cms.tours.a-tour.included.0']);
     expect(snapshot.messages.en?.['cms.tours.a-tour.notes.0']).toBe('Weather');
     expect(page?.format).toBe('both');
+    expect(page?.termsSummaryKey).toBe('cms.tours.a-tour.termsSummary');
+    expect(page?.itineraryFile).toBe('/files/itinerary.pdf');
+  });
+
+  it('maps itinerary stops with images, expanded copy and videos', () => {
+    const page = snapshot.tourPages['a-tour'];
+    expect(page?.itinerary).toEqual([
+      {
+        image: 'https://cms.test/uploads/stop.jpg',
+        titleKey: 'cms.tours.a-tour.itinerary.0.title',
+        bodyKey: 'cms.tours.a-tour.itinerary.0.body',
+        expandedBodyKey: 'cms.tours.a-tour.itinerary.0.expanded',
+      },
+      {
+        image: 'https://img/tour.jpg',
+        titleKey: 'cms.tours.a-tour.itinerary.1.title',
+        bodyKey: 'cms.tours.a-tour.itinerary.1.body',
+        expandedBodyKey: undefined,
+      },
+    ]);
+    expect(snapshot.messages.en?.['cms.tours.a-tour.itinerary.0.expanded']).toBe('More');
+    expect(page?.videos).toEqual([
+      { poster: 'https://img/poster.jpg', webm: '/v.webm', mp4: 'https://cms.test/uploads/v.mp4' },
+    ]);
   });
 
   it('keeps only non-empty translations', () => {

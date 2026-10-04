@@ -116,7 +116,6 @@ export class I18nService {
     const locale = resolveLocale({
       cookie: parseCookie(this.request?.headers.get('cookie'), LOCALE_COOKIE),
       query: url?.searchParams.get(LOCALE_QUERY),
-      acceptLanguage: this.request?.headers.get('accept-language'),
     });
 
     this.transferState.set(LOCALE_STATE_KEY, locale);

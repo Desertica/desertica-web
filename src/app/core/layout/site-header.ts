@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
+import { ScrollStrategy, ScrollStrategyOptions } from '@angular/cdk/overlay';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
+import { lucideChevronDown, lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import { PlanTripHover } from '../animation/plan-trip-hover';
+import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
@@ -29,7 +31,7 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
     PlanTripHover,
     BrandMark,
   ],
-  providers: [provideIcons({ lucideMenu, lucideMoon, lucideSun })],
+  providers: [provideIcons({ lucideChevronDown, lucideMenu, lucideMoon, lucideSun })],
   template: `
     <header class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md">
       <div
@@ -167,7 +169,12 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
             {{ planTrip.labelKey | translate: i18n.locale() }}
           </a>
 
-          <hlm-sheet #mobileNav="hlmSheet" side="right">
+          <hlm-sheet
+            #mobileNav="hlmSheet"
+            side="right"
+            [scrollStrategy]="menuScroll"
+            (stateChanged)="onMenuState($event)"
+          >
             <button
               hlmBtn
               hlmSheetTrigger
@@ -180,7 +187,7 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
             >
               <ng-icon name="lucideMenu" />
             </button>
-            <hlm-sheet-content *hlmSheetPortal>
+            <hlm-sheet-content *hlmSheetPortal class="mobile-nav-sheet flex flex-col overflow-hidden">
               <hlm-sheet-header>
                 <h2 hlmSheetTitle>{{ 'menu.title' | translate: i18n.locale() }}</h2>
                 <p hlmSheetDescription class="sr-only">
@@ -188,68 +195,90 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
                 </p>
               </hlm-sheet-header>
               <nav
-                class="flex flex-col gap-1 px-4 pb-6"
+                class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-4 pb-6"
                 [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
               >
-                @for (item of navLinks(); track item.path) {
-                  @if (isGroup(item)) {
-                    <p
-                      class="text-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase"
-                    >
-                      {{ item.labelKey | translate: i18n.locale() }}
-                    </p>
-                    @for (child of item.children; track navTrack(child)) {
-                      <a
-                        [routerLink]="child.path"
-                        [fragment]="child.fragment"
-                        routerLinkActive="bg-muted text-foreground"
-                        class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
-                        (click)="mobileNav.close()"
-                      >
-                        {{ child.labelKey | translate: i18n.locale() }}
-                      </a>
-                    }
-                    @for (column of item.columns ?? []; track column.fragment) {
-                      <a
-                        [routerLink]="column.path"
-                        [fragment]="column.fragment"
-                        class="text-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase"
-                        (click)="mobileNav.close()"
-                      >
-                        {{ column.headingKey | translate: i18n.locale() }}
-                      </a>
-                      @for (child of column.children; track navTrack(child)) {
-                        <a
-                          [routerLink]="child.path"
-                          [fragment]="child.fragment"
-                          routerLinkActive="bg-muted text-foreground"
-                          class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
-                          (click)="mobileNav.close()"
-                        >
-                          {{ child.labelKey | translate: i18n.locale() }}
-                        </a>
-                      }
-                    }
-                  } @else {
+                <a
+                  hlmBtn
+                  appPlanTripHover
+                  class="mb-2 transition-none"
+                  [routerLink]="planTrip.path"
+                  (click)="closeMobileNav(mobileNav)"
+                >
+                  {{ planTrip.labelKey | translate: i18n.locale() }}
+                </a>
+                @for (item of mobileNavLinks(); track item.path) {
+                  @if (!isGroup(item)) {
                     <a
                       [routerLink]="item.path"
                       routerLinkActive="bg-muted text-foreground"
                       class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
-                      (click)="mobileNav.close()"
+                      (click)="closeMobileNav(mobileNav)"
                     >
                       {{ item.labelKey | translate: i18n.locale() }}
                     </a>
+                  } @else {
+                    <div class="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        class="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center justify-between rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
+                        [attr.aria-expanded]="mobileToursOpen()"
+                        aria-controls="mobile-tours-panel"
+                        id="mobile-tours-trigger"
+                        (click)="toggleMobileTours()"
+                      >
+                        {{ item.labelKey | translate: i18n.locale() }}
+                        <ng-icon
+                          name="lucideChevronDown"
+                          class="size-4 shrink-0 transition-transform"
+                          [class.rotate-180]="mobileToursOpen()"
+                          aria-hidden="true"
+                        />
+                      </button>
+                      @if (mobileToursOpen()) {
+                        <div
+                          id="mobile-tours-panel"
+                          role="region"
+                          aria-labelledby="mobile-tours-trigger"
+                          class="flex flex-col gap-1"
+                        >
+                          @for (child of item.children; track navTrack(child)) {
+                            <a
+                              [routerLink]="child.path"
+                              [fragment]="child.fragment"
+                              routerLinkActive="bg-muted text-foreground"
+                              class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 ps-5 text-sm font-medium transition-colors"
+                              (click)="closeMobileNav(mobileNav)"
+                            >
+                              {{ child.labelKey | translate: i18n.locale() }}
+                            </a>
+                          }
+                          @for (column of item.columns ?? []; track column.fragment) {
+                            <a
+                              [routerLink]="column.path"
+                              [fragment]="column.fragment"
+                              class="text-foreground px-3 pt-3 pb-1 ps-5 text-xs font-semibold tracking-wide uppercase"
+                              (click)="closeMobileNav(mobileNav)"
+                            >
+                              {{ column.headingKey | translate: i18n.locale() }}
+                            </a>
+                            @for (child of column.children; track navTrack(child)) {
+                              <a
+                                [routerLink]="child.path"
+                                [fragment]="child.fragment"
+                                routerLinkActive="bg-muted text-foreground"
+                                class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 ps-5 text-sm font-medium transition-colors"
+                                (click)="closeMobileNav(mobileNav)"
+                              >
+                                {{ child.labelKey | translate: i18n.locale() }}
+                              </a>
+                            }
+                          }
+                        </div>
+                      }
+                    </div>
                   }
                 }
-                <a
-                  hlmBtn
-                  appPlanTripHover
-                  class="mt-2 transition-none"
-                  [routerLink]="planTrip.path"
-                  (click)="mobileNav.close()"
-                >
-                  {{ planTrip.labelKey | translate: i18n.locale() }}
-                </a>
                 <div class="mt-4">
                   <app-locale-switcher />
                 </div>
@@ -257,7 +286,9 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
             </hlm-sheet-content>
           </hlm-sheet>
 
-          <app-locale-switcher />
+          <span class="hidden lg:contents">
+            <app-locale-switcher />
+          </span>
 
           <button
             hlmBtn
@@ -281,10 +312,36 @@ import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
   `,
 })
 export class SiteHeader {
+  private readonly smooth = inject(SmoothScroll);
+  private readonly scrollStrategies = inject(ScrollStrategyOptions);
+  protected readonly menuScroll: ScrollStrategy = this.scrollStrategies.noop();
   protected readonly theme = inject(ThemeService);
   protected readonly i18n = inject(I18nService);
-  protected readonly navLinks = inject(CatalogService).navLinks;
+  private readonly catalog = inject(CatalogService);
+  protected readonly navLinks = this.catalog.navLinks;
+  protected readonly mobileNavLinks = computed(() => [...this.navLinks()].reverse());
   protected readonly planTrip = planTripLink;
   protected readonly isGroup = isNavGroup;
   protected readonly navTrack = navItemTrack;
+  protected readonly mobileToursOpen = signal(false);
+
+  protected toggleMobileTours(): void {
+    this.mobileToursOpen.update((open) => !open);
+  }
+
+  protected closeMobileNav(sheet: { close: () => void }): void {
+    this.mobileToursOpen.set(false);
+    sheet.close();
+  }
+
+  protected onMenuState(state: string): void {
+    if (state === 'open') {
+      this.smooth.hold();
+      return;
+    }
+    if (state === 'closed') {
+      this.mobileToursOpen.set(false);
+      this.smooth.release();
+    }
+  }
 }

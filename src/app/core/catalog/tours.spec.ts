@@ -63,16 +63,17 @@ describe('tour catalog', () => {
     const page = tourPage(dune);
     expect(page.gallery).toHaveLength(3);
     expect(new Set(page.gallery.map(unsplashPhotoId)).size).toBe(3);
-    expect(page.portraits).toHaveLength(2);
+    expect(page.videos).toHaveLength(2);
     expect(page.itinerary).toHaveLength(5);
-    expect(page.highlights.length).toBeGreaterThan(3);
+    expect(page.itinerary.every((stop) => Boolean(stop.image))).toBe(true);
+    expect(page.descriptionKeys.length).toBeGreaterThan(1);
     expect(page.leadKey).toBe('tours.duneBuggy.lead');
 
     const stub = tourPage(sandboard);
     expect(stub.gallery).toEqual([sandboard.image, sandboard.image, sandboard.image]);
-    expect(stub.highlights).toEqual([]);
+    expect(stub.videos).toEqual([]);
     expect(stub.itinerary).toEqual([]);
-    expect(stub.portraits).toEqual([]);
+    expect(stub.descriptionKeys).toEqual([]);
     expect(stub.leadKey).toBe(sandboard.descriptionKey);
   });
 });

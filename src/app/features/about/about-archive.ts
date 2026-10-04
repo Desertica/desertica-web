@@ -6,16 +6,22 @@ import { SmoothScroll } from '../../core/animation/smooth-scroll';
 import { ABOUT_ARCHIVE_IMAGES } from './about-media';
 
 const FRAME =
-  'about-archive-frame bg-muted surface-grain relative overflow-hidden box-border shrink-0 max-md:w-full';
+  'about-archive-frame bg-background surface-grain relative overflow-hidden box-border shrink-0 w-[68vw] sm:w-64';
 
-const ARCHIVE_FRAMES = [
-  { id: '1', class: `${FRAME} h-56 md:h-[26rem] md:w-[22vw]`, image: ABOUT_ARCHIVE_IMAGES[0] },
-  { id: '2', class: `${FRAME} h-72 md:h-[32rem] md:w-[28vw]`, image: ABOUT_ARCHIVE_IMAGES[1] },
-  { id: '3', class: `${FRAME} h-52 md:h-[24rem] md:w-[20vw]`, image: ABOUT_ARCHIVE_IMAGES[2] },
-  { id: '4', class: `${FRAME} h-64 md:h-[30rem] md:w-[26vw]`, image: ABOUT_ARCHIVE_IMAGES[3] },
-  { id: '5', class: `${FRAME} h-56 md:h-[26rem] md:w-[22vw]`, image: ABOUT_ARCHIVE_IMAGES[4] },
-  { id: '6', class: `${FRAME} h-60 md:h-[28rem] md:w-[24vw]`, image: ABOUT_ARCHIVE_IMAGES[5] },
+const ARCHIVE_SIZES = [
+  'h-56 md:h-[26rem] md:w-[22vw]',
+  'h-72 md:h-[32rem] md:w-[28vw]',
+  'h-52 md:h-[24rem] md:w-[20vw]',
+  'h-64 md:h-[30rem] md:w-[26vw]',
+  'h-56 md:h-[26rem] md:w-[22vw]',
+  'h-60 md:h-[28rem] md:w-[24vw]',
 ] as const;
+
+const ARCHIVE_FRAMES = ABOUT_ARCHIVE_IMAGES.map((image, index) => ({
+  id: String(index + 1),
+  class: `${FRAME} ${ARCHIVE_SIZES[index % ARCHIVE_SIZES.length]}`,
+  image,
+}));
 
 @Component({
   selector: 'app-about-archive',
@@ -23,10 +29,10 @@ const ARCHIVE_FRAMES = [
   imports: [NgOptimizedImage],
   template: `
     <div
-      class="about-archive-wrapper relative overflow-hidden max-md:overflow-visible md:flex md:flex-nowrap"
+      class="about-archive-wrapper relative overflow-x-auto overscroll-x-contain md:flex md:flex-nowrap md:overflow-hidden"
     >
       <div
-        class="about-archive-strip flex will-change-transform max-md:flex-col max-md:gap-3 md:flex-nowrap md:items-end md:gap-3"
+        class="about-archive-strip flex w-max items-end gap-3 will-change-transform md:w-auto md:flex-nowrap"
       >
         @for (frame of frames; track frame.id) {
           <div [class]="frame.class">

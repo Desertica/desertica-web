@@ -4,6 +4,7 @@ import type {
   TourLanguage,
   TourPage,
   TourStop,
+  TourVideo,
 } from '../catalog/tour-pages';
 import type { CatalogDestination, CatalogTour } from '../catalog/tours';
 import { LOCALES, type AppLocale } from '../i18n/catalogs';
@@ -88,7 +89,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       assign(target, tourKey(slug, 'title'), text(entry['title']));
       assign(target, tourKey(slug, 'description'), text(entry['description']));
       assign(target, tourKey(slug, 'lead'), text(entry['lead']) ?? text(entry['description']));
-      assign(target, tourKey(slug, 'lead2'), text(entry['lead2']));
+      assign(target, tourKey(slug, 'termsSummary'), text(entry['termsSummary']));
       assign(target, tourKey(slug, 'meeting'), text(entry['meeting']));
     }
 
@@ -110,20 +111,24 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
     const gallery = mediaList(base['gallery'], options.mediaBase, stringList(base['galleryUrls']));
     tourPages[slug] = {
       gallery: gallery.length ? gallery : [image, image, image],
-      portraits: mediaList(base['portraits'], options.mediaBase, stringList(base['portraitUrls'])),
       leadKey: tourKey(slug, 'lead'),
-      lead2Key:
-        byLocale.en?.['lead2'] || byLocale.es?.['lead2'] ? tourKey(slug, 'lead2') : undefined,
+      descriptionKeys: items(slug, 'paragraphs', byLocale, messages),
+      expandedDescriptionKeys: items(slug, 'expandedParagraphs', byLocale, messages),
       meetingKey: tourKey(slug, 'meeting'),
       languages: languages(base['languages']),
       format: format(base['format']),
-      highlights: features(slug, 'highlights', byLocale, messages),
       practices: features(slug, 'practices', byLocale, messages),
-      itinerary: stops(slug, byLocale, messages),
+      itinerary: stops(slug, byLocale, messages, options.mediaBase, image),
+      videos: videos(base['videos'], options.mediaBase),
       includedKeys: items(slug, 'included', byLocale, messages),
       excludedKeys: items(slug, 'excluded', byLocale, messages),
       packKeys: items(slug, 'pack', byLocale, messages),
       notesKeys: items(slug, 'notes', byLocale, messages),
+      termsSummaryKey:
+        byLocale.en?.['termsSummary'] || byLocale.es?.['termsSummary']
+          ? tourKey(slug, 'termsSummary')
+          : undefined,
+      itineraryFile: media(base['itineraryFile']) ?? text(base['itineraryFileUrl']),
     };
   }
 
@@ -205,6 +210,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       featured: base['featured'] === true,
       i18n: localized(byLocale, (entry) => ({
         title: text(entry['title']) ?? '',
+        category: text(entry['category']) ?? '',
         excerpt: text(entry['excerpt']) ?? '',
         content: text(entry['content']) ?? '',
         seoDescription: text(entry['seoDescription']) ?? '',
@@ -300,7 +306,7 @@ function localized<T>(byLocale: Grouped, map: (entry: RawEntry) => T): Localized
 
 function features(
   slug: string,
-  field: 'highlights' | 'practices',
+  field: 'practices',
   byLocale: Grouped,
   messages: Record<AppLocale, Record<string, string>>,
 ): TourFeature[] {
@@ -325,27 +331,51 @@ function stops(
   slug: string,
   byLocale: Grouped,
   messages: Record<AppLocale, Record<string, string>>,
+  mediaBase: string | null,
+  fallbackImage: string,
 ): TourStop[] {
   const base = asList(byLocale.en?.['itinerary']) ?? asList(byLocale.es?.['itinerary']) ?? [];
   return base.map((item, index) => {
     const prefix = `cms.tours.${slug}.itinerary.${index}`;
+    let expanded = false;
     for (const locale of LOCALES) {
       const entry = asList(byLocale[locale]?.['itinerary'])?.[index];
       assign(messages[locale], `${prefix}.title`, text(entry?.['title']));
       assign(messages[locale], `${prefix}.body`, text(entry?.['body']));
+      const expandedBody = text(entry?.['expandedBody']);
+      assign(messages[locale], `${prefix}.expanded`, expandedBody);
+      expanded ||= !!expandedBody;
     }
 
     return {
-      time: text(item['time']) ?? '',
+      image: mediaUrl(item['image'], mediaBase) ?? text(item['imageUrl']) ?? fallbackImage,
       titleKey: `${prefix}.title`,
       bodyKey: `${prefix}.body`,
+      expandedBodyKey: expanded ? `${prefix}.expanded` : undefined,
     };
+  });
+}
+
+function videos(value: unknown, mediaBase: string | null): TourVideo[] {
+  return (asList(value) ?? []).flatMap((item): TourVideo[] => {
+    const poster = mediaUrl(item['poster'], mediaBase) ?? text(item['posterUrl']);
+    if (!poster) {
+      return [];
+    }
+
+    return [
+      compact({
+        poster,
+        webm: mediaUrl(item['webm'], mediaBase) ?? text(item['webmUrl']),
+        mp4: mediaUrl(item['mp4'], mediaBase) ?? text(item['mp4Url']),
+      }),
+    ];
   });
 }
 
 function items(
   slug: string,
-  field: 'included' | 'excluded' | 'pack' | 'notes',
+  field: 'paragraphs' | 'expandedParagraphs' | 'included' | 'excluded' | 'pack' | 'notes',
   byLocale: Grouped,
   messages: Record<AppLocale, Record<string, string>>,
 ): string[] {

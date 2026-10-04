@@ -19,4 +19,10 @@ export const ABOUT_ARCHIVE_IMAGES = [
   unsplash('photo-1739519310027-fe3fd9b04cdd', { w: 1000, h: 1500 }),
   unsplash('photo-1694949705617-ea882acee186', { w: 900, h: 1400 }),
   unsplash('photo-1623524322001-edc2423ac854', { w: 900, h: 1450 }),
+  unsplash('photo-1533106497176-45ae19e68ba2', { w: 900, h: 1300 }),
+  unsplash('photo-1509316785289-025f5b846b35', { w: 1000, h: 1500 }),
+  unsplash('photo-1473580044384-7ba9967e16a0', { w: 900, h: 1400 }),
+  unsplash('photo-1419242902214-272b3f66ee7a', { w: 800, h: 1250 }),
+  unsplash('photo-1469854523086-cc02fe5d8800', { w: 1000, h: 1550 }),
+  unsplash('photo-1516026672322-bc52d61a55d5', { w: 900, h: 1350 }),
 ] as const;

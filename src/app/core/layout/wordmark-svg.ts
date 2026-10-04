@@ -26,8 +26,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     }
 
     .wordmark-svg .draw.counter {
-      fill: #5a6b3e;
-      stroke: #5a6b3e;
+      fill: var(--primary);
+      stroke: var(--primary);
     }
 
     .wordmark-svg .mark {

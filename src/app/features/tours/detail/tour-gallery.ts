@@ -13,11 +13,11 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
   template: `
     <section [attr.aria-label]="'tour.galleryLabel' | translate: i18n.locale()">
       <div
-        class="flex snap-x snap-mandatory gap-3 overflow-x-auto md:grid md:h-[min(42svh,22rem)] md:snap-none md:grid-cols-3 md:grid-rows-2 md:overflow-visible"
+        class="flex snap-x snap-mandatory gap-3 overflow-x-auto md:grid md:h-[min(56svh,32rem)] md:snap-none md:grid-cols-3 md:grid-rows-2 md:overflow-visible"
       >
         @for (src of photos(); track src; let i = $index) {
           <div
-            class="relative aspect-[16/10] w-[72%] shrink-0 snap-center overflow-hidden md:aspect-auto md:h-full md:w-auto md:min-h-0"
+            class="relative aspect-[16/10] w-[88%] shrink-0 snap-center overflow-hidden md:aspect-auto md:h-full md:w-auto md:min-h-0"
             [class.md:col-span-2]="i === 0"
             [class.md:row-span-2]="i === 0"
           >
@@ -25,7 +25,9 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
               [ngSrc]="src"
               fill
               [priority]="i === 0"
-              [sizes]="i === 0 ? '(min-width: 768px) 42rem, 72vw' : '(min-width: 768px) 14rem, 72vw'"
+              [sizes]="
+                i === 0 ? '(min-width: 768px) 48rem, 88vw' : '(min-width: 768px) 24rem, 88vw'
+              "
               [alt]="alt(i)"
               class="rounded-none object-cover"
             />

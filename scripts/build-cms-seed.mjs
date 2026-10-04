@@ -29,6 +29,7 @@ const { tourDestinations } = toursMod;
 // phone.ts importa libphonenumber-js: se marca como externo (packages: 'external') y se resuelve desde node_modules.
 const { CONTACT_BAND_IMAGE } = load('src/app/features/contact/phone.ts', { packages: 'external' });
 const { ABOUT_TRIO_IMAGE, ABOUT_ARCHIVE_IMAGES } = load('src/app/features/about/about-media.ts');
+const { BLOG_HERO_IMAGE } = load('src/app/core/catalog/blog.ts', { packages: 'external' });
 const { tourPage } = load('src/app/core/catalog/tour-pages.ts');
 
 const dicts = {
@@ -51,7 +52,13 @@ const t = (locale, key) => {
 };
 
 const feature = (locale, f) => ({ icon: f.icon, title: t(locale, f.titleKey), body: t(locale, f.bodyKey) });
-const stop = (locale, s) => ({ time: s.time, title: t(locale, s.titleKey), body: t(locale, s.bodyKey) });
+const stop = (locale, s) => ({
+  imageUrl: s.image,
+  title: t(locale, s.titleKey),
+  body: t(locale, s.bodyKey),
+  expandedBody: s.expandedBodyKey ? t(locale, s.expandedBodyKey) : '',
+});
+const video = (v) => ({ posterUrl: v.poster, webmUrl: v.webm, mp4Url: v.mp4 });
 const list = (locale, keys) => keys.map((k) => t(locale, k)).filter(Boolean);
 
 const destinations = [];
@@ -78,12 +85,11 @@ tourDestinations.forEach((destination, dIndex) => {
         description: t(locale, tour.descriptionKey),
         lead: t(locale, page.leadKey),
       };
-      if (page.lead2Key) {
-        const lead2 = t(locale, page.lead2Key);
-        if (lead2) entry.lead2 = lead2;
-      }
       entry.meeting = t(locale, page.meetingKey);
-      entry.highlights = page.highlights.map((f) => feature(locale, f));
+      entry.paragraphs = list(locale, page.descriptionKeys);
+      entry.expandedParagraphs = list(locale, page.expandedDescriptionKeys);
+      entry.termsSummary = t(locale, page.termsSummaryKey);
+      entry.videos = page.videos.map(video);
       entry.practices = page.practices.map((f) => feature(locale, f));
       entry.itinerary = page.itinerary.map((s) => stop(locale, s));
       entry.included = list(locale, page.includedKeys);
@@ -103,7 +109,7 @@ tourDestinations.forEach((destination, dIndex) => {
       languages: [...page.languages],
       imageUrl: tour.image,
       galleryUrls: [...page.gallery],
-      portraitUrls: [...page.portraits],
+      itineraryFileUrl: page.itineraryFile,
       i18n: tourI18n,
     });
   });
@@ -145,6 +151,9 @@ for (const key of Object.keys(flatEs)) if (!(key in flatEn)) warnings.add(`only 
 
 const slot = (key, extra) => ({ key, ...extra });
 const mediaSlots = [
+  slot('home.hero', { imageUrl: toursMod.HOME_HERO_IMAGE }),
+  slot('blog.hero', { imageUrl: BLOG_HERO_IMAGE }),
+  slot('products.hero', { imageUrl: toursMod.TOURS_BANNER_IMAGE }),
   slot('tours.banner', { imageUrl: toursMod.TOURS_BANNER_IMAGE }),
   slot('tours.closer', { imageUrl: toursMod.TOURS_CLOSER_IMAGE }),
   slot('contact.band', { imageUrl: CONTACT_BAND_IMAGE }),

@@ -10,26 +10,35 @@ export type TourFeature = {
 };
 
 export type TourStop = {
-  time: string;
+  image: string;
   titleKey: string;
   bodyKey: string;
+  expandedBodyKey?: string;
+};
+
+export type TourVideo = {
+  poster: string;
+  webm?: string;
+  mp4?: string;
 };
 
 export type TourPage = {
   gallery: readonly string[];
-  portraits: readonly string[];
   leadKey: string;
-  lead2Key?: string;
+  descriptionKeys: readonly string[];
+  expandedDescriptionKeys: readonly string[];
   meetingKey: string;
   languages: readonly TourLanguage[];
   format: TourFormat;
-  highlights: readonly TourFeature[];
   practices: readonly TourFeature[];
   itinerary: readonly TourStop[];
+  videos: readonly TourVideo[];
   includedKeys: readonly string[];
   excludedKeys: readonly string[];
   packKeys: readonly string[];
   notesKeys: readonly string[];
+  termsSummaryKey?: string;
+  itineraryFile?: string;
 };
 
 const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string => {
@@ -38,16 +47,28 @@ const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string 
   return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
 };
 
+const duneGallery = [
+  unsplash('photo-1533106497176-45ae19e68ba2', { w: 1800, h: 1200 }),
+  unsplash('photo-1509316785289-025f5b846b35', { w: 900, h: 1200 }),
+  unsplash('photo-1473580044384-7ba9967e16a0', { w: 900, h: 1200 }),
+] as const;
+
+const dunePosters = [
+  unsplash('photo-1621795307430-3ff25aa08945', { w: 900, h: 1600 }),
+  unsplash('photo-1643856120284-f47c4e9521e0', { w: 900, h: 1600 }),
+] as const;
+
 const emptyPage = (tour: CatalogTour): TourPage => ({
   gallery: [tour.image, tour.image, tour.image],
-  portraits: [],
   leadKey: tour.descriptionKey,
+  descriptionKeys: [],
+  expandedDescriptionKeys: [],
   meetingKey: 'tour.meetingIca',
   languages: ['es', 'en'],
   format: 'both',
-  highlights: [],
   practices: [],
   itinerary: [],
+  videos: [],
   includedKeys: [],
   excludedKeys: [],
   packKeys: [],
@@ -55,47 +76,20 @@ const emptyPage = (tour: CatalogTour): TourPage => ({
 });
 
 const duneBuggyPage: TourPage = {
-  gallery: [
-    unsplash('photo-1533106497176-45ae19e68ba2', { w: 1800, h: 1200 }),
-    unsplash('photo-1509316785289-025f5b846b35', { w: 900, h: 1200 }),
-    unsplash('photo-1473580044384-7ba9967e16a0', { w: 900, h: 1200 }),
-  ],
-  portraits: [
-    unsplash('photo-1621795307430-3ff25aa08945', { w: 900, h: 1600 }),
-    unsplash('photo-1643856120284-f47c4e9521e0', { w: 900, h: 1600 }),
-  ],
+  gallery: duneGallery,
   leadKey: 'tours.duneBuggy.lead',
-  lead2Key: 'tours.duneBuggy.lead2',
+  descriptionKeys: [
+    'tours.duneBuggy.lead2',
+    'tours.duneBuggy.description.p1',
+    'tours.duneBuggy.description.p2',
+  ],
+  expandedDescriptionKeys: [
+    'tours.duneBuggy.details.description.p1',
+    'tours.duneBuggy.details.description.p2',
+  ],
   meetingKey: 'tours.duneBuggy.meeting',
   languages: ['es', 'en'],
   format: 'both',
-  highlights: [
-    {
-      icon: 'lucideCar',
-      titleKey: 'tours.duneBuggy.highlights.buggy.title',
-      bodyKey: 'tours.duneBuggy.highlights.buggy.body',
-    },
-    {
-      icon: 'lucideWind',
-      titleKey: 'tours.duneBuggy.highlights.board.title',
-      bodyKey: 'tours.duneBuggy.highlights.board.body',
-    },
-    {
-      icon: 'lucideShield',
-      titleKey: 'tours.duneBuggy.highlights.helmet.title',
-      bodyKey: 'tours.duneBuggy.highlights.helmet.body',
-    },
-    {
-      icon: 'lucideSun',
-      titleKey: 'tours.duneBuggy.highlights.light.title',
-      bodyKey: 'tours.duneBuggy.highlights.light.body',
-    },
-    {
-      icon: 'lucideMapPin',
-      titleKey: 'tours.duneBuggy.highlights.meet.title',
-      bodyKey: 'tours.duneBuggy.highlights.meet.body',
-    },
-  ],
   practices: [
     {
       icon: 'lucideUsers',
@@ -120,41 +114,44 @@ const duneBuggyPage: TourPage = {
   ],
   itinerary: [
     {
-      time: '15:50',
+      image: dunePosters[0],
       titleKey: 'tours.duneBuggy.itinerary.meet.title',
       bodyKey: 'tours.duneBuggy.itinerary.meet.body',
+      expandedBodyKey: 'tours.duneBuggy.itinerary.meet.expanded',
     },
     {
-      time: '15:55',
+      image: duneGallery[0],
       titleKey: 'tours.duneBuggy.itinerary.dunes.title',
       bodyKey: 'tours.duneBuggy.itinerary.dunes.body',
+      expandedBodyKey: 'tours.duneBuggy.itinerary.dunes.expanded',
     },
     {
-      time: '16:30',
+      image: duneGallery[1],
       titleKey: 'tours.duneBuggy.itinerary.board.title',
       bodyKey: 'tours.duneBuggy.itinerary.board.body',
+      expandedBodyKey: 'tours.duneBuggy.itinerary.board.expanded',
     },
     {
-      time: '17:40',
+      image: duneGallery[2],
       titleKey: 'tours.duneBuggy.itinerary.light.title',
       bodyKey: 'tours.duneBuggy.itinerary.light.body',
+      expandedBodyKey: 'tours.duneBuggy.itinerary.light.expanded',
     },
     {
-      time: '18:15',
+      image: dunePosters[1],
       titleKey: 'tours.duneBuggy.itinerary.close.title',
       bodyKey: 'tours.duneBuggy.itinerary.close.body',
+      expandedBodyKey: 'tours.duneBuggy.itinerary.close.expanded',
     },
   ],
+  videos: [{ poster: dunePosters[0] }, { poster: dunePosters[1] }],
   includedKeys: [
     'tours.duneBuggy.included.guide',
     'tours.duneBuggy.included.buggy',
     'tours.duneBuggy.included.board',
     'tours.duneBuggy.included.helmet',
   ],
-  excludedKeys: [
-    'tours.duneBuggy.excluded.meals',
-    'tours.duneBuggy.excluded.standing',
-  ],
+  excludedKeys: ['tours.duneBuggy.excluded.meals', 'tours.duneBuggy.excluded.standing'],
   packKeys: [
     'tours.duneBuggy.pack.wind',
     'tours.duneBuggy.pack.sun',
@@ -165,6 +162,8 @@ const duneBuggyPage: TourPage = {
     'tours.duneBuggy.notes.kids',
     'tours.duneBuggy.notes.weather',
   ],
+  termsSummaryKey: 'tours.duneBuggy.termsSummary',
+  itineraryFile: '/tours/dune-buggy-itinerary.pdf',
 };
 
 const pages: Readonly<Record<string, TourPage>> = {
@@ -186,4 +185,16 @@ export function resolvedTour(id: string): { tour: CatalogTour; page: TourPage } 
 
 export function tourDestination(tour: CatalogTour) {
   return destinationById(tour.destination);
+}
+
+export function tourHasDetails(page: TourPage): boolean {
+  return Boolean(
+    page.expandedDescriptionKeys.length ||
+      page.itinerary.length ||
+      page.notesKeys.length ||
+      page.includedKeys.length ||
+      page.excludedKeys.length ||
+      page.packKeys.length ||
+      page.termsSummaryKey,
+  );
 }

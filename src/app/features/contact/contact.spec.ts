@@ -53,7 +53,7 @@ describe('Contact', () => {
     expect(photo).not.toBeNull();
     expect(photo?.className).toContain('rounded-none');
     expect(photo?.closest('.rounded-2xl')).toBeNull();
-    expect(photo?.closest('.min-h-72')).not.toBeNull();
+    expect(photo?.closest('.h-80')).not.toBeNull();
     expect(photo?.getAttribute('sizes')).toContain('50vw');
     expect(photo?.getAttribute('sizes')).toContain('92vw');
     expect(compiled.querySelector('#contact-name')).not.toBeNull();

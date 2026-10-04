@@ -13,6 +13,39 @@ import {
 import type { CmsSnapshot } from './cms-models';
 
 const PAGE_SIZE = 100;
+
+/**
+ * `populate=*` stops at the first level, so media nested in components needs explicit paths.
+ * Keys use Strapi's bracket syntax and are sent as-is.
+ */
+const POPULATE: Readonly<Record<string, Record<string, string>>> = {
+  destinations: { 'populate[image]': 'true' },
+  tours: {
+    'populate[destination][fields][0]': 'slug',
+    'populate[image]': 'true',
+    'populate[gallery]': 'true',
+    'populate[itineraryFile]': 'true',
+    'populate[practices]': 'true',
+    'populate[paragraphs]': 'true',
+    'populate[expandedParagraphs]': 'true',
+    'populate[included]': 'true',
+    'populate[excluded]': 'true',
+    'populate[pack]': 'true',
+    'populate[notes]': 'true',
+    'populate[itinerary][populate][0]': 'image',
+    'populate[videos][populate][0]': 'poster',
+    'populate[videos][populate][1]': 'webm',
+    'populate[videos][populate][2]': 'mp4',
+  },
+  'media-slots': {
+    'populate[image]': 'true',
+    'populate[video]': 'true',
+    'populate[poster]': 'true',
+  },
+  pages: { 'populate[heroImage]': 'true' },
+  'blog-posts': { 'populate[cover]': 'true' },
+  products: { 'populate[image]': 'true', 'populate[gallery]': 'true' },
+};
 const MAX_PAGES = 20;
 
 type Cached = { key: string; at: number; snapshot: CmsSnapshot };
@@ -131,8 +164,8 @@ export class CmsApi {
         meta?: { pagination?: { pageCount?: number } };
       }>(base, path, {
         ...extra,
+        ...POPULATE[path],
         locale,
-        populate: '*',
         'pagination[page]': String(page),
         'pagination[pageSize]': String(PAGE_SIZE),
       });

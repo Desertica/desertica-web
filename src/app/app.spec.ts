@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { App } from './app';
+import { INTRO_STORAGE_KEY } from './core/animation/intro';
 import { I18nService } from './core/i18n/i18n';
 import { remoteImageLoader } from './core/images/remote-image-loader';
 
@@ -11,6 +12,9 @@ describe('App', () => {
   beforeEach(async () => {
     localStorage.removeItem('theme');
     localStorage.removeItem('locale');
+    sessionStorage.removeItem(INTRO_STORAGE_KEY);
+    window.history.replaceState({}, '', '/');
+    document.documentElement.dataset['intro'] = 'done';
     document.cookie = 'locale=; path=/; max-age=0';
     document.documentElement.lang = 'en';
     document.documentElement.classList.remove('dark');
@@ -44,6 +48,9 @@ describe('App', () => {
   afterEach(() => {
     localStorage.removeItem('theme');
     localStorage.removeItem('locale');
+    sessionStorage.removeItem(INTRO_STORAGE_KEY);
+    window.history.replaceState({}, '', '/');
+    document.documentElement.dataset['intro'] = 'done';
     document.cookie = 'locale=; path=/; max-age=0';
     document.documentElement.lang = 'en';
     document.documentElement.classList.remove('dark');
@@ -114,5 +121,34 @@ describe('App', () => {
     expect(
       compiled.querySelector<HTMLButtonElement>('button[aria-label="Cambiar tema de color"]'),
     ).not.toBeNull();
+  });
+
+  it('does not mount the intro overlay on home', async () => {
+    sessionStorage.removeItem(INTRO_STORAGE_KEY);
+    document.documentElement.dataset['intro'] = 'pending';
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-intro-overlay')).toBeNull();
+  });
+
+  it('mounts the intro overlay on a deep link before the intro has played', async () => {
+    sessionStorage.removeItem(INTRO_STORAGE_KEY);
+    window.history.replaceState({}, '', '/contact');
+    document.documentElement.dataset['intro'] = 'pending';
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const overlay = fixture.nativeElement.querySelector('app-intro-overlay');
+    expect(overlay).not.toBeNull();
+    expect(overlay?.getAttribute('role')).toBe('status');
+    expect(overlay?.getAttribute('aria-label')).toBe('Loading Desértica');
+  });
+
+  it('does not mount the intro overlay when the session already played it', async () => {
+    sessionStorage.setItem(INTRO_STORAGE_KEY, '1');
+    window.history.replaceState({}, '', '/contact');
+    document.documentElement.dataset['intro'] = 'done';
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-intro-overlay')).toBeNull();
   });
 });

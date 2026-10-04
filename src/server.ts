@@ -51,9 +51,9 @@ app.use((req, res, next) => {
   i18n.init(req, res, () => {
     const queryValue = req.query[LOCALE_QUERY];
     const locale = resolveLocale({
-      cookie: typeof req.cookies[LOCALE_COOKIE] === 'string' ? req.cookies[LOCALE_COOKIE] : undefined,
+      cookie:
+        typeof req.cookies[LOCALE_COOKIE] === 'string' ? req.cookies[LOCALE_COOKIE] : undefined,
       query: typeof queryValue === 'string' ? queryValue : undefined,
-      acceptLanguage: req.headers['accept-language'],
     });
 
     (req as express.Request & { setLocale?: (locale: string) => void }).setLocale?.(locale);

@@ -1,22 +1,45 @@
 <section
   data-hero
-  class="hero relative flex min-h-[calc(100dvh-var(--header-h))] flex-col justify-center px-4 py-16 sm:px-6 sm:py-20"
+  class="hero relative isolate min-h-[calc(100dvh-var(--header-h))] w-full overflow-hidden"
 >
-
-  <div class="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 text-center">
-    <div class="wordmark-stage w-full max-w-3xl origin-center">
+  <img
+    data-hero-photo
+    [ngSrc]="heroImage"
+    fill
+    priority
+    sizes="100vw"
+    alt=""
+    class="rounded-none object-cover object-[center_40%]"
+  />
+  <div
+    class="wordmark-stage hero-rest pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+  >
+    <div class="w-full max-w-3xl origin-center px-4">
       <app-wordmark-svg />
     </div>
-    <div data-hero-copy class="flex max-w-xl flex-col items-center gap-4">
-      <h1 class="font-heading text-4xl tracking-tight sm:text-5xl">
+  </div>
+  <div
+    data-hero-copy
+    class="hero-overlay pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end p-6 text-center md:p-8"
+  >
+    <div class="flex max-w-xl flex-col items-center gap-4">
+      <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+      <h1 class="font-heading text-4xl tracking-tight text-balance sm:text-5xl">
         {{ 'home.heroTitle' | translate: i18n.locale() }}
       </h1>
-      <p class="text-muted-foreground text-base sm:text-lg">
+      <p class="max-w-md text-base sm:text-lg">
         {{ 'home.heroLead' | translate: i18n.locale() }}
       </p>
-      <div class="mt-2 flex flex-wrap items-center justify-center gap-3">
+      <div class="pointer-events-auto mt-2 flex flex-wrap items-center justify-center gap-3">
         <a hlmBtn [routerLink]="planTrip.path">{{ planTrip.labelKey | translate: i18n.locale() }}</a>
-        <a hlmBtn variant="outline" routerLink="/tours">{{ 'nav.tours' | translate: i18n.locale() }}</a>
+        <a
+          hlmBtn
+          variant="outline"
+          class="border-white bg-transparent text-white hover:bg-white/10"
+          routerLink="/tours"
+        >
+          {{ 'nav.tours' | translate: i18n.locale() }}
+        </a>
       </div>
     </div>
   </div>
@@ -77,13 +100,14 @@
   </div>
 </section>
 
-<section class="pb-24 md:pb-0">
+<section>
   <div class="grid md:grid-cols-3">
     @for (destination of destinations(); track destination.id) {
       <a
         appPlanTripHover
         class="dest-card block transition-none"
         [routerLink]="planTrip.path"
+        [fragment]="destination.id"
       >
         <section hlmCard class="rounded-none py-0 shadow-none ring-0">
           <div [hlmAspectRatio]="destRatio" class="w-full overflow-hidden">

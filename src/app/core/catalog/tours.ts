@@ -30,6 +30,11 @@ const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string 
   return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=${width}&h=${height}&q=80`;
 };
 
+export const HOME_HERO_IMAGE = unsplash('photo-1509316785289-025f5b846b35', {
+  w: 2400,
+  h: 1600,
+});
+
 export const TOURS_BANNER_IMAGE = unsplash('photo-1511919471431-35002133f316', {
   w: 2400,
   h: 1200,
