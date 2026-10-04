@@ -26,6 +26,7 @@ import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { CountryCode } from 'libphonenumber-js/min';
 import { CatalogService } from '../../core/catalog/catalog';
 import { DEFAULT_FORMS } from '../../core/cms/booking-defaults';
+import { AnalyticsService } from '../../core/analytics/analytics';
 import { FormsApi } from '../../core/cms/forms-api';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -66,6 +67,7 @@ export class Contact {
   private readonly destroyRef = inject(DestroyRef);
   private readonly phoneTouched = signal(false);
   private readonly forms = inject(FormsApi);
+  private readonly analytics = inject(AnalyticsService);
   private readonly sending = signal(false);
 
   protected readonly i18n = inject(I18nService);
@@ -83,7 +85,7 @@ export class Contact {
       this.countries()[0],
   );
 
-  protected readonly form = new FormGroup({
+  readonly form = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(this.limits.nameMin), Validators.maxLength(this.limits.nameMax)],
@@ -190,6 +192,7 @@ export class Contact {
       return;
     }
 
+    this.analytics.track('generate_lead', { form: 'contact' });
     toast(this.i18n.t('contact.thanks'));
     this.form.reset();
     this.countryCode.set(DEFAULT_PHONE_COUNTRY);

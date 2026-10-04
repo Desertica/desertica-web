@@ -339,5 +339,21 @@
   "products": {
     "empty": "No products yet. Check back soon.",
     "back": "Back to products"
+  },
+  "cookies": {
+    "title": "Your cookie choices",
+    "text": "We use necessary cookies to run the site. With your permission we also measure visits (analytics) and the ads that brought you here (marketing). Nothing optional runs until you choose.",
+    "policy": "Privacy policy",
+    "necessary": "Necessary",
+    "necessaryText": "Language, theme and your booking. Always on.",
+    "analytics": "Analytics",
+    "analyticsText": "Anonymous statistics on how the site is used.",
+    "marketing": "Marketing",
+    "marketingText": "Measures which ads and campaigns led to a booking.",
+    "acceptAll": "Accept all",
+    "rejectAll": "Reject all",
+    "customize": "Customize",
+    "save": "Save preferences",
+    "preferences": "Cookie preferences"
   }
 }

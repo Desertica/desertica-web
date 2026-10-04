@@ -339,5 +339,21 @@
   "products": {
     "empty": "Aún no hay productos. Vuelve pronto.",
     "back": "Volver a productos"
+  },
+  "cookies": {
+    "title": "Tus opciones de cookies",
+    "text": "Usamos cookies necesarias para que el sitio funcione. Con tu permiso también medimos las visitas (analítica) y los anuncios que te trajeron aquí (marketing). Nada opcional se activa hasta que elijas.",
+    "policy": "Política de privacidad",
+    "necessary": "Necesarias",
+    "necessaryText": "Idioma, tema y tu reserva. Siempre activas.",
+    "analytics": "Analítica",
+    "analyticsText": "Estadísticas anónimas sobre el uso del sitio.",
+    "marketing": "Marketing",
+    "marketingText": "Mide qué anuncios y campañas llevaron a una reserva.",
+    "acceptAll": "Aceptar todo",
+    "rejectAll": "Rechazar todo",
+    "customize": "Personalizar",
+    "save": "Guardar preferencias",
+    "preferences": "Preferencias de cookies"
   }
 }

@@ -10,12 +10,14 @@ import {
 } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { AnalyticsService, asCurrency } from '../../../core/analytics/analytics';
+import { tourItem } from '../../../core/analytics/items';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { tourHasDetails } from '../../../core/catalog/tour-pages';
-import { TOURS_PATH } from '../../../core/catalog/tours';
+import { type CatalogTour, TOURS_PATH } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { TourAssurances } from './tour-assurances';
@@ -51,6 +53,8 @@ export class TourDetail {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly analytics = inject(AnalyticsService);
+  private viewed: string | null = null;
 
   readonly id = input.required<string>();
   protected readonly i18n = inject(I18nService);
@@ -75,6 +79,8 @@ export class TourDetail {
         return;
       }
 
+      untracked(() => this.trackView(data.tour));
+
       const name = this.i18n.t(data.page.seoTitleKey ?? data.tour.titleKey);
       this.title.setTitle(`${name} | ${this.i18n.t('meta.title')}`);
       this.meta.updateTag({
@@ -89,6 +95,20 @@ export class TourDetail {
         name: 'description',
         content: this.i18n.t('meta.description'),
       });
+    });
+  }
+
+  /** One `view_item` per tour per visit to the page, not per language switch. */
+  private trackView(tour: CatalogTour): void {
+    if (this.viewed === tour.id) {
+      return;
+    }
+
+    this.viewed = tour.id;
+    this.analytics.track('view_item', {
+      currency: asCurrency(this.catalog.booking().currencyCode),
+      value: tour.priceFrom,
+      items: [tourItem(tour, this.i18n.t(tour.titleKey))],
     });
   }
 }

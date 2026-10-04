@@ -31,7 +31,7 @@
       </p>
       <div class="mt-10 grid gap-3 text-left md:grid-cols-2 lg:grid-cols-3">
         @for (tour of destination.tours; track tour.id; let firstTour = $first) {
-          <a class="block" [routerLink]="detailPath(tour.id)">
+          <a class="block" [routerLink]="detailPath(tour.id)" (click)="select(tour)">
             <app-tour-card [tour]="tour" [priority]="firstDest && firstTour" />
           </a>
         }
