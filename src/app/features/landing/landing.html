@@ -79,7 +79,7 @@
 
 <section class="pb-24 md:pb-0">
   <div class="grid md:grid-cols-3">
-    @for (destination of destinations; track destination.id) {
+    @for (destination of destinations(); track destination.id) {
       <a
         appPlanTripHover
         class="dest-card block transition-none"

@@ -16,6 +16,8 @@ import {
   LOCALE_QUERY,
   LOCALE_STORAGE_KEY,
   type AppLocale,
+  EMPTY_OVERLAY,
+  type MessageOverlay,
   isAppLocale,
   parseCookie,
   resolveLocale,
@@ -34,6 +36,7 @@ export class I18nService {
   private readonly meta = inject(Meta);
 
   readonly locale = signal<AppLocale>(this.readInitialLocale());
+  private overlayValue: MessageOverlay = EMPTY_OVERLAY;
 
   constructor() {
     this.apply(this.locale());
@@ -51,8 +54,18 @@ export class I18nService {
     }
   }
 
+  get overlay(): MessageOverlay {
+    return this.overlayValue;
+  }
+
+  /** Registers CMS messages for this injector (one per SSR request) and refreshes page meta. */
+  setOverlay(overlay: MessageOverlay): void {
+    this.overlayValue = overlay;
+    this.apply(this.locale());
+  }
+
   t(key: string): string {
-    return translate(key, this.locale());
+    return translate(key, this.locale(), this.overlayValue);
   }
 
   setLocale(locale: AppLocale): void {
@@ -121,7 +134,7 @@ export class I18nService {
 
   private apply(locale: AppLocale): void {
     this.document.documentElement.lang = locale;
-    this.title.setTitle(translate('meta.title', locale));
-    this.meta.updateTag({ name: 'description', content: translate('meta.description', locale) });
+    this.title.setTitle(translate('meta.title', locale, this.overlayValue));
+    this.meta.updateTag({ name: 'description', content: translate('meta.description', locale, this.overlayValue) });
   }
 }

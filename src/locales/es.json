@@ -99,7 +99,8 @@
     "emailError": "Ingresa un correo válido.",
     "whatsappError": "Ingresa un número de WhatsApp válido.",
     "messageError": "Escribe un mensaje.",
-    "captchaError": "Confirma que no eres un robot."
+    "captchaError": "Confirma que no eres un robot.",
+    "sendError": "No pudimos enviar tu mensaje. Inténtalo de nuevo o escríbenos por WhatsApp."
   },
   "footer": {
     "sitemap": "Mapa del sitio",
@@ -320,5 +321,13 @@
   "meta": {
     "title": "Desértica | Tours y experiencias en Ica",
     "description": "Reserva tubulares, atardeceres en viñedos, campamentos en el oasis y caminatas al amanecer en Ica y Huacachina."
+  },
+  "blog": {
+    "empty": "Aún no hay publicaciones. Vuelve pronto.",
+    "back": "Volver al blog"
+  },
+  "products": {
+    "empty": "Aún no hay productos. Vuelve pronto.",
+    "back": "Volver a productos"
   }
 }

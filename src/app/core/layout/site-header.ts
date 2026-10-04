@@ -11,7 +11,8 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
 import { LocaleSwitcher } from './locale-switcher';
-import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './primary-nav';
+import { CatalogService } from '../catalog/catalog';
+import { isNavGroup, navItemTrack, planTripLink } from './primary-nav';
 
 @Component({
   selector: 'app-site-header',
@@ -49,7 +50,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
             [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
           >
             <ul hlmNavigationMenuList>
-              @for (item of navLinks; track item.path) {
+              @for (item of navLinks(); track item.path) {
                 <li hlmNavigationMenuItem>
                   @if (isGroup(item)) {
                     <button type="button" hlmNavigationMenuTrigger align="center">
@@ -190,7 +191,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
                 class="flex flex-col gap-1 px-4 pb-6"
                 [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
               >
-                @for (item of navLinks; track item.path) {
+                @for (item of navLinks(); track item.path) {
                   @if (isGroup(item)) {
                     <p
                       class="text-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase"
@@ -282,7 +283,7 @@ import { isNavGroup, navItemTrack, planTripLink, primaryNavLinks } from './prima
 export class SiteHeader {
   protected readonly theme = inject(ThemeService);
   protected readonly i18n = inject(I18nService);
-  protected readonly navLinks = primaryNavLinks;
+  protected readonly navLinks = inject(CatalogService).navLinks;
   protected readonly planTrip = planTripLink;
   protected readonly isGroup = isNavGroup;
   protected readonly navTrack = navItemTrack;

@@ -16,7 +16,7 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { afterNextGsap } from '../../core/animation/gsap';
 import { PlanTripHover } from '../../core/animation/plan-trip-hover';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
-import { tourDestinations } from '../../core/catalog/tours';
+import { CatalogService } from '../../core/catalog/catalog';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { HorizGallery } from '../../core/layout/horiz-gallery';
@@ -56,7 +56,7 @@ export class Landing {
 
   protected readonly i18n = inject(I18nService);
   protected readonly planTrip = planTripLink;
-  protected readonly destinations = tourDestinations;
+  protected readonly destinations = inject(CatalogService).destinations;
   protected readonly destRatio = 4 / 5;
   protected readonly reserveBtnClass = `${buttonVariants({ size: 'lg' })} w-fit self-start`;
   protected readonly pitchBeats = [

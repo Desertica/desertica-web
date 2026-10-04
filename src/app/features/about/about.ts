@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { afterNextGsap } from '../../core/animation/gsap';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
+import { CatalogService } from '../../core/catalog/catalog';
 import { TOURS_CLOSER_IMAGE, TOURS_PATH } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -61,11 +62,13 @@ export class About {
   private bindMotiva: (() => void) | undefined;
 
   protected readonly i18n = inject(I18nService);
-  protected readonly poster = ABOUT_POSTER;
-  protected readonly videoWebm = ABOUT_VIDEO_WEBM;
-  protected readonly videoMp4 = ABOUT_VIDEO_MP4;
-  protected readonly trioImage = ABOUT_TRIO_IMAGE;
-  protected readonly closerImage = TOURS_CLOSER_IMAGE;
+  private readonly catalog = inject(CatalogService);
+  private readonly video = this.catalog.media('about.video');
+  protected readonly poster = this.video?.poster ?? ABOUT_POSTER;
+  protected readonly videoWebm = this.video?.videoWebm ?? ABOUT_VIDEO_WEBM;
+  protected readonly videoMp4 = this.video?.video ?? ABOUT_VIDEO_MP4;
+  protected readonly trioImage = this.catalog.mediaImage('about.trio', ABOUT_TRIO_IMAGE);
+  protected readonly closerImage = this.catalog.mediaImage('tours.closer', TOURS_CLOSER_IMAGE);
   protected readonly toursPath = TOURS_PATH;
   protected readonly motivaCols = [
     { label: 'about.motivaLabel1', body: 'about.motivaP1' },

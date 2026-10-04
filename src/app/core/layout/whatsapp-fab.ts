@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject } from '@angular/core';
 import { afterNextGsapUi } from '../animation/gsap-ui';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
-import { footerContact } from './footer-nav';
+import { CatalogService } from '../catalog/catalog';
 
 type TipTimeline = {
   timeScale: (value: number) => TipTimeline;
@@ -20,7 +20,7 @@ type TipTimeline = {
   template: `
     <a
       class="relative inline-flex focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none"
-      [href]="href"
+      [href]="href()"
       target="_blank"
       rel="noopener noreferrer"
       [attr.aria-label]="'a11y.whatsapp' | translate: i18n.locale()"
@@ -60,7 +60,8 @@ export class WhatsappFab {
   private showInstant: ((visible: boolean) => void) | undefined;
 
   protected readonly i18n = inject(I18nService);
-  protected readonly href = footerContact.whatsapp;
+  private readonly catalog = inject(CatalogService);
+  protected readonly href = computed(() => this.catalog.contact().whatsapp);
   protected readonly tooltipId = 'whatsapp-fab-tooltip';
 
   constructor() {

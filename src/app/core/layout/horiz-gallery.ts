@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } fr
 import { RouterLink } from '@angular/router';
 import { afterNextGsap } from '../animation/gsap';
 import { SmoothScroll } from '../animation/smooth-scroll';
-import { featuredTours, tourPath } from '../catalog/tours';
+import { CatalogService } from '../catalog/catalog';
+import { tourPath } from '../catalog/tours';
 import { TourCard } from './tour-card';
 
 @Component({
@@ -16,7 +17,7 @@ import { TourCard } from './tour-card';
       <div
         class="horiz-gallery-strip flex will-change-transform max-md:flex-col max-md:gap-3 md:flex-nowrap md:gap-3"
       >
-        @for (slide of slides; track slide.id) {
+        @for (slide of slides(); track slide.id) {
           <a
             [routerLink]="detailPath(slide.id)"
             class="horiz-gallery-item box-border block shrink-0 max-md:w-full md:w-[33vw]"
@@ -32,7 +33,7 @@ export class HorizGallery {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly smooth = inject(SmoothScroll);
   private readonly destroyRef = inject(DestroyRef);
-  protected readonly slides = featuredTours;
+  protected readonly slides = inject(CatalogService).featuredTours;
   protected readonly detailPath = tourPath;
 
   constructor() {

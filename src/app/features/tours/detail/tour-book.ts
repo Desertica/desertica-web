@@ -32,11 +32,13 @@ import { TourFormat, TourLanguage, TourPage } from '../../../core/catalog/tour-p
 import { CatalogTour } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
-import { footerContact } from '../../../core/layout/footer-nav';
+import { CatalogService } from '../../../core/catalog/catalog';
+import { FormsApi } from '../../../core/cms/forms-api';
 import {
   buildTourWhatsappHref,
   formatPickerDate,
   formatTourDate,
+  localIsoDate,
   startOfLocalDay,
 } from './tour-whatsapp';
 
@@ -310,6 +312,8 @@ function partyMaxValidator(control: AbstractControl): ValidationErrors | null {
 export class TourBook {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly catalog = inject(CatalogService);
+  private readonly forms = inject(FormsApi);
 
   readonly tour = input.required<CatalogTour>();
   readonly page = input.required<TourPage>();
@@ -470,6 +474,32 @@ export class TourBook {
     }
 
     this.document.defaultView?.open(href, '_blank', 'noopener,noreferrer');
+    void this.recordReservation();
+  }
+
+  /** Best-effort copy of the request into Strapi; WhatsApp stays the booking channel. */
+  private recordReservation(): Promise<boolean> {
+    const controls = this.form.controls;
+    const date = controls.date.value;
+    if (!date) {
+      return Promise.resolve(false);
+    }
+
+    const page = this.page();
+    const format = page.format === 'both' ? controls.format.value : page.format;
+    const people = controls.adults.value + controls.children.value;
+    return this.forms.submitReservation({
+      tourSlug: this.tour().id,
+      tourTitle: this.i18n.t(this.tour().titleKey),
+      date: localIsoDate(date),
+      language: controls.language.value,
+      format: format === 'shared' || format === 'private' ? format : undefined,
+      adults: controls.adults.value,
+      children: controls.children.value,
+      payment: controls.payment.value,
+      amount: tourDuePrice(this.tour().priceFrom, controls.payment.value, people),
+      locale: this.i18n.locale(),
+    });
   }
 
   protected whatsappHref(): string {
@@ -478,7 +508,7 @@ export class TourBook {
     const date = this.form.controls.date.value;
     const payment = this.form.controls.payment.value;
     const people = this.form.controls.adults.value + this.form.controls.children.value;
-    return buildTourWhatsappHref(footerContact.whatsapp, this.i18n.t('tour.whatsappMessage'), {
+    return buildTourWhatsappHref(this.catalog.contact().whatsapp, this.i18n.t('tour.whatsappMessage'), {
       tour: this.i18n.t(this.tour().titleKey),
       date: date ? formatTourDate(date) : '',
       language: this.i18n.t(`lang.${this.form.controls.language.value}`),

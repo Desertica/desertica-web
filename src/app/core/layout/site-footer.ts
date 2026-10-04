@@ -1,5 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -9,20 +9,13 @@ import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { filter } from 'rxjs';
+import { CatalogService } from '../catalog/catalog';
 import { afterNextGsap } from '../animation/gsap';
 import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { BrandMark } from './brand-mark';
-import {
-  footerBrandLinks,
-  footerContact,
-  footerDestinations,
-  footerLegalEntity,
-  footerLegalLinks,
-  footerSocials,
-  footerStamps,
-} from './footer-nav';
+import { FOOTER_LEGAL_YEAR, footerBrandLinks, footerLegalLinks } from './footer-nav';
 
 const BOUNCE_DOWN = 'M0-0.3C0-0.3,464,156,1139,156S2278-0.3,2278-0.3V683H0V-0.3z';
 const BOUNCE_CENTER = 'M0-0.3C0-0.3,464,0,1139,0s1139-0.3,1139-0.3V683H0V-0.3z';
@@ -54,12 +47,17 @@ export class SiteFooter {
   protected readonly i18n = inject(I18nService);
   protected readonly bounceCenter = BOUNCE_CENTER;
   protected readonly brandLinks = footerBrandLinks;
-  protected readonly destinations = footerDestinations;
-  protected readonly socials = footerSocials;
-  protected readonly contact = footerContact;
-  protected readonly legal = footerLegalEntity;
+  private readonly catalog = inject(CatalogService);
+  protected readonly destinations = this.catalog.footerDestinations;
+  protected readonly socials = this.catalog.socials;
+  protected readonly contact = this.catalog.contact;
+  protected readonly legal = computed(() => ({
+    year: FOOTER_LEGAL_YEAR,
+    name: this.catalog.site().legalName,
+    ruc: this.catalog.site().ruc,
+  }));
   protected readonly legalLinks = footerLegalLinks;
-  protected readonly stamps = footerStamps;
+  protected readonly stamps = this.catalog.footerStamps;
   protected readonly email = new FormControl('', {
     nonNullable: true,
     validators: [Validators.required, Validators.email],

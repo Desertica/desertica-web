@@ -99,7 +99,8 @@
     "emailError": "Enter a valid email.",
     "whatsappError": "Enter a valid WhatsApp number.",
     "messageError": "Enter a message.",
-    "captchaError": "Confirm you are not a robot."
+    "captchaError": "Confirm you are not a robot.",
+    "sendError": "We could not send your message. Please try again or write to us on WhatsApp."
   },
   "footer": {
     "sitemap": "Sitemap",
@@ -320,5 +321,13 @@
   "meta": {
     "title": "Desértica | Tours and experiences in Ica",
     "description": "Book dune buggies, vineyard sunsets, oasis camps, and sunrise walks in Ica and Huacachina."
+  },
+  "blog": {
+    "empty": "No posts yet. Check back soon.",
+    "back": "Back to the blog"
+  },
+  "products": {
+    "empty": "No products yet. Check back soon.",
+    "back": "Back to products"
   }
 }

@@ -1,6 +1,7 @@
 export const TOURS_PATH = '/tours';
 
-export type DestinationId = 'huacachina' | 'paracas' | 'nazca';
+/** Destination slug. Known today: `huacachina`, `paracas`, `nazca`; the CMS may add more. */
+export type DestinationId = string;
 
 export type CatalogTour = {
   id: string;
@@ -17,7 +18,7 @@ export type CatalogDestination = {
   id: DestinationId;
   titleKey: string;
   allLabelKey: string;
-  hubPath: `/${DestinationId}`;
+  hubPath: `/${string}`;
   leadKey: string;
   image: string;
   tours: readonly CatalogTour[];

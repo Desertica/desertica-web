@@ -2,6 +2,7 @@ import { IMAGE_LOADER } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { toast } from '@spartan-ng/brain/sonner';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
+import { FormsApi } from '../../core/cms/forms-api';
 import { remoteImageLoader } from '../../core/images/remote-image-loader';
 import { Contact } from './contact';
 import { GEOJS_COUNTRY_URL } from './phone';
@@ -12,9 +13,11 @@ vi.mock('@spartan-ng/brain/sonner', () => ({
 
 describe('Contact', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
+  const submitContact = vi.fn();
 
   beforeEach(async () => {
     vi.mocked(toast).mockClear();
+    submitContact.mockReset().mockResolvedValue(true);
     fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       json: async () => ({}),
@@ -23,7 +26,11 @@ describe('Contact', () => {
 
     await TestBed.configureTestingModule({
       imports: [Contact],
-      providers: [provideSpartanHlm(), { provide: IMAGE_LOADER, useValue: remoteImageLoader }],
+      providers: [
+        provideSpartanHlm(),
+        { provide: IMAGE_LOADER, useValue: remoteImageLoader },
+        { provide: FormsApi, useValue: { submitContact } },
+      ],
     }).compileComponents();
   });
 
@@ -292,6 +299,14 @@ describe('Contact', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
+    expect(submitContact).toHaveBeenCalledWith({
+      name: 'Ana',
+      email: 'ana@desertica.pe',
+      whatsapp: '+51999999999',
+      country: 'PE',
+      message: 'Quiero info del buggy',
+      locale: 'en',
+    });
     expect(toast).toHaveBeenCalledWith("Message sent. We'll write back soon.");
     expect(compiled.querySelector<HTMLInputElement>('#contact-name')?.value).toBe('');
     expect(compiled.querySelector<HTMLInputElement>('#contact-email')?.value).toBe('');
@@ -304,6 +319,27 @@ describe('Contact', () => {
         ?.closest('[data-country]')
         ?.getAttribute('data-country'),
     ).toBe('PE');
+  });
+
+  it('keeps the form and reports an error when the message cannot be stored', async () => {
+    submitContact.mockResolvedValue(false);
+    const fixture = TestBed.createComponent(Contact);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    fill(compiled, {
+      name: 'Ana',
+      email: 'ana@desertica.pe',
+      whatsapp: '+51 999 999 999',
+      message: 'Quiero info del buggy',
+      captcha: true,
+    });
+    fixture.detectChanges();
+    compiledSubmit(compiled);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(toast).toHaveBeenCalledWith(expect.stringContaining('could not send'));
+    expect(compiled.querySelector<HTMLInputElement>('#contact-name')?.value).toBe('Ana');
   });
 });
 

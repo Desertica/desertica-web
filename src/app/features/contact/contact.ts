@@ -24,6 +24,8 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { CountryCode } from 'libphonenumber-js/min';
+import { CatalogService } from '../../core/catalog/catalog';
+import { FormsApi } from '../../core/cms/forms-api';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import {
@@ -32,6 +34,7 @@ import {
   DEFAULT_PHONE_COUNTRY,
   GEOJS_COUNTRY_URL,
   isValidWhatsapp,
+  toE164,
   parseGeojsCountry,
   phoneCountries,
   type PhoneCountry,
@@ -61,9 +64,11 @@ export const MESSAGE_MAX = 500;
 export class Contact {
   private readonly destroyRef = inject(DestroyRef);
   private readonly phoneTouched = signal(false);
+  private readonly forms = inject(FormsApi);
+  private readonly sending = signal(false);
 
   protected readonly i18n = inject(I18nService);
-  protected readonly bandImage = CONTACT_BAND_IMAGE;
+  protected readonly bandImage = inject(CatalogService).mediaImage('contact.band', CONTACT_BAND_IMAGE);
   protected readonly nameMax = NAME_MAX;
   protected readonly emailMax = EMAIL_MAX;
   protected readonly messageMax = MESSAGE_MAX;
@@ -159,9 +164,25 @@ export class Contact {
     }
   }
 
-  protected send(): void {
+  protected async send(): Promise<void> {
     this.form.markAllAsTouched();
-    if (this.form.invalid) {
+    if (this.form.invalid || this.sending()) {
+      return;
+    }
+
+    const value = this.form.getRawValue();
+    this.sending.set(true);
+    const sent = await this.forms.submitContact({
+      name: value.name.trim(),
+      email: value.email.trim(),
+      whatsapp: toE164(value.whatsapp, this.countryCode()) ?? value.whatsapp.trim(),
+      country: this.countryCode(),
+      message: value.message.trim(),
+      locale: this.i18n.locale(),
+    });
+    this.sending.set(false);
+    if (!sent) {
+      toast(this.i18n.t('contact.sendError'));
       return;
     }
 

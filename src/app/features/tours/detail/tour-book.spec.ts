@@ -4,6 +4,7 @@ import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { tourPage } from '../../../core/catalog/tour-pages';
 import { tourById } from '../../../core/catalog/tours';
 import { TourBook, tourDuePrice } from './tour-book';
+import { formatTourDate } from './tour-whatsapp';
 
 describe('TourBook', () => {
   beforeEach(async () => {
@@ -119,6 +120,8 @@ describe('TourBook', () => {
     }
 
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const tripDate = new Date();
+    tripDate.setDate(tripDate.getDate() + 30);
 
     const fixture = TestBed.createComponent(TourBook);
     fixture.componentRef.setInput('tour', tour);
@@ -127,7 +130,7 @@ describe('TourBook', () => {
 
     const component = fixture.componentInstance;
     component.form.setValue({
-      date: new Date(2026, 8, 20),
+      date: tripDate,
       language: 'en',
       adults: 3,
       children: 1,
@@ -141,7 +144,7 @@ describe('TourBook', () => {
     expect(href.startsWith('https://wa.me/519XXXXXXXX?text=')).toBe(true);
     const text = decodeURIComponent(href.split('text=')[1] ?? '');
     expect(text).toContain('Dune buggy');
-    expect(text).toContain('20/09/2026');
+    expect(text).toContain(formatTourDate(tripDate));
     expect(text).toContain('English');
     expect(text).toContain('Adults: 3');
     expect(text).toContain('Children: 1');
