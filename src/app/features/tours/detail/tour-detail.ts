@@ -2,13 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
   inject,
   input,
   untracked,
 } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { AnalyticsService, asCurrency } from '../../../core/analytics/analytics';
 import { tourItem } from '../../../core/analytics/items';
@@ -17,9 +15,13 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { tourHasDetails } from '../../../core/catalog/tour-pages';
-import { type CatalogTour, TOURS_PATH } from '../../../core/catalog/tours';
+import { type CatalogTour, TOURS_PATH, tourPath } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
+import { touristTripLd } from '../../../core/seo/json-ld';
+import { usePageMeta } from '../../../core/seo/page-meta';
+import { SeoService } from '../../../core/seo/seo';
+import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
 import { TourAssurances } from './tour-assurances';
 import { TourBook } from './tour-book';
 import { TourFeatures } from './tour-features';
@@ -50,9 +52,7 @@ import { TourVideos } from './tour-videos';
 })
 export class TourDetail {
   private readonly router = inject(Router);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly seo = inject(SeoService);
   private readonly analytics = inject(AnalyticsService);
   private viewed: string | null = null;
 
@@ -75,26 +75,42 @@ export class TourDetail {
     effect(() => {
       const data = this.resolved();
       this.i18n.locale();
-      if (!data) {
-        return;
+      if (data) {
+        untracked(() => this.trackView(data.tour));
       }
-
-      untracked(() => this.trackView(data.tour));
-
-      const name = this.i18n.t(data.page.seoTitleKey ?? data.tour.titleKey);
-      this.title.setTitle(`${name} | ${this.i18n.t('meta.title')}`);
-      this.meta.updateTag({
-        name: 'description',
-        content: this.i18n.t(data.page.seoDescriptionKey ?? data.page.leadKey),
-      });
     });
 
-    this.destroyRef.onDestroy(() => {
-      this.title.setTitle(this.i18n.t('meta.title'));
-      this.meta.updateTag({
-        name: 'description',
-        content: this.i18n.t('meta.description'),
-      });
+    usePageMeta(() => {
+      const data = this.resolved();
+      this.i18n.locale();
+      if (!data) {
+        return null;
+      }
+
+      const { tour, page } = data;
+      const origin = this.seo.origin();
+      const description = this.i18n.t(page.seoDescriptionKey ?? page.leadKey);
+      const image = page.gallery[0] ?? tour.image;
+      return {
+        title: this.i18n.t(page.seoTitleKey ?? tour.titleKey),
+        description,
+        image,
+        breadcrumbs: [{ name: this.i18n.t('nav.tours'), path: TOURS_PATH }],
+        jsonLd: origin
+          ? [
+              touristTripLd({
+                name: this.i18n.t(tour.titleKey),
+                description,
+                url: localizedUrl(origin, tourPath(tour.id), this.i18n.locale()),
+                image: [absoluteUrl(origin, image)],
+                organizationId: `${origin}/#organization`,
+                price: tour.priceFrom,
+                currency: asCurrency(this.catalog.booking().currencyCode),
+                inLanguage: page.languages,
+              }),
+            ]
+          : [],
+      };
     });
   }
 

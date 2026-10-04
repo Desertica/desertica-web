@@ -54,11 +54,9 @@ export const routes: Routes = [
   content('complaints', 'complaints', 'footer.complaints', 'pages.complaintsLead'),
   content('conduct', 'conduct', 'footer.conduct', 'pages.conductLead'),
   content('legal/mincetur', 'legal-mincetur', 'footer.mincetur', 'pages.minceturLead'),
-  {
-    path: 'experiences/:slug',
-    loadComponent: () =>
-      import('./features/experiences/detail/experience-detail').then((m) => m.ExperienceDetail),
-  },
+  // Legacy URL: Express answers it with a permanent redirect; this keeps in-app navigation consistent.
+  { path: 'experiences/:slug', redirectTo: 'tours/:slug' },
+  { path: 'experiences', redirectTo: 'tours' },
   {
     path: 'reservations',
     loadComponent: () => import('./features/reservations/reservations').then((m) => m.Reservations),

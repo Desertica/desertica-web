@@ -5,6 +5,7 @@ import { CatalogService } from '../../core/catalog/catalog';
 import { TOURS_BANNER_IMAGE, TOURS_PATH } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { usePageMeta } from '../../core/seo/page-meta';
 
 @Component({
   selector: 'app-products',
@@ -28,4 +29,12 @@ export class Products {
         : [];
     }),
   );
+
+  constructor() {
+    usePageMeta(() => ({
+      title: this.i18n.t('nav.products'),
+      image: this.image,
+      breadcrumbs: [],
+    }));
+  }
 }

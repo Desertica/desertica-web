@@ -29,6 +29,7 @@ import { DEFAULT_FORMS } from '../../core/cms/booking-defaults';
 import { AnalyticsService } from '../../core/analytics/analytics';
 import { FormsApi } from '../../core/cms/forms-api';
 import { I18nService } from '../../core/i18n/i18n';
+import { usePageMeta } from '../../core/seo/page-meta';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import {
   applyPhoneInput,
@@ -109,6 +110,12 @@ export class Contact {
   });
 
   constructor() {
+    usePageMeta(() => ({
+      title: this.i18n.t('nav.contact'),
+      description: this.i18n.t('pages.contactLead'),
+      breadcrumbs: [],
+    }));
+
     afterNextRender(() => {
       void this.guessCountryFromIp();
     });

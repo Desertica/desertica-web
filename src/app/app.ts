@@ -17,6 +17,7 @@ import { IntroOverlay } from './core/layout/intro-overlay';
 import { SiteFooter } from './core/layout/site-footer';
 import { SiteHeader } from './core/layout/site-header';
 import { WhatsappFab } from './core/layout/whatsapp-fab';
+import { SeoService } from './core/seo/seo';
 import { ThemeService } from './core/theme/theme';
 
 @Component({
@@ -46,6 +47,8 @@ export class App {
   protected readonly theme = inject(ThemeService).theme;
   protected readonly i18n = inject(I18nService);
   private readonly analytics = inject(AnalyticsService);
+  // Instantiated here so its effect writes the SEO tags for every route, including pages with no own meta.
+  private readonly seo = inject(SeoService);
 
   constructor() {
     this.analytics.start();

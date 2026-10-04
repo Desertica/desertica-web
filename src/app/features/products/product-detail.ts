@@ -91,7 +91,14 @@ export class ProductDetail {
 
     usePageMeta(() => {
       const product = this.product();
-      return product ? { title: product.title, description: product.description } : null;
+      return product
+        ? {
+            title: product.title,
+            description: product.description,
+            image: product.images[0],
+            breadcrumbs: [{ name: this.i18n.t('nav.products'), path: '/products' }],
+          }
+        : null;
     });
   }
 }

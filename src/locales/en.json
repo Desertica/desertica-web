@@ -36,7 +36,8 @@
     "cahuachi": "Cahuachi",
     "cahuachiDesc": "Adobe pyramids in the Nazca desert.",
     "mariaReiche": "María Reiche museum",
-    "mariaReicheDesc": "The lines, explained beside the desert."
+    "mariaReicheDesc": "The lines, explained beside the desert.",
+    "home": "Home"
   },
   "a11y": {
     "toggleTheme": "Toggle color theme",
@@ -71,7 +72,6 @@
     "reservationsLead": "Huacachina, Paracas, or Nazca. Pick the axis and the tour. One thread to book.",
     "reservationsAxis": "Axis",
     "reservationsTour": "Tour",
-    "experienceLead": "SSR placeholder. Catalog later.",
     "blogLead": "Stories from Ica and Huacachina.",
     "blogSoon": "Coming soon",
     "blogHeroAlt": "Ica desert dunes at dusk.",

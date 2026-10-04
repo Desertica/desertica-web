@@ -14,6 +14,7 @@ import { TOURS_CLOSER_IMAGE, TOURS_PATH } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { PhotoCta } from '../../core/layout/photo-cta';
+import { usePageMeta } from '../../core/seo/page-meta';
 import { AboutArchive } from './about-archive';
 import { ABOUT_TRIO_IMAGE } from './about-media';
 import { PeruIca } from './peru-ica';
@@ -55,6 +56,8 @@ export class About {
   ] as const;
 
   constructor() {
+    usePageMeta(() => ({ title: this.i18n.t('nav.about'), breadcrumbs: [] }));
+
     effect(() => {
       this.i18n.locale();
       if (!this.motionReady()) {

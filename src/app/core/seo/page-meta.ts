@@ -1,33 +1,24 @@
 import { DestroyRef, effect, inject } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
-import { I18nService } from '../i18n/i18n';
+import { type PageSeo, SeoService } from './seo';
 
-export type PageMetaValue = { title?: string; description?: string } | null | undefined;
+export type PageMetaValue = PageSeo | null | undefined;
 
-/** Keeps `<title>` and the meta description in sync with a page and restores the defaults on exit. */
+/**
+ * Describes the current page to `SeoService` and clears it when the page is destroyed. Returning
+ * `null` (content still loading, unknown slug) leaves the site defaults in place.
+ */
 export function usePageMeta(source: () => PageMetaValue): void {
-  const title = inject(Title);
-  const meta = inject(Meta);
-  const i18n = inject(I18nService);
-  const destroyRef = inject(DestroyRef);
+  const seo = inject(SeoService);
+  const owner = {};
 
   effect(() => {
     const value = source();
-    i18n.locale();
-    if (!value) {
-      return;
+    if (value) {
+      seo.setPage(owner, value);
+    } else {
+      seo.clearPage(owner);
     }
-
-    const site = i18n.t('meta.title');
-    title.setTitle(value.title ? `${value.title} | ${site}` : site);
-    meta.updateTag({
-      name: 'description',
-      content: value.description || i18n.t('meta.description'),
-    });
   });
 
-  destroyRef.onDestroy(() => {
-    title.setTitle(i18n.t('meta.title'));
-    meta.updateTag({ name: 'description', content: i18n.t('meta.description') });
-  });
+  inject(DestroyRef).onDestroy(() => seo.clearPage(owner));
 }
