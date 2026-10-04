@@ -1,15 +1,21 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { tourPage } from '../../../core/catalog/tour-pages';
 import { tourById } from '../../../core/catalog/tours';
 import { TourBook, tourDuePrice } from './tour-book';
+import { formatTourDate } from './tour-whatsapp';
 
 describe('TourBook', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TourBook],
-      providers: [provideRouter([]), provideSpartanHlm()],
+      providers: [provideRouter([]), provideSpartanHlm(), provideNativeDateAdapter()],
     }).compileComponents();
   });
 
@@ -125,9 +131,11 @@ describe('TourBook', () => {
     fixture.componentRef.setInput('page', tourPage(tour));
     await fixture.whenStable();
 
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
     const component = fixture.componentInstance;
     component.form.setValue({
-      date: new Date(2026, 8, 20),
+      date,
       language: 'en',
       adults: 3,
       children: 1,
@@ -141,7 +149,7 @@ describe('TourBook', () => {
     expect(href.startsWith('https://wa.me/519XXXXXXXX?text=')).toBe(true);
     const text = decodeURIComponent(href.split('text=')[1] ?? '');
     expect(text).toContain('Dune buggy');
-    expect(text).toContain('20/09/2026');
+    expect(text).toContain(formatTourDate(date));
     expect(text).toContain('English');
     expect(text).toContain('Adults: 3');
     expect(text).toContain('Children: 1');
@@ -150,6 +158,95 @@ describe('TourBook', () => {
     expect(text).not.toContain('Ana');
     expect(text).toContain('Book now, pay later');
     expect(text).toContain(`$USD ${tourDuePrice(tour.priceFrom, 'deposit', 4)}`);
+  });
+
+  it('shows field errors, steps the party, and ignores unknown choices', async () => {
+    const tour = tourById('dune-buggy');
+    expect(tour).toBeDefined();
+    if (!tour) {
+      return;
+    }
+
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const fixture = TestBed.createComponent(TourBook);
+    const page = tourPage(tour);
+    fixture.componentRef.setInput('tour', tour);
+    fixture.componentRef.setInput('page', { ...page, format: 'private' });
+    await fixture.whenStable();
+
+    const submit = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+    submit.click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Choose a date');
+    expect(open).not.toHaveBeenCalled();
+
+    const past = new Date();
+    past.setDate(past.getDate() - 2);
+    fixture.componentInstance.form.controls.date.setValue(past);
+    fixture.componentInstance.form.controls.date.markAsTouched();
+    fixture.detectChanges();
+    submit.click();
+    expect(open).not.toHaveBeenCalled();
+
+    fixture.componentInstance.form.controls.adults.setValue(2);
+    fixture.componentInstance.form.controls.children.setValue(1);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('2 adults');
+    expect(fixture.nativeElement.textContent).toContain('1 child');
+
+    fixture.componentInstance.form.controls.children.setValue(2);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('2 children');
+
+    fixture.componentInstance.form.controls.adults.setValue(0);
+    fixture.componentInstance.form.controls.adults.markAsTouched();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Enter 1 to 12 people.');
+
+    const people = fixture.nativeElement.querySelector('#tour-people') as HTMLButtonElement;
+    people.click();
+    await fixture.whenStable();
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const plus = buttons.filter((button) => button.textContent?.trim() === '+');
+    const minus = buttons.filter((button) => button.textContent?.trim() === '−');
+    fixture.componentInstance.form.controls.adults.setValue(1);
+    fixture.componentInstance.form.controls.children.setValue(0);
+    fixture.detectChanges();
+    minus[0]?.click();
+    minus[1]?.click();
+    plus[0]?.click();
+    plus[1]?.click();
+    await fixture.whenStable();
+
+    fixture.componentInstance.form.controls.adults.setValue(12);
+    fixture.detectChanges();
+    plus[0]?.click();
+
+    const language = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button) =>
+      (button as HTMLButtonElement).textContent?.includes('Español'),
+    ) as HTMLButtonElement;
+    language.click();
+    await fixture.whenStable();
+
+    fixture.componentRef.setInput('page', page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const shared = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button) =>
+      (button as HTMLButtonElement).textContent?.includes('Group'),
+    ) as HTMLButtonElement | undefined;
+    shared?.click();
+    await fixture.whenStable();
+
+    const dateButton = fixture.nativeElement.querySelector('#tour-date') as HTMLButtonElement;
+    dateButton.click();
+    await fixture.whenStable();
+    const day = document.querySelector('[brncalendcellbutton]:not([disabled]), button[brncalendcellbutton]') as
+      | HTMLButtonElement
+      | null;
+    day?.click();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('#tour-format-label')).not.toBeNull();
   });
 });
 

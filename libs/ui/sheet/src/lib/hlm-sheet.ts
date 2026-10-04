@@ -1,3 +1,4 @@
+import { NoopScrollStrategy } from '@angular/cdk/overlay';
 import { ChangeDetectionStrategy, Component, forwardRef } from '@angular/core';
 import { BrnDialog, provideBrnDialogDefaultOptions } from '@spartan-ng/brain/dialog';
 import { BrnSheet } from '@spartan-ng/brain/sheet';
@@ -17,7 +18,7 @@ import { HlmSheetOverlay } from './hlm-sheet-overlay';
       useExisting: forwardRef(() => HlmSheet),
     },
     provideBrnDialogDefaultOptions({
-      // add custom options here
+      scrollStrategy: new NoopScrollStrategy(),
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

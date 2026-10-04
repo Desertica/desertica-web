@@ -1,12 +1,13 @@
 import { isPlatformBrowser } from '@angular/common';
 import { DestroyRef, Injectable, PLATFORM_ID, inject } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { Router, Scroll } from '@angular/router';
 import { filter } from 'rxjs';
 
 type SmootherInstance = {
   kill: () => void;
+  paused: (value?: boolean) => boolean;
   scrollTop: (position: number) => unknown;
-  scrollTo: (target: string | Element, smooth?: boolean, position?: string) => unknown;
+  scrollTo: (target: string | number | Element, smooth?: boolean, position?: string) => unknown;
 };
 
 const JSDOM = /jsdom/i;
@@ -29,6 +30,22 @@ export class SmoothScroll {
 
   constructor() {
     this.destroyRef.onDestroy(() => this.instance?.kill());
+
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    try {
+      history.scrollRestoration = 'manual';
+    } catch {
+      // Some embedded browsers reject this assignment.
+    }
+
+    const navigation = this.router.events
+      .pipe(filter((event): event is Scroll => event instanceof Scroll))
+      .subscribe((event) => this.onRouterScroll(event));
+
+    this.destroyRef.onDestroy(() => navigation.unsubscribe());
   }
 
   whenReady(): Promise<void> {
@@ -37,6 +54,14 @@ export class SmoothScroll {
 
   active(): boolean {
     return this.instance !== null;
+  }
+
+  hold(): void {
+    this.instance?.paused(true);
+  }
+
+  release(): void {
+    this.instance?.paused(false);
   }
 
   markReady(): void {
@@ -61,7 +86,24 @@ export class SmoothScroll {
     void this.create(wrapper, content);
   }
 
-  scrollToId(id: string): boolean {
+  scrollToElement(target: HTMLElement): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    if (this.instance) {
+      this.instance.scrollTo(target, true, FRAGMENT_OFFSET);
+      return;
+    }
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }
+
+  scrollToId(id: string, immediate = false): boolean {
     if (!isPlatformBrowser(this.platformId) || !id) {
       return false;
     }
@@ -72,37 +114,70 @@ export class SmoothScroll {
     }
 
     if (this.instance) {
-      this.instance.scrollTo(target, true, FRAGMENT_OFFSET);
+      this.instance.scrollTo(target, !immediate, FRAGMENT_OFFSET);
       return true;
     }
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     target.scrollIntoView({
-      behavior: reduced ? 'auto' : 'smooth',
+      behavior: immediate || reduced ? 'auto' : 'smooth',
       block: 'start',
     });
     return true;
   }
 
-  scrollToFragmentWhenReady(id: string | null | undefined): void {
+  private onRouterScroll(event: Scroll): void {
+    if (event.position) {
+      this.snap(event.position[1]);
+      return;
+    }
+
+    if (event.anchor) {
+      this.scrollToFragmentWhenReady(event.anchor, true);
+      return;
+    }
+
+    this.snap(0);
+  }
+
+  private snap(top: number): void {
+    this.applySnap(top);
+    requestAnimationFrame(() => this.applySnap(top));
+  }
+
+  private applySnap(top: number): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    if (this.instance) {
+      this.instance.scrollTo(top, false);
+      return;
+    }
+
+    window.scrollTo({ top, left: 0, behavior: 'auto' });
+  }
+
+  scrollToFragmentWhenReady(id: string | null | undefined, immediate = false): void {
     if (!id) {
       return;
     }
 
-    void this.whenReady().then(() => this.retryScroll(id, 0));
+    void this.whenReady().then(() => this.retryScroll(id, 0, immediate));
   }
 
-  private retryScroll(id: string, attempt: number): void {
-    if (this.scrollToId(id) || attempt >= MAX_FRAGMENT_ATTEMPTS) {
+  private retryScroll(id: string, attempt: number, immediate = false): void {
+    if (this.scrollToId(id, immediate) || attempt >= MAX_FRAGMENT_ATTEMPTS) {
       return;
     }
 
-    requestAnimationFrame(() => this.retryScroll(id, attempt + 1));
+    requestAnimationFrame(() => this.retryScroll(id, attempt + 1, immediate));
   }
 
   private async create(wrapper: HTMLElement, content: HTMLElement): Promise<void> {
     try {
       if (!this.canUse()) {
+        document.documentElement.style.scrollBehavior = 'auto';
         return;
       }
 
@@ -114,7 +189,8 @@ export class SmoothScroll {
       this.instance = ScrollSmoother.create({
         wrapper,
         content,
-        smooth: 2,
+        smooth: 2.2,
+        smoothTouch: 0.6,
         preventDefault: true,
         normalizeScroll: { allowNestedScroll: true },
         ignoreMobileResize: true,
@@ -122,20 +198,6 @@ export class SmoothScroll {
       } as Parameters<typeof ScrollSmoother.create>[0]) as SmootherInstance;
 
       ScrollTrigger.refresh();
-
-      const navigation = this.router.events
-        .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-        .subscribe(() => {
-          const fragment = this.router.parseUrl(this.router.url).fragment;
-          if (fragment) {
-            this.scrollToFragmentWhenReady(fragment);
-          } else {
-            this.instance?.scrollTop(0);
-          }
-          ScrollTrigger.refresh();
-        });
-
-      this.destroyRef.onDestroy(() => navigation.unsubscribe());
     } finally {
       this.markReady();
     }
@@ -146,12 +208,6 @@ export class SmoothScroll {
       return false;
     }
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return false;
-    }
-
-    const coarse = window.matchMedia('(pointer: coarse)').matches;
-    const narrow = window.matchMedia('(max-width: 767px)').matches;
-    return !(coarse && narrow);
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 }

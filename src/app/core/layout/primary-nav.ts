@@ -60,9 +60,12 @@ export const primaryNavLinks: readonly NavItem[] = [
   { labelKey: 'nav.contact', path: '/contact' },
 ];
 
+/** Desktop visual order is LTR (Tours … Contact). Mobile stacks the same items top→bottom as desktop right→left. */
+export const mobilePrimaryNavLinks: readonly NavItem[] = [...primaryNavLinks].reverse();
+
 export const planTripLink = {
   labelKey: 'nav.planTrip',
-  path: '/reservations',
+  path: TOURS_PATH,
 } as const;
 
 export function toursNavColumns(): readonly NavColumn[] {

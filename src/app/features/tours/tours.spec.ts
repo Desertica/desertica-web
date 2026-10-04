@@ -57,7 +57,7 @@ describe('Tours', () => {
     expect(photo?.closest('.max-w-6xl')).toBeNull();
   });
 
-  it('renders a shorter full-bleed closer with a contact CTA', async () => {
+  it('renders a shared full-bleed closer with a contact CTA', async () => {
     const fixture = TestBed.createComponent(Tours);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -65,21 +65,23 @@ describe('Tours', () => {
     expect(compiled.textContent).toContain('Looking for something else?');
     expect(compiled.textContent).toContain("Private tours and custom days if the list doesn't fit.");
 
-    const closerPhoto = compiled.querySelector('img[src*="photo-1516026672322-bc52d61a55d5"]');
+    const closer = compiled.querySelector('app-photo-cta');
+    const closerPhoto = closer?.querySelector('img[src*="photo-1516026672322-bc52d61a55d5"]');
     expect(closerPhoto).not.toBeNull();
     expect(closerPhoto?.getAttribute('sizes')).toContain('100vw');
     expect(closerPhoto?.className).toContain('object-cover');
-    const closer = closerPhoto?.closest('section');
-    expect(closer?.className).toContain('w-full');
-    expect(closer?.className).toContain('h-[min(28svh,16rem)]');
+    const section = closerPhoto?.closest('section');
+    expect(section?.className).toContain('w-full');
+    expect(section?.className).toContain('h-[500px]');
     expect(closerPhoto?.closest('.max-w-6xl')).toBeNull();
 
-    const overlay = closer?.querySelector('.tours-banner-overlay');
+    const overlay = closer?.querySelector('.photo-cta-overlay');
     expect(overlay).not.toBeNull();
     expect(overlay?.className).toContain('items-center');
     expect(overlay?.className).toContain('justify-end');
     expect(overlay?.className).toContain('text-center');
     expect(overlay?.querySelector('h2')?.textContent?.trim()).toBe('Looking for something else?');
+    expect(closer?.querySelector('.tours-banner-overlay')).toBeNull();
 
     const cta = overlay?.querySelector('a[href="/contact"]');
     expect(cta).not.toBeNull();

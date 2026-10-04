@@ -7,45 +7,26 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { HlmButton } from '@spartan-ng/helm/button';
 import { afterNextGsap } from '../../core/animation/gsap';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
 import { TOURS_CLOSER_IMAGE, TOURS_PATH } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { PhotoCta } from '../../core/layout/photo-cta';
 import { AboutArchive } from './about-archive';
 import { ABOUT_TRIO_IMAGE } from './about-media';
 import { PeruIca } from './peru-ica';
 
 export const ABOUT_POSTER = '/about/sand-poster.jpg';
-export const ABOUT_VIDEO_WEBM = '/about/sand.webm';
-export const ABOUT_VIDEO_MP4 = '/about/sand.mp4';
 export { ABOUT_TRIO_IMAGE } from './about-media';
 
 const ICA_FILL_WASH = 0.18;
 const LAKE_STROKE_WIDTH = 1.2;
 
-type SplitInstance = {
-  revert: () => void;
-  kill?: () => void;
-  words: Element[];
-  chars: Element[];
-  lines: Element[];
-};
-type TweenInstance = { kill: () => void; scrollTrigger?: { kill: () => void } };
-
 @Component({
   selector: 'app-about',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    NgOptimizedImage,
-    RouterLink,
-    HlmButton,
-    TranslatePipe,
-    AboutArchive,
-    PeruIca,
-  ],
+  imports: [NgOptimizedImage, TranslatePipe, PhotoCta, AboutArchive, PeruIca],
   templateUrl: './about.html',
   styleUrl: './about.css',
 })
@@ -53,17 +34,10 @@ export class About {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly smooth = inject(SmoothScroll);
   private readonly motionReady = signal(false);
-  private bindHero: (() => void) | undefined;
-  private bindManifesto: (() => void) | undefined;
-  private bindQuote: (() => void) | undefined;
-  private bindRibbon: (() => void) | undefined;
-  private bindMapCopy: (() => void) | undefined;
-  private bindMotiva: (() => void) | undefined;
+  private refreshMotion: (() => void) | undefined;
 
   protected readonly i18n = inject(I18nService);
   protected readonly poster = ABOUT_POSTER;
-  protected readonly videoWebm = ABOUT_VIDEO_WEBM;
-  protected readonly videoMp4 = ABOUT_VIDEO_MP4;
   protected readonly trioImage = ABOUT_TRIO_IMAGE;
   protected readonly closerImage = TOURS_CLOSER_IMAGE;
   protected readonly toursPath = TOURS_PATH;
@@ -77,15 +51,6 @@ export class About {
     { label: 'about.craftLabel2', body: 'about.craftFormat' },
     { label: 'about.craftLabel3', body: 'about.craftLang' },
   ] as const;
-  protected readonly videoReady = signal(false);
-
-  protected onHeroPlaying(): void {
-    this.videoReady.set(true);
-  }
-
-  protected onHeroVideoError(): void {
-    this.videoReady.set(false);
-  }
 
   constructor() {
     effect(() => {
@@ -94,495 +59,45 @@ export class About {
         return;
       }
 
-      requestAnimationFrame(() => {
-        this.bindHero?.();
-        this.bindManifesto?.();
-        this.bindQuote?.();
-        this.bindRibbon?.();
-        this.bindMapCopy?.();
-        this.bindMotiva?.();
-      });
+      requestAnimationFrame(() => this.refreshMotion?.());
     });
 
     afterNextGsap(
-      (gsap, { ScrollTrigger, SplitText }) => {
-        const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      (gsap, { ScrollTrigger }) => {
         const motionMq = '(prefers-reduced-motion: no-preference)';
         const reducedMq = '(prefers-reduced-motion: reduce)';
-
-        let heroSplit: SplitInstance | undefined;
-        let heroTween: TweenInstance | undefined;
-        this.bindHero = () => {
-          heroTween?.kill();
-          heroSplit?.revert();
-          heroSplit = undefined;
-          heroTween = undefined;
-
-          const title = this.host.nativeElement.querySelector('[data-hero-title]');
-          if (!(title instanceof HTMLElement) || !SplitText) {
-            return;
-          }
-
-          title.textContent = this.i18n.t('about.heroTitle');
-          if (reduced()) {
-            return;
-          }
-
-          heroSplit = new SplitText(title, {
-            type: 'chars,words,lines',
-            linesClass: 'about-split-line',
-            aria: 'auto',
-          });
-          heroTween = gsap.from(heroSplit.chars, {
-            yPercent: 120,
-            rotateZ: 8,
-            duration: 0.7,
-            stagger: 0.016,
-            ease: 'power4.out',
-            immediateRender: false,
-            onComplete: () => {
-              heroSplit?.revert();
-              heroSplit = undefined;
-            },
-          });
+        const root = this.host.nativeElement;
+        const query = (sel: string): HTMLElement | null => {
+          const node = root.querySelector(sel);
+          return node instanceof HTMLElement ? node : null;
         };
-
-        let manifestoSplit: SplitInstance | undefined;
-        let manifestoTween: TweenInstance | undefined;
-        let manifestoParaSplits: SplitInstance[] = [];
-        this.bindManifesto = () => {
-          manifestoTween?.scrollTrigger?.kill();
-          manifestoTween?.kill();
-          manifestoSplit?.kill?.();
-          manifestoSplit?.revert();
-          manifestoParaSplits.forEach((split) => {
-            split.kill?.();
-            split.revert();
-          });
-          manifestoSplit = undefined;
-          manifestoTween = undefined;
-          manifestoParaSplits = [];
-
-          const section = this.host.nativeElement.querySelector('[data-manifesto]');
-          const headline = this.host.nativeElement.querySelector('[data-manifesto-headline]');
-          const paragraphs = this.host.nativeElement.querySelectorAll('[data-manifesto-p]');
-          if (
-            !(section instanceof HTMLElement) ||
-            !(headline instanceof HTMLElement) ||
-            !SplitText
-          ) {
-            return;
+        const clearMotion = (node: Element | null) => {
+          if (node instanceof HTMLElement) {
+            gsap.set(node, { willChange: 'auto', clearProps: 'clipPath,transform,opacity' });
           }
-
-          headline.textContent = this.i18n.t('about.manifestoHeadline');
-          const paraKeys = ['about.manifestoP1', 'about.manifestoP2'] as const;
-          paragraphs.forEach((node: Element, index: number) => {
-            if (node instanceof HTMLElement) {
-              node.textContent = this.i18n.t(paraKeys[index] ?? paraKeys[0]);
-            }
-          });
-          if (reduced()) {
-            return;
-          }
-
-          manifestoSplit = new SplitText(headline, {
-            type: 'words,lines',
-            linesClass: 'about-split-line',
-            autoSplit: true,
-            aria: 'auto',
-            onSplit: (self) => {
-              manifestoTween?.scrollTrigger?.kill();
-              manifestoTween?.kill();
-              manifestoTween = gsap.from(self.words, {
-                yPercent: 100,
-                duration: 0.7,
-                stagger: 0.04,
-                ease: 'power3.out',
-                immediateRender: false,
-                scrollTrigger: {
-                  trigger: section,
-                  start: 'top 80%',
-                  toggleActions: 'play none none none',
-                },
-              });
-              return manifestoTween;
-            },
-          });
-
-          paragraphs.forEach((node: Element) => {
-            if (!(node instanceof HTMLElement)) {
-              return;
-            }
-            const split = new SplitText(node, {
-              type: 'lines',
-              linesClass: 'about-split-line',
-              autoSplit: true,
-              aria: 'auto',
-              onSplit: (self) => {
-                return gsap.from(self.lines, {
-                  yPercent: 110,
-                  duration: 0.85,
-                  stagger: 0.07,
-                  ease: 'power3.out',
-                  immediateRender: false,
-                  scrollTrigger: {
-                    trigger: node,
-                    start: 'top 88%',
-                    toggleActions: 'play none none none',
-                  },
-                });
-              },
-            });
-            manifestoParaSplits.push(split);
-          });
-        };
-
-        let quoteSplitA: SplitInstance | undefined;
-        let quoteSplitB: SplitInstance | undefined;
-        let quoteTween: TweenInstance | undefined;
-        this.bindQuote = () => {
-          quoteTween?.scrollTrigger?.kill();
-          quoteTween?.kill();
-          quoteSplitA?.revert();
-          quoteSplitB?.revert();
-          quoteSplitA = undefined;
-          quoteSplitB = undefined;
-          quoteTween = undefined;
-
-          const section = this.host.nativeElement.querySelector('[data-quote]');
-          const lineA = this.host.nativeElement.querySelector('[data-quote-a]');
-          const lineB = this.host.nativeElement.querySelector('[data-quote-b]');
-          const plateA = lineA?.querySelector('[data-quote-plate]');
-          const plateB = lineB?.querySelector('[data-quote-plate]');
-          if (
-            !(section instanceof HTMLElement) ||
-            !(plateA instanceof HTMLElement) ||
-            !(plateB instanceof HTMLElement) ||
-            !SplitText
-          ) {
-            return;
-          }
-
-          plateA.textContent = this.i18n.t('about.quoteA');
-          plateB.textContent = this.i18n.t('about.quoteB');
-          if (reduced()) {
-            return;
-          }
-
-          const pinQuote = false;
-          quoteSplitA = new SplitText(plateA, {
-            type: 'chars,lines',
-            linesClass: 'about-split-line',
-            aria: 'auto',
-          });
-          quoteSplitB = new SplitText(plateB, {
-            type: 'chars,lines',
-            linesClass: 'about-split-line',
-            aria: 'auto',
-          });
-          quoteTween = gsap
-            .timeline({
-              scrollTrigger: pinQuote
-                ? {
-                    trigger: section,
-                    pin: true,
-                    start: 'center center',
-                    end: '+=90%',
-                    scrub: true,
-                  }
-                : {
-                    trigger: section,
-                    start: 'top 78%',
-                    toggleActions: 'play none none none',
-                  },
-            })
-            .from(plateA, {
-              scaleX: 0,
-              duration: pinQuote ? undefined : 0.55,
-              ease: pinQuote ? 'none' : 'power2.out',
-              immediateRender: false,
-            })
-            .from(
-              quoteSplitA.chars,
-              {
-                yPercent: 115,
-                stagger: pinQuote ? 0.02 : 0.018,
-                duration: pinQuote ? undefined : 0.6,
-                ease: pinQuote ? 'none' : 'power3.out',
-                immediateRender: false,
-              },
-              pinQuote ? '<0.12' : '-=0.35',
-            )
-            .from(
-              plateB,
-              {
-                scaleX: 0,
-                duration: pinQuote ? undefined : 0.5,
-                ease: pinQuote ? 'none' : 'power2.out',
-                immediateRender: false,
-              },
-              pinQuote ? '>0.08' : '-=0.2',
-            )
-            .from(
-              quoteSplitB.chars,
-              {
-                yPercent: 110,
-                stagger: 0.014,
-                duration: pinQuote ? undefined : 0.55,
-                ease: pinQuote ? 'none' : 'power2.out',
-                immediateRender: false,
-              },
-              pinQuote ? '<0.1' : '-=0.32',
-            );
-        };
-
-        let ribbonTween: TweenInstance | undefined;
-        this.bindRibbon = () => {
-          ribbonTween?.scrollTrigger?.kill();
-          ribbonTween?.kill();
-          ribbonTween = undefined;
-
-          const ribbon = this.host.nativeElement.querySelector('[data-ribbon]');
-          const pinEl = this.host.nativeElement.querySelector('[data-ribbon-pin]');
-          const track = this.host.nativeElement.querySelector('[data-ribbon-track]');
-          const units = this.host.nativeElement.querySelectorAll('[data-ribbon-unit]');
-          const unit0 = units.item(0);
-          const phrase = this.i18n.t('about.ribbon');
-          units.forEach((unit: Element) => {
-            unit.textContent = `${phrase} · `;
-          });
-          if (
-            reduced() ||
-            !(ribbon instanceof HTMLElement) ||
-            !(pinEl instanceof HTMLElement) ||
-            !(track instanceof HTMLElement) ||
-            !(unit0 instanceof HTMLElement)
-          ) {
-            return;
-          }
-
-          const unitW = () => unit0.offsetWidth;
-          gsap.set(track, { x: 0 });
-          ribbonTween = gsap.to(track, {
-            x: () => -unitW(),
-            ease: 'none',
-            scrollTrigger: {
-              trigger: pinEl,
-              pin: true,
-              scrub: 1,
-              start: 'center center',
-              end: () => `+=${Math.max(Math.round(window.innerHeight * 0.75), 1)}`,
-              invalidateOnRefresh: true,
-            },
-          });
-          void document.fonts.ready.then(() => ScrollTrigger.refresh());
-        };
-
-        let mapSplit: SplitInstance | undefined;
-        let mapTween: TweenInstance | undefined;
-        this.bindMapCopy = () => {
-          mapTween?.scrollTrigger?.kill();
-          mapTween?.kill();
-          mapSplit?.kill?.();
-          mapSplit?.revert();
-          mapSplit = undefined;
-          mapTween = undefined;
-
-          const copyEl = this.host.nativeElement.querySelector('[data-map-copy]');
-          const kicker = this.host.nativeElement.querySelector('[data-map-kicker]');
-          const headline = this.host.nativeElement.querySelector('[data-map-headline]');
-          const lead = this.host.nativeElement.querySelector('[data-map-lead]');
-          if (!(copyEl instanceof HTMLElement) || !(headline instanceof HTMLElement) || !SplitText) {
-            return;
-          }
-
-          if (kicker instanceof HTMLElement) {
-            kicker.textContent = this.i18n.t('about.mapKicker');
-          }
-          headline.textContent = this.i18n.t('about.mapHeadline');
-          if (lead instanceof HTMLElement) {
-            lead.textContent = this.i18n.t('about.mapLead');
-          }
-          gsap.set(copyEl, { autoAlpha: 1 });
-          if (reduced()) {
-            return;
-          }
-
-          mapSplit = new SplitText(headline, {
-            type: 'words,lines',
-            linesClass: 'about-split-line',
-            autoSplit: true,
-            aria: 'auto',
-            onSplit: (self) => {
-              mapTween?.scrollTrigger?.kill();
-              mapTween?.kill();
-              mapTween = gsap
-                .timeline({
-                  scrollTrigger: {
-                    trigger: copyEl,
-                    start: 'top 85%',
-                    toggleActions: 'play none none none',
-                  },
-                })
-                .from(kicker, {
-                  autoAlpha: 0,
-                  duration: 0.45,
-                  ease: 'power1.out',
-                })
-                .from(
-                  self.words,
-                  {
-                    yPercent: 100,
-                    duration: 0.7,
-                    stagger: 0.05,
-                    ease: 'power3.out',
-                  },
-                  '-=0.2',
-                )
-                .from(
-                  lead,
-                  {
-                    autoAlpha: 0,
-                    duration: 0.7,
-                    ease: 'power1.out',
-                  },
-                  '-=0.35',
-                );
-              return mapTween;
-            },
-          });
-        };
-
-        let motivaSplit: SplitInstance | undefined;
-        let motivaTween: TweenInstance | undefined;
-        let motivaLineSplits: SplitInstance[] = [];
-        this.bindMotiva = () => {
-          motivaTween?.scrollTrigger?.kill();
-          motivaTween?.kill();
-          motivaSplit?.revert();
-          motivaLineSplits.forEach((split) => {
-            split.kill?.();
-            split.revert();
-          });
-          motivaSplit = undefined;
-          motivaTween = undefined;
-          motivaLineSplits = [];
-
-          const section = this.host.nativeElement.querySelector('[data-motiva]');
-          const headline = this.host.nativeElement.querySelector('[data-motiva-headline]');
-          const beats = this.host.nativeElement.querySelectorAll('[data-motiva-beat]');
-          if (
-            !(section instanceof HTMLElement) ||
-            !(headline instanceof HTMLElement) ||
-            !SplitText
-          ) {
-            return;
-          }
-
-          headline.textContent = this.i18n.t('about.motivaHeadline');
-          beats.forEach((node: Element, index: number) => {
-            if (node instanceof HTMLElement) {
-              node.textContent = this.i18n.t(this.motivaCols[index]?.body ?? 'about.motivaP1');
-            }
-          });
-          if (reduced()) {
-            return;
-          }
-
-          motivaSplit = new SplitText(headline, { type: 'lines', linesClass: 'about-split-line' });
-          motivaTween = gsap.from(motivaSplit.lines, {
-            autoAlpha: 0,
-            duration: 0.8,
-            ease: 'power1.out',
-            immediateRender: false,
-            scrollTrigger: {
-              trigger: section,
-              start: 'top 80%',
-              toggleActions: 'play none none none',
-            },
-          });
-
-          beats.forEach((node: Element) => {
-            if (!(node instanceof HTMLElement)) {
-              return;
-            }
-            const split = new SplitText(node, {
-              type: 'lines',
-              linesClass: 'about-split-line',
-              autoSplit: true,
-              aria: 'auto',
-              onSplit: (self) =>
-                gsap.from(self.lines, {
-                  yPercent: 110,
-                  duration: 0.85,
-                  stagger: 0.07,
-                  ease: 'power3.out',
-                  immediateRender: false,
-                  scrollTrigger: {
-                    trigger: node,
-                    start: 'top 90%',
-                    toggleActions: 'play none none none',
-                  },
-                }),
-            });
-            motivaLineSplits.push(split);
-          });
         };
 
         return gsap.context(() => {
-          const poster = this.host.nativeElement.querySelector('[data-hero-poster]');
-          const video = this.host.nativeElement.querySelector('[data-hero-video]');
-          const kenBurns = () => {
-            if (!(poster instanceof HTMLElement) || reduced()) {
-              return;
-            }
-            gsap.to(poster, {
-              scale: 1.06,
-              duration: 14,
-              ease: 'none',
-              repeat: -1,
-              yoyo: true,
-            });
-          };
-
-          if (video instanceof HTMLVideoElement) {
-            if (reduced()) {
-              video.pause();
-              this.videoReady.set(false);
-              kenBurns();
-            } else {
-              const play = video.play();
-              if (play) {
-                void play.catch(() => {
-                  this.videoReady.set(false);
-                  kenBurns();
-                });
-              }
-            }
-          } else {
-            kenBurns();
-          }
-
           this.motionReady.set(true);
 
           void this.smooth.whenReady().then(() => {
-            this.bindManifesto?.();
-            this.bindQuote?.();
-            this.bindRibbon?.();
-            this.bindMapCopy?.();
-            this.bindMotiva?.();
-
             const mm = gsap.matchMedia();
-            const scene = this.host.nativeElement.querySelector('[data-map-scene]');
-            const mapLayer = this.host.nativeElement.querySelector('[data-map-layer]');
-            const copy = this.host.nativeElement.querySelector('[data-map-copy]');
-            const stageWrap = this.host.nativeElement.querySelector('[data-map-stage-wrap]');
-            const stage = this.host.nativeElement.querySelector('[data-map-stage]');
-            const svg = this.host.nativeElement.querySelector('.about-map-svg');
-            const ica = this.host.nativeElement.querySelector('[data-ica]');
-            const trio = this.host.nativeElement.querySelector('[data-trio]');
-            const peruGroup = this.host.nativeElement.querySelector('[data-peru]');
-            const lake = this.host.nativeElement.querySelector('[data-lake]');
+            const heroCopy = query('[data-hero-copy]');
+            const motiva = query('[data-motiva]');
+            const motivaCols = root.querySelectorAll('[data-motiva-col]');
+            const scene = query('[data-map-scene]');
+            const mapLayer = query('[data-map-layer]');
+            const who = query('[data-map-who]');
+            const whoIn = query('[data-map-who-in]');
+            const origin = query('[data-map-origin]');
+            const originIn = query('[data-map-origin-in]');
+            const stageWrap = query('[data-map-stage-wrap]');
+            const stage = root.querySelector('[data-map-stage]');
+            const svg = root.querySelector('.about-map-svg');
+            const ica = root.querySelector('[data-ica]');
+            const trio = root.querySelector('[data-trio]');
+            const peruGroup = root.querySelector('[data-peru]');
+            const lake = root.querySelector('[data-lake]');
             const peruPaths =
               peruGroup instanceof Element ? Array.from(peruGroup.querySelectorAll('path')) : [];
 
@@ -658,6 +173,33 @@ export class About {
             };
 
             mm.add(motionMq, () => {
+              if (heroCopy) {
+                gsap.from(heroCopy, {
+                  opacity: 0,
+                  y: 12,
+                  duration: 0.8,
+                  ease: 'power2.out',
+                  onStart: () => gsap.set(heroCopy, { willChange: 'transform, opacity' }),
+                  onComplete: () => gsap.set(heroCopy, { willChange: 'auto', clearProps: 'transform' }),
+                });
+              }
+
+              if (motiva && motivaCols.length) {
+                gsap.set(motivaCols, { opacity: 0, y: 18 });
+                gsap.to(motivaCols, {
+                  opacity: 1,
+                  y: 0,
+                  stagger: 0.12,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: motiva,
+                    start: 'top 75%',
+                    end: 'bottom 60%',
+                    scrub: true,
+                  },
+                });
+              }
+
               if (
                 !(scene instanceof HTMLElement) ||
                 !(mapLayer instanceof HTMLElement) ||
@@ -682,8 +224,83 @@ export class About {
               if (trio instanceof Element) {
                 gsap.set(trio, { autoAlpha: 0 });
               }
-              if (copy instanceof Element) {
-                gsap.set(copy, { autoAlpha: 1 });
+              if (who instanceof Element) {
+                gsap.set(who, { autoAlpha: 1 });
+              }
+              if (origin instanceof Element) {
+                gsap.set(origin, { autoAlpha: 1 });
+              }
+              if (whoIn instanceof Element) {
+                gsap.set(whoIn, { opacity: 0, x: 16 });
+              }
+              if (originIn instanceof Element) {
+                gsap.set(originIn, { opacity: 0, x: -16 });
+              }
+
+              const narrowMap = window.matchMedia('(max-width: 767px)').matches;
+              if (narrowMap) {
+                const reveal = (node: Element, trigger: Element) => {
+                  gsap.fromTo(
+                    node,
+                    { opacity: 0, y: 18 },
+                    {
+                      opacity: 1,
+                      y: 0,
+                      ease: 'none',
+                      scrollTrigger: {
+                        trigger,
+                        start: 'top 90%',
+                        end: 'top 62%',
+                        scrub: true,
+                      },
+                    },
+                  );
+                };
+                if (whoIn instanceof Element && who instanceof Element) {
+                  gsap.set(whoIn, { opacity: 0, x: 0, y: 18 });
+                  reveal(whoIn, who);
+                }
+                if (originIn instanceof Element && origin instanceof Element) {
+                  gsap.set(originIn, { opacity: 0, x: 0, y: 18 });
+                  reveal(originIn, origin);
+                }
+                const mobileTl = gsap.timeline({
+                  scrollTrigger: {
+                    id: 'about-map-draw-mobile',
+                    trigger: stageWrap,
+                    start: 'top 85%',
+                    end: 'center 60%',
+                    scrub: true,
+                    invalidateOnRefresh: true,
+                  },
+                });
+                mobileTl.fromTo(
+                  drawn,
+                  { drawSVG: '0% 0%' },
+                  {
+                    drawSVG: '0% 100%',
+                    duration: 10,
+                    stagger: { amount: 8, from: 'start' },
+                    ease: 'none',
+                  },
+                  0,
+                );
+                if (ica instanceof Element) {
+                  mobileTl.to(ica, { fillOpacity: ICA_FILL_WASH, duration: 2, ease: 'none' });
+                }
+                if (trio instanceof Element) {
+                  gsap.fromTo(trio, { autoAlpha: 0 }, {
+                    autoAlpha: 1,
+                    ease: 'none',
+                    scrollTrigger: {
+                      trigger: trio,
+                      start: 'top 92%',
+                      end: 'top 62%',
+                      scrub: true,
+                    },
+                  });
+                }
+                return;
               }
 
               const baseVb =
@@ -721,9 +338,8 @@ export class About {
                 const bar = document.querySelector('app-site-header header');
                 return bar instanceof HTMLElement ? bar.getBoundingClientRect().height : 80;
               };
-              const approach = 0.85;
-              const drawInPin = 1.8;
-              const pinLen = 4;
+              const drawInPin = 0.72;
+              const pinLen = 1.6;
               const restTl = 8.9;
               const dummyFrac = drawInPin / pinLen;
               const dummyDur = (dummyFrac * restTl) / (1 - dummyFrac);
@@ -731,12 +347,18 @@ export class About {
                 scrollTrigger: {
                   id: 'about-map-draw',
                   trigger: scene,
-                  start: 'top 85%',
-                  end: () => `+=${vh() * (approach + drawInPin)}`,
+                  start: () => `top ${headerPx()}px`,
+                  end: () => `+=${vh() * drawInPin}`,
                   scrub: true,
                   invalidateOnRefresh: true,
                 },
               });
+              if (whoIn instanceof Element) {
+                drawTl.to(whoIn, { opacity: 1, x: 0, duration: 3, ease: 'none' }, 0);
+              }
+              if (originIn instanceof Element) {
+                drawTl.to(originIn, { opacity: 1, x: 0, duration: 3, ease: 'none' }, 11);
+              }
               drawTl.fromTo(
                 drawn,
                 { drawSVG: '0% 0%' },
@@ -746,6 +368,7 @@ export class About {
                   stagger: { amount: 12, from: 'start' },
                   ease: 'none',
                 },
+                0,
               );
               if (ica instanceof Element) {
                 drawTl.to(ica, { fillOpacity: ICA_FILL_WASH, duration: 2, ease: 'none' });
@@ -781,8 +404,9 @@ export class About {
               );
 
               tl.to({}, { duration: 1 });
-              if (copy instanceof Element) {
-                tl.to(copy, { autoAlpha: 0, duration: 1.2, ease: 'none' }, 'takeover');
+              const mapCopy = [who, origin].filter((node): node is HTMLElement => node instanceof HTMLElement);
+              if (mapCopy.length) {
+                tl.to(mapCopy, { autoAlpha: 0, duration: 1.2, ease: 'none' }, 'takeover');
               }
               tl.to(mapLayer, { autoAlpha: 0, duration: 1.2, ease: 'none' }, 'cross');
               if (trio instanceof Element) {
@@ -793,6 +417,8 @@ export class About {
             });
 
             mm.add(reducedMq, () => {
+              clearMotion(heroCopy);
+              motivaCols.forEach((col: Element) => clearMotion(col));
               gsap.set(peruPaths, { drawSVG: '0% 100%' });
               if (lake instanceof Element) {
                 gsap.set(lake, { drawSVG: '0% 100%' });
@@ -803,11 +429,26 @@ export class About {
               if (trio instanceof Element) {
                 gsap.set(trio, { autoAlpha: 1 });
               }
+              if (who instanceof Element) {
+                gsap.set(who, { autoAlpha: 1 });
+              }
+              if (origin instanceof Element) {
+                gsap.set(origin, { autoAlpha: 1 });
+              }
+              if (whoIn instanceof Element) {
+                gsap.set(whoIn, { opacity: 1, x: 0 });
+              }
+              if (originIn instanceof Element) {
+                gsap.set(originIn, { opacity: 1, x: 0 });
+              }
             });
+
+            this.refreshMotion = () => ScrollTrigger.refresh();
+            ScrollTrigger.refresh();
           });
         }, this.host.nativeElement);
       },
-      { morphSvg: false, splitText: true, drawSvg: true, scrambleText: false },
+      { morphSvg: false, drawSvg: true, scrambleText: false },
     );
   }
 }

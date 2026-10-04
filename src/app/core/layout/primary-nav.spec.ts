@@ -1,4 +1,10 @@
-import { isNavGroup, primaryNavLinks, toursNavColumns } from './primary-nav';
+import {
+  isNavGroup,
+  mobilePrimaryNavLinks,
+  navItemTrack,
+  primaryNavLinks,
+  toursNavColumns,
+} from './primary-nav';
 
 describe('primary nav', () => {
   it('groups tours by destination and links each tour to its page', () => {
@@ -48,5 +54,23 @@ describe('primary nav', () => {
       '/contact',
     ]);
     expect(primaryNavLinks.some((item) => item.path === '/packages')).toBe(false);
+    expect(navItemTrack({ path: '/products' })).toBe('/products');
+    expect(navItemTrack({ path: '/tours', fragment: 'nazca' })).toBe('/tours#nazca');
+  });
+
+  it('stacks mobile links top-to-bottom as desktop visual right-to-left', () => {
+    expect(primaryNavLinks.map((item) => item.path)).toEqual([
+      '/tours',
+      '/products',
+      '/about',
+      '/contact',
+    ]);
+    expect(mobilePrimaryNavLinks.map((item) => item.path)).toEqual([
+      '/contact',
+      '/about',
+      '/products',
+      '/tours',
+    ]);
+    expect(isNavGroup(mobilePrimaryNavLinks[3]!)).toBe(true);
   });
 });

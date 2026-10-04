@@ -38,29 +38,9 @@ export function parseCookie(header: string | null | undefined, name: string): st
   return undefined;
 }
 
-export function localeFromAcceptLanguage(header: string | null | undefined): AppLocale | undefined {
-  if (!header) {
-    return undefined;
-  }
-
-  for (const part of header.split(',')) {
-    const tag = part.split(';')[0]?.trim().toLowerCase();
-    if (tag === 'es' || tag.startsWith('es-')) {
-      return 'es';
-    }
-
-    if (tag === 'en' || tag.startsWith('en-')) {
-      return 'en';
-    }
-  }
-
-  return undefined;
-}
-
 export function resolveLocale(options: {
   cookie?: string | null;
   query?: string | null;
-  acceptLanguage?: string | null;
 }): AppLocale {
   if (isAppLocale(options.cookie)) {
     return options.cookie;
@@ -70,7 +50,7 @@ export function resolveLocale(options: {
     return options.query;
   }
 
-  return localeFromAcceptLanguage(options.acceptLanguage) ?? DEFAULT_LOCALE;
+  return DEFAULT_LOCALE;
 }
 
 export function translate(key: string, locale: AppLocale): string {

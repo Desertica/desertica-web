@@ -1,6 +1,6 @@
 <section
   data-hero
-  class="bg-muted relative isolate h-[min(88svh,42rem)] w-full overflow-hidden"
+  class="bg-background relative isolate min-h-[calc(100dvh-var(--header-h))] w-full overflow-hidden"
 >
   <img
     data-hero-poster
@@ -9,90 +9,17 @@
     priority
     sizes="100vw"
     alt=""
-    class="rounded-none object-cover object-center"
+    class="rounded-none object-cover object-[center_65%]"
   />
-  <video
-    data-hero-video
-    class="absolute inset-0 z-[1] size-full object-cover transition-opacity duration-500"
-    [class.opacity-0]="!videoReady()"
-    [class.opacity-100]="videoReady()"
-    muted
-    loop
-    autoplay
-    playsinline
-    disablePictureInPicture
-    preload="auto"
-    aria-hidden="true"
-    [attr.poster]="poster"
-    (playing)="onHeroPlaying()"
-    (error)="onHeroVideoError()"
-  >
-    <source [src]="videoWebm" type="video/webm" />
-    <source [src]="videoMp4" type="video/mp4" />
-  </video>
   <div
     class="about-banner-overlay pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end p-6 text-center md:p-8"
   >
-    <div class="flex max-w-xl flex-col items-center gap-3">
+    <div data-hero-copy class="flex max-w-xl flex-col items-center gap-3">
       <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
-      <h1
-        data-hero-title
-        [attr.aria-label]="'about.heroTitle' | translate: i18n.locale()"
-      >
+      <h1>
         {{ 'about.heroTitle' | translate: i18n.locale() }}
       </h1>
       <p>{{ 'about.heroLead' | translate: i18n.locale() }}</p>
-    </div>
-  </div>
-</section>
-
-<section data-manifesto class="surface-grain">
-  <div class="relative z-10 mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-    <p class="text-muted-foreground text-sm font-medium tracking-wide">
-      {{ 'about.kicker' | translate: i18n.locale() }}
-    </p>
-    <h2 data-manifesto-headline class="font-heading mt-4 max-w-4xl text-3xl text-balance sm:text-5xl">
-      {{ 'about.manifestoHeadline' | translate: i18n.locale() }}
-    </h2>
-    <p data-manifesto-p class="text-muted-foreground mt-6 max-w-md text-base sm:text-lg">
-      {{ 'about.manifestoP1' | translate: i18n.locale() }}
-    </p>
-    <p data-manifesto-p class="text-muted-foreground mt-4 max-w-md text-base sm:text-lg">
-      {{ 'about.manifestoP2' | translate: i18n.locale() }}
-    </p>
-  </div>
-</section>
-
-<section
-  data-quote
-  class="about-quote flex items-center justify-center px-4 pt-16 pb-24 sm:px-6 sm:pt-20 sm:pb-32"
->
-  <blockquote class="about-quote-stack">
-    <p data-quote-a class="about-quote-line">
-      <span data-quote-plate class="about-quote-plate about-quote-plate-a">{{
-        'about.quoteA' | translate: i18n.locale()
-      }}</span>
-    </p>
-    <p data-quote-b class="about-quote-line about-quote-line-b">
-      <span data-quote-plate class="about-quote-plate about-quote-plate-b">{{
-        'about.quoteB' | translate: i18n.locale()
-      }}</span>
-    </p>
-  </blockquote>
-</section>
-
-<section data-ribbon class="about-ribbon">
-  <div data-ribbon-pin class="about-ribbon-pin">
-    <div data-ribbon-track class="about-ribbon-track">
-      <p data-ribbon-unit class="about-ribbon-unit">
-        {{ 'about.ribbon' | translate: i18n.locale() }}
-      </p>
-      <p data-ribbon-unit class="about-ribbon-unit">
-        {{ 'about.ribbon' | translate: i18n.locale() }}
-      </p>
-      <p data-ribbon-unit class="about-ribbon-unit">
-        {{ 'about.ribbon' | translate: i18n.locale() }}
-      </p>
     </div>
   </div>
 </section>
@@ -106,27 +33,42 @@
     data-map-layer
     class="about-map-layer relative z-10 min-h-[calc(100svh-var(--header-h))] w-full"
   >
-    <div data-map-copy class="about-map-copy">
-      <p data-map-kicker class="text-muted-foreground text-sm font-medium tracking-wide">
-        {{ 'about.mapKicker' | translate: i18n.locale() }}
-      </p>
-      <h2
-        data-map-headline
-        class="font-heading mt-4 text-3xl sm:text-5xl"
-      >
-        {{ 'about.mapHeadline' | translate: i18n.locale() }}
-      </h2>
-      <p data-map-lead class="mt-6 max-w-md text-base sm:text-lg">
-        {{ 'about.mapLead' | translate: i18n.locale() }}
-      </p>
+    <div data-map-who class="about-map-who">
+      <div data-map-who-in>
+        <p class="text-muted-foreground text-sm font-medium tracking-wide">
+          {{ 'about.kicker' | translate: i18n.locale() }}
+        </p>
+        <h2 data-map-who-headline class="font-heading mt-4 text-3xl text-balance sm:text-5xl">
+          {{ 'about.manifestoHeadline' | translate: i18n.locale() }}
+        </h2>
+        <p class="text-muted-foreground text-pretty mt-6 text-base sm:text-lg">
+          {{ 'about.manifestoP1' | translate: i18n.locale() }}
+        </p>
+        <p class="text-muted-foreground text-pretty mt-4 text-base sm:text-lg">
+          {{ 'about.manifestoP2' | translate: i18n.locale() }}
+        </p>
+      </div>
     </div>
     <div data-map-stage-wrap class="about-map-stage">
       <app-peru-ica />
     </div>
+    <div data-map-origin class="about-map-origin">
+      <div data-map-origin-in>
+        <p data-map-kicker class="text-muted-foreground text-sm font-medium tracking-wide">
+          {{ 'about.mapKicker' | translate: i18n.locale() }}
+        </p>
+        <h2 data-map-headline class="font-heading mt-4 text-3xl text-balance sm:text-5xl">
+          {{ 'about.mapHeadline' | translate: i18n.locale() }}
+        </h2>
+        <p data-map-lead class="text-pretty mt-6 text-base sm:text-lg">
+          {{ 'about.mapLead' | translate: i18n.locale() }}
+        </p>
+      </div>
+    </div>
   </div>
   <div
     data-trio
-    class="about-trio-layer bg-muted isolate overflow-hidden"
+    class="about-trio-layer bg-background isolate overflow-hidden"
   >
     <img
       data-trio-photo
@@ -147,7 +89,7 @@
   </div>
 </section>
 
-<section data-motiva class="surface-grain">
+<section data-motiva class="surface-grain bg-background">
   <div class="relative z-10 mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
     <p class="text-muted-foreground text-sm font-medium tracking-wide">
       {{ 'about.motivaKicker' | translate: i18n.locale() }}
@@ -161,7 +103,7 @@
           <p class="text-muted-foreground text-sm font-medium tracking-wide">
             {{ col.label | translate: i18n.locale() }}
           </p>
-          <p data-motiva-beat class="text-muted-foreground mt-3 text-base sm:text-lg">
+          <p class="text-muted-foreground mt-3 text-base sm:text-lg">
             {{ col.body | translate: i18n.locale() }}
           </p>
         </article>
@@ -170,7 +112,8 @@
   </div>
 </section>
 
-<section data-craft class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+<section data-craft class="bg-background">
+  <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
   <p class="text-muted-foreground text-sm font-medium tracking-wide">
     {{ 'about.craftKicker' | translate: i18n.locale() }}
   </p>
@@ -185,6 +128,7 @@
         </p>
       </article>
     }
+  </div>
   </div>
 </section>
 
@@ -202,28 +146,10 @@
   </p>
 </section>
 
-<section
-  class="bg-muted relative isolate min-h-[min(42svh,22rem)] h-[min(48svh,26rem)] w-full overflow-hidden"
->
-  <img
-    [ngSrc]="closerImage"
-    fill
-    sizes="100vw"
-    alt=""
-    class="rounded-none object-cover object-center"
-  />
-  <div
-    class="about-banner-overlay pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-end p-6 pb-8 text-center md:p-8 md:pb-10"
-  >
-    <div class="flex max-w-md flex-col items-center gap-4">
-      <div class="flex flex-col items-center gap-3">
-        <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
-        <h2>{{ 'about.closerTitle' | translate: i18n.locale() }}</h2>
-        <p>{{ 'about.closerLead' | translate: i18n.locale() }}</p>
-      </div>
-      <a hlmBtn class="pointer-events-auto" [routerLink]="toursPath">
-        {{ 'nav.tours' | translate: i18n.locale() }}
-      </a>
-    </div>
-  </div>
-</section>
+<app-photo-cta
+  [image]="closerImage"
+  titleKey="about.closerTitle"
+  leadKey="about.closerLead"
+  ctaLabelKey="nav.tours"
+  [ctaLink]="toursPath"
+/>

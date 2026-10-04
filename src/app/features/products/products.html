@@ -1,0 +1,29 @@
+<section
+  class="relative isolate flex min-h-[calc(100dvh-var(--header-h))] w-full items-end overflow-hidden"
+>
+  <img
+    [ngSrc]="image"
+    fill
+    priority
+    sizes="100vw"
+    alt=""
+    class="rounded-none object-cover object-center"
+  />
+  <div class="products-overlay relative z-10 flex w-full flex-col items-center gap-4 px-4 py-16 text-center">
+    <p class="text-sm font-medium tracking-wide">
+      {{ 'nav.products' | translate: i18n.locale() }}
+    </p>
+    <h1 class="font-heading text-4xl text-balance sm:text-6xl">
+      {{ 'pages.productsSoon' | translate: i18n.locale() }}
+    </h1>
+    <p class="max-w-md text-base sm:text-lg">
+      {{ 'pages.productsLead' | translate: i18n.locale() }}
+    </p>
+    <a
+      class="bg-primary text-primary-foreground focus-visible:ring-ring/50 mt-2 inline-flex h-10 items-center justify-center rounded-4xl px-5 text-sm font-medium outline-none focus-visible:ring-3"
+      [routerLink]="toursPath"
+    >
+      {{ 'nav.tours' | translate: i18n.locale() }}
+    </a>
+  </div>
+</section>

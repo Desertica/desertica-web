@@ -1,0 +1,4 @@
+.products-overlay {
+  color: #fff;
+  background-image: linear-gradient(to top, rgb(0 0 0 / 0.62), transparent 72%);
+}

@@ -21,7 +21,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/tours/detail/tour-detail').then((m) => m.TourDetail),
   },
-  placeholder('products', 'nav.products', 'pages.productsLead'),
+  {
+    path: 'products',
+    loadComponent: () => import('./features/products/products').then((m) => m.Products),
+  },
   {
     path: 'about',
     loadComponent: () => import('./features/about/about').then((m) => m.About),
@@ -30,7 +33,11 @@ export const routes: Routes = [
     path: 'contact',
     loadComponent: () => import('./features/contact/contact').then((m) => m.Contact),
   },
-  placeholder('blog', 'nav.blog', 'pages.blogLead'),
+  {
+    path: 'blog',
+    loadComponent: () => import('./features/blog/blog').then((m) => m.Blog),
+  },
+  placeholder('blog/:slug', 'nav.blog', 'pages.blogLead'),
   placeholder('nazca', 'footer.nazca', 'pages.nazcaLead'),
   placeholder('huacachina', 'footer.huacachina', 'pages.huacachinaLead'),
   placeholder('paracas', 'footer.paracas', 'pages.paracasLead'),

@@ -1,12 +1,11 @@
-import { resolveLocale, translate } from './catalogs';
+import { parseCookie, resolveLocale, translate } from './catalogs';
 
 describe('i18n catalogs', () => {
-  it('prefers the cookie over the query and Accept-Language', () => {
+  it('prefers the cookie over the query', () => {
     expect(
       resolveLocale({
         cookie: 'en',
         query: 'es',
-        acceptLanguage: 'es-PE,es;q=0.9',
       }),
     ).toBe('en');
   });
@@ -15,18 +14,18 @@ describe('i18n catalogs', () => {
     expect(
       resolveLocale({
         query: 'es',
-        acceptLanguage: 'en-US,en;q=0.9',
       }),
     ).toBe('es');
   });
 
-  it('falls back to Accept-Language and then English', () => {
-    expect(resolveLocale({ acceptLanguage: 'es-PE,en;q=0.8' })).toBe('es');
-    expect(resolveLocale({ acceptLanguage: 'fr-FR,fr;q=0.9' })).toBe('en');
+  it('defaults to English when there is no explicit preference', () => {
+    expect(resolveLocale({})).toBe('en');
   });
 
   it('looks up nested keys with object notation', () => {
     expect(translate('nav.tours', 'en')).toBe('Tours');
+    expect(translate('a11y.intro', 'en')).toBe('Loading Desértica');
+    expect(translate('a11y.intro', 'es')).toBe('Cargando Desértica');
     expect(translate('nav.products', 'es')).toBe('Productos');
     expect(translate('nav.planTrip', 'es')).toBe('Planifica tu viaje');
     expect(translate('home.whyHeadline', 'en')).toContain("Ica isn't a stop");
@@ -100,16 +99,11 @@ describe('i18n catalogs', () => {
     expect(translate('about.heroTitle', 'es')).not.toContain('SSG');
     expect(translate('about.heroTitle', 'en')).not.toContain('SSG');
     expect(translate('about.heroLead', 'en')).not.toContain('Story later');
-    expect(translate('about.kicker', 'es')).toBe('{ Desde Ica }');
-    expect(translate('about.kicker', 'en')).toBe('{ From Ica }');
-    expect(translate('about.quoteA', 'es')).toContain('comienzo');
-    expect(translate('about.quoteB', 'en')).toContain('up close');
+    expect(translate('about.kicker', 'es')).toBe('{ Quiénes somos }');
+    expect(translate('about.kicker', 'en')).toBe('{ Who we are }');
     expect(translate('about.mapHeadline', 'es')).toContain('arma el día');
     expect(translate('about.mapLead', 'es')).not.toContain('Trujillo');
     expect(translate('about.mapLead', 'en')).not.toContain('Trujillo');
-    expect(translate('about.ribbon', 'es')).toBe('Ica · Huacachina · Paracas · Nazca');
-    expect(translate('about.ribbon', 'en')).toContain('Ica');
-    expect(translate('about.ribbon', 'en')).not.toContain('Trujillo');
     expect(translate('about.trioCaption', 'es')).toContain('Huacachina');
     expect(translate('about.motivaHeadline', 'en')).toContain('stay');
     expect(translate('about.motivaLabel1', 'es')).toBe('Motivación');
@@ -125,10 +119,12 @@ describe('i18n catalogs', () => {
     expect(translate('tour.book', 'en')).toBe('Book');
     expect(translate('tour.book', 'es')).not.toContain('WhatsApp');
     expect(translate('tour.payLater', 'es')).toContain('paga después');
-    expect(translate('tour.highlights', 'en')).toContain('includes');
+    expect(translate('tour.detailsLabel', 'en')).toBe('Details');
+    expect(translate('tour.videoSoon', 'es')).toBe('Video próximamente');
     expect(translate('tours.duneBuggy.lead', 'es')).toContain('tubular');
     expect(translate('tours.duneBuggy.lead', 'en')).toContain('tubular');
     expect(translate('tours.duneBuggy.itinerary.meet.title', 'es')).toBe('Encuentro');
+    expect(translate('tours.duneBuggy.itinerary.meet.body', 'en')).toContain('confirmation');
     expect(translate('tour.language', 'en')).toBe('Language');
     expect(translate('tour.language', 'es')).toBe('Idioma');
     expect(translate('tour.whatsappMessage', 'en')).toContain('{tour}');
@@ -138,5 +134,16 @@ describe('i18n catalogs', () => {
     expect(translate('tour.whatsappMessage', 'en')).toContain('{payment}');
     expect(translate('tour.whatsappMessage', 'en')).toContain('{amount}');
     expect(translate('tour.whatsappMessage', 'en')).not.toContain('{name}');
+    expect(translate('missing.key', 'en')).toBe('missing.key');
+    expect(translate('missing.key', 'es')).toBe('missing.key');
+  });
+
+  it('reads a named cookie and ignores malformed pairs', () => {
+    expect(parseCookie(undefined, 'locale')).toBeUndefined();
+    expect(parseCookie(null, 'locale')).toBeUndefined();
+    expect(parseCookie('locale', 'locale')).toBeUndefined();
+    expect(parseCookie('theme=dark; locale=es', 'locale')).toBe('es');
+    expect(parseCookie('locale=es%20pe', 'locale')).toBe('es pe');
+    expect(parseCookie('theme=dark', 'locale')).toBeUndefined();
   });
 });

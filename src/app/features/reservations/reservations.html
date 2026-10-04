@@ -1,6 +1,97 @@
 <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-  <h1 class="font-heading text-4xl">{{ 'pages.reservationsTitle' | translate: i18n.locale() }}</h1>
-  <p class="text-muted-foreground mt-4">
+  <p class="text-muted-foreground text-sm font-medium tracking-wide">
+    {{ 'pages.reservationsKicker' | translate: i18n.locale() }}
+  </p>
+  <h1 class="font-heading mt-4 text-4xl text-balance">
+    {{ 'pages.reservationsTitle' | translate: i18n.locale() }}
+  </h1>
+  <p class="text-muted-foreground mt-4 max-w-2xl text-base sm:text-lg">
     {{ 'pages.reservationsLead' | translate: i18n.locale() }}
   </p>
+
+  <h2 id="reservations-axis" class="font-heading mt-12 text-2xl">
+    {{ 'pages.reservationsAxis' | translate: i18n.locale() }}
+  </h2>
+  <div class="mt-6 grid gap-3 md:grid-cols-3" role="group" aria-labelledby="reservations-axis">
+    @for (item of destinations; track item.id) {
+      <button
+        type="button"
+        class="relative block w-full overflow-hidden text-start"
+        [attr.aria-pressed]="axis() === item.id ? 'true' : 'false'"
+        (click)="chooseAxis(item.id)"
+      >
+        <img
+          [ngSrc]="item.image"
+          width="800"
+          height="1000"
+          alt=""
+          class="aspect-[4/5] w-full rounded-none object-cover"
+        />
+        <span
+          class="pointer-events-none absolute inset-0 flex flex-col justify-end gap-3 bg-gradient-to-t from-black/55 to-transparent p-6 text-white"
+        >
+          <span class="font-heading text-lg tracking-wide uppercase">
+            {{ item.titleKey | translate: i18n.locale() }}
+          </span>
+          <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+        </span>
+      </button>
+    }
+  </div>
+
+  @if (destination(); as dest) {
+    <h2 id="reservations-tour" class="font-heading mt-12 text-2xl">
+      {{ 'pages.reservationsTour' | translate: i18n.locale() }}
+    </h2>
+    <ul class="mt-4" aria-labelledby="reservations-tour">
+      @for (item of dest.tours; track item.id) {
+        <li class="border-border border-b">
+          <button
+            type="button"
+            class="flex w-full flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-4 text-start"
+            [attr.aria-pressed]="selected()?.tour?.id === item.id ? 'true' : 'false'"
+            (click)="chooseTour(item.id)"
+          >
+            <span class="font-heading text-lg">
+              {{ item.titleKey | translate: i18n.locale() }}
+            </span>
+            <span class="text-muted-foreground text-sm tracking-wide uppercase">
+              {{ item.durationHours }} {{ 'gallery.hours' | translate: i18n.locale() }}
+              · {{ 'gallery.from' | translate: i18n.locale() }}
+              {{ 'gallery.currency' | translate: i18n.locale() }}
+              {{ item.priceFrom }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+
+    @if (selected(); as current) {
+      <div
+        #bookHost
+        data-reservation-book
+        tabindex="-1"
+        class="mt-10 scroll-mt-[calc(var(--header-h)+1rem)]"
+      >
+        <div class="relative mb-6 h-36 overflow-hidden md:hidden">
+          <img
+            [ngSrc]="dest.image"
+            fill
+            sizes="100vw"
+            alt=""
+            class="rounded-none object-cover object-center"
+          />
+        </div>
+        <div class="md:grid md:grid-cols-3">
+          @for (t of [current]; track t.tour.id) {
+            <app-tour-book
+              class="md:sticky md:top-[calc(var(--header-h)+1.5rem)] md:col-start-3"
+              [tour]="t.tour"
+              [page]="t.page"
+            />
+          }
+        </div>
+      </div>
+    }
+  }
 </section>

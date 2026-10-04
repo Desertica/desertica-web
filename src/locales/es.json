@@ -42,7 +42,8 @@
     "toggleTheme": "Cambiar tema de color",
     "openMenu": "Abrir menú",
     "chooseLanguage": "Idioma",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "intro": "Cargando Desértica"
   },
   "whatsapp": {
     "tooltip": "Escríbenos"
@@ -62,12 +63,18 @@
     "toursCtaTitle": "¿Buscas otra experiencia?",
     "toursCtaLead": "Tours privados y salidas a medida, si no ves lo que necesitas.",
     "productsLead": "Pisco, tejas y cerámica. Catálogo más adelante.",
+    "productsSoon": "Próximamente",
     "contactTitle": "Contáctanos",
     "contactLead": "Consultas sobre tours y fechas. Para reservar, usa Planifica tu viaje.",
-    "reservationsTitle": "Reservas",
-    "reservationsLead": "Reservas (CSR). Formulario más adelante.",
+    "reservationsKicker": "{ El día }",
+    "reservationsTitle": "Arma tu día",
+    "reservationsLead": "Huacachina, Paracas o Nazca. Elige el eje y el tour. Un hilo para reservar.",
+    "reservationsAxis": "Eje",
+    "reservationsTour": "Tour",
     "experienceLead": "Placeholder SSR. Catálogo más adelante.",
     "blogLead": "Historias de Ica y Huacachina.",
+    "blogSoon": "Próximamente",
+    "blogHeroAlt": "Dunas del desierto de Ica al atardecer.",
     "nazcaLead": "Líneas de Nazca y vuelos sobre el desierto.",
     "huacachinaLead": "Dunas, oasis y noches junto a la laguna.",
     "paracasLead": "Ballestas, acantilados y arena de Paracas.",
@@ -154,16 +161,13 @@
   "about": {
     "heroTitle": "El desierto es el destino, no el atajo.",
     "heroLead": "Tres dueños. Base en Ica. Huacachina, Paracas y Nazca, al ritmo del grupo.",
-    "kicker": "{ Desde Ica }",
+    "kicker": "{ Quiénes somos }",
     "manifestoHeadline": "Ica no se visita de paso.",
     "manifestoP1": "Se baja, se espera el calor y se sale cuando el grupo está listo.",
     "manifestoP2": "Desértica nace para que el desierto sea el motivo del viaje, no el tramo entre dos ciudades.",
-    "quoteA": "Somos el comienzo.",
-    "quoteB": "El desierto, de cerca, todos los días.",
     "mapKicker": "{ Origen }",
     "mapHeadline": "Aquí se arma el día.",
     "mapLead": "El departamento es el mapa. Oasis, reserva y líneas salen de Ica, no de una escala en el sur.",
-    "ribbon": "Ica · Huacachina · Paracas · Nazca",
     "trioCaption": "Los tres, Huacachina",
     "motivaKicker": "{ Qué nos motiva }",
     "motivaHeadline": "Seguimos por esto.",
@@ -187,13 +191,17 @@
   },
   "tour": {
     "meetingIca": "Encuentro en Ica",
-    "highlights": "Qué entra en el día",
     "practices": "Cómo se corre",
     "included": "Qué incluye",
     "notIncluded": "Qué no incluye",
     "pack": "Qué llevar",
-    "notes": "Antes de salir",
+    "notes": "Importante",
     "terms": "Términos de la reserva",
+    "detailsLabel": "Detalles",
+    "detailsOverview": "Descripción e itinerario",
+    "videosLabel": "Videos del tour",
+    "videoSoon": "Video próximamente",
+    "clipPlay": "Reproducir {tour}, video {n}",
     "book": "Reservar",
     "bookLead": "Fecha, idioma y grupo. Te respondemos en el hilo.",
     "date": "Fecha",
@@ -220,36 +228,26 @@
     "crumb": "Miga",
     "galleryLabel": "Fotos del tour",
     "timelineLabel": "El día",
-    "portraitsLabel": "En las dunas",
-    "photoAlt": "{tour}, foto {n}"
+    "photoAlt": "{tour}, foto {n}",
+    "downloadItinerary": "Descargar itinerario",
+    "assure": {
+      "payLater": "Reserva ahora, paga después:",
+      "payLaterBody": "Asegura tu lugar",
+      "cancel": "Cancelación gratis:",
+      "cancelBody": "Hasta 24 horas antes del tour",
+      "price": "Precio final:",
+      "priceBody": "Impuestos y cargos de reserva incluidos"
+    }
   },
   "tours": {
     "duneBuggy": {
       "lead": "Recorre las dunas de Huacachina en tubular, con paradas para bajar en tabla y quedarte a la luz baja.",
       "lead2": "El encuentro es en Ica. El ritmo, el del grupo. Confirmación antes de encender el motor.",
-      "meeting": "Encuentro en Ica",
-      "highlights": {
-        "buggy": {
-          "title": "Tubular",
-          "body": "Un tramo por la arena abierta, con paradas de foto en las crestas."
-        },
-        "board": {
-          "title": "Sandboard",
-          "body": "Tabla para bajar boca abajo. Para empezar, no de pie."
-        },
-        "helmet": {
-          "title": "Casco",
-          "body": "Casco en el tubular. Di si necesitas otra talla."
-        },
-        "light": {
-          "title": "Luz baja",
-          "body": "Nos quedamos hasta que baja la luz. Si hay nubes, la hora se mantiene."
-        },
-        "meet": {
-          "title": "Encuentro en Ica",
-          "body": "El día sale de Ica, no de un recojo en Lima."
-        }
+      "description": {
+        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae nisl at erat tristique tincidunt, sed interdum nisl a tincidunt posuere.",
+        "p2": "Suspendisse potenti. Curabitur at lectus nec nisi tincidunt gravida. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."
       },
+      "meeting": "Encuentro en Ica",
       "practices": {
         "group": {
           "title": "Grupo chico",
@@ -271,25 +269,37 @@
       "itinerary": {
         "meet": {
           "title": "Encuentro",
-          "body": "Ica. Diez minutos antes."
+          "body": "Ica. El punto exacto va en la confirmación.",
+          "expanded": "Nos vemos en Ica. El punto y la hora exactos van en la confirmación, según el día y el ritmo del grupo."
         },
         "dunes": {
           "title": "Dunas",
-          "body": "Tubular por las crestas, con paradas de foto."
+          "body": "Tubular por las crestas, con paradas de foto.",
+          "expanded": "El tubular recorre las crestas con paradas para foto. El tramo se ajusta a la arena y al grupo, no a un circuito cerrado."
         },
         "board": {
           "title": "Tabla",
-          "body": "Boca abajo, en tabla artesanal."
+          "body": "Boca abajo, en tabla artesanal.",
+          "expanded": "Bajada boca abajo en tabla artesanal. No es de pie. El guía indica la duna y el ritmo."
         },
         "light": {
           "title": "Luz baja",
-          "body": "Tiempo en la arena cuando baja el sol."
+          "body": "Tiempo en la arena cuando baja el sol.",
+          "expanded": "Nos quedamos en la arena cuando baja el sol. Si hay nubes, la hora se mantiene."
         },
         "close": {
           "title": "Cierre",
-          "body": "Vuelta hacia el oasis cuando se va la luz."
+          "body": "Vuelta hacia el oasis cuando se va la luz.",
+          "expanded": "Vuelta hacia el oasis cuando se va la luz. El cierre depende del día, no de un reloj fijo."
         }
       },
+      "details": {
+        "description": {
+          "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam tincidunt, sapien at fermentum pretium, lorem nisl iaculis erat, vitae vehicula nisl lorem sit amet nisl.",
+          "p2": "Praesent sagittis, lorem a tincidunt tincidunt, nisl nisl aliquam nisl, a tincidunt nisl nisl sit amet nisl. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae."
+        }
+      },
+      "termsSummary": "La reserva se confirma por WhatsApp. Cancelaciones y cambios siguen los términos publicados.",
       "included": {
         "guide": "Guía en español o inglés.",
         "buggy": "Tubular compartido.",

@@ -10,7 +10,7 @@ import { ICA_SVG_ORIGIN } from './about-media';
       display: block;
       width: 100%;
       height: 100%;
-      color: #3d4a2a;
+      color: var(--primary);
     }
 
     .about-map-svg {
@@ -22,7 +22,7 @@ import { ICA_SVG_ORIGIN } from './about-media';
 
     [data-peru] {
       fill: none;
-      stroke: #3d4a2a;
+      stroke: currentColor;
       stroke-opacity: 1;
       stroke-width: 2.15;
       stroke-linejoin: round;
@@ -31,15 +31,15 @@ import { ICA_SVG_ORIGIN } from './about-media';
 
     [data-lake] {
       fill: none;
-      stroke: #3d4a2a;
+      stroke: currentColor;
       stroke-opacity: 0.75;
       stroke-width: 1.2;
     }
 
     [data-ica] {
-      fill: #5a6b3e;
+      fill: var(--primary);
       fill-opacity: 0;
-      stroke: #3d4a2a;
+      stroke: currentColor;
       stroke-width: 2.4;
       stroke-linejoin: round;
     }
