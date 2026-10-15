@@ -75,7 +75,15 @@ export class BlogPostPage {
 
     usePageMeta(() => {
       const post = this.post();
-      return post ? { title: post.title, description: post.seoDescription || post.excerpt } : null;
+      return post
+        ? {
+            title: post.title,
+            description: post.seoDescription || post.excerpt,
+            image: post.cover,
+            type: 'article' as const,
+            breadcrumbs: [{ name: this.i18n.t('nav.blog'), path: '/blog' }],
+          }
+        : null;
     });
   }
 }

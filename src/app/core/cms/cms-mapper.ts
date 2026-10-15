@@ -361,6 +361,7 @@ function mapBooking(
     childrenMin: num(base['childrenMin']) ?? 0,
     childrenDefault: num(base['childrenDefault']) ?? 0,
     peopleMax: num(base['peopleMax']) ?? 0,
+    availabilityMonths: num(base['availabilityMonths']) ?? 0,
     currencyCode: text(base['currencyCode']) ?? '',
     assurances: features('cms.booking', 'assurances', byLocale, messages),
   };

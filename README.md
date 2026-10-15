@@ -50,13 +50,17 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/paracas`           | **SSR** (`RenderMode.Server`) | Destination hub: Strapi page + its tours  |
 | `/terms`             | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/privacy`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
-| `/complaints`        | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/complaints`        | **SSR** (`RenderMode.Server`) | Libro de Reclamaciones form (files through the API) |
 | `/conduct`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/legal/mincetur`    | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
-| `/experiences/:slug` | **SSR** (`RenderMode.Server`)    | Detail placeholder (`slug` from the URL)  |
+| `/experiences/:slug` | Express **301**               | Permanent redirect to `/tours/:slug`      |
+| `/sitemap.xml`, `/robots.txt` | Express          | Built from the live catalog (see `src/seo-routes.ts`) |
+| `/checkout`, `/checkout/payment/:reference`, `/booking[/:reference]` | **SSR** | Booking engine; only with `BOOKING_ENGINE_ENABLED=true` |
 | `/reservations`      | **SSR** (`RenderMode.Server`)    | Plan your trip / reservations placeholder |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
+
+SEO: `SeoService` writes canonical, `hreflang`, Open Graph, Twitter and JSON-LD for every route. The language strategy (`?lang=` today, path prefix later) is in [`docs/SEO-LOCALE.md`](docs/SEO-LOCALE.md).
 
 Every route renders per request (`RenderMode.Server`) and reads Strapi through a short server-side cache, so publishing a change needs no rebuild and the build does not depend on the CMS.
 
@@ -75,12 +79,11 @@ src/app/
     catalog/tours.ts           # Huacachina / Paracas / Nazca catalog
     catalog/tour-pages.ts      # Per-tour detail content (dune-buggy first)
     layout/                    # header, footer bounce, horiz gallery
-    models/experience.ts
     models/reservation.ts
-    services/experiences.ts    # empty list / getBySlug
     catalog/catalog.ts         # CatalogService: Strapi content with static fallback
     cms/                       # Strapi client, mapper, forms API, site defaults
-    seo/page-meta.ts           # title/description per page
+    seo/                       # SeoService (canonical, hreflang, OG, JSON-LD) + usePageMeta
+    analytics/                 # consent, GTM, typed dataLayer events, attribution
   features/
     landing/                   # Home (DrawSVG hero, Why, gallery, destinos, CTA)
     tours/                     # Tours catalog
@@ -90,7 +93,6 @@ src/app/
     content/                   # CMS page (legal, destination hubs)
     blog/                      # Strapi posts (SSR)
     products/                  # Strapi products (SSR)
-    experiences/detail/        # SSR placeholder
     reservations/              # CSR placeholder
 src/forms-proxy.ts             # /api/forms/* -> Strapi (validation + rate limit)
 scripts/build-cms-seed.mjs     # regenerates the CMS seed (../desertica-cms/seed/catalog.json) from the static catalog

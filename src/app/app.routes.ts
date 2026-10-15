@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { bookingEngineGuard } from './core/booking/booking-engine';
 
 /** CMS-backed page: `slug` selects the Strapi `page` entry, the keys are the i18n fallback. */
 const content = (path: string, slug: string, titleKey: string, leadKey: string, destination?: string) => ({
@@ -51,17 +52,41 @@ export const routes: Routes = [
   content('paracas', 'paracas', 'footer.paracas', 'pages.paracasLead', 'paracas'),
   content('terms', 'terms', 'footer.terms', 'pages.termsLead'),
   content('privacy', 'privacy', 'footer.privacy', 'pages.privacyLead'),
-  content('complaints', 'complaints', 'footer.complaints', 'pages.complaintsLead'),
+  {
+    path: 'complaints',
+    loadComponent: () =>
+      import('./features/complaints/complaints').then((m) => m.ComplaintsBook),
+  },
   content('conduct', 'conduct', 'footer.conduct', 'pages.conductLead'),
   content('legal/mincetur', 'legal-mincetur', 'footer.mincetur', 'pages.minceturLead'),
-  {
-    path: 'experiences/:slug',
-    loadComponent: () =>
-      import('./features/experiences/detail/experience-detail').then((m) => m.ExperienceDetail),
-  },
+  // Legacy URL: Express answers it with a permanent redirect; this keeps in-app navigation consistent.
+  { path: 'experiences/:slug', redirectTo: 'tours/:slug' },
+  { path: 'experiences', redirectTo: 'tours' },
   {
     path: 'reservations',
     loadComponent: () => import('./features/reservations/reservations').then((m) => m.Reservations),
+  },
+  // Booking engine: these routes only exist while BOOKING_ENGINE_ENABLED is true.
+  {
+    path: 'checkout',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () => import('./features/booking/checkout').then((m) => m.Checkout),
+  },
+  {
+    path: 'checkout/payment/:reference',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () =>
+      import('./features/booking/checkout-payment').then((m) => m.CheckoutPayment),
+  },
+  {
+    path: 'booking',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () => import('./features/booking/my-booking').then((m) => m.MyBooking),
+  },
+  {
+    path: 'booking/:reference',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () => import('./features/booking/my-booking').then((m) => m.MyBooking),
   },
   { path: '**', redirectTo: '' },
 ];

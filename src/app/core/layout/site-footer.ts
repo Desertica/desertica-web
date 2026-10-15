@@ -9,6 +9,7 @@ import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmSeparator } from '@spartan-ng/helm/separator';
 import { filter } from 'rxjs';
+import { ConsentService } from '../analytics/consent';
 import { CatalogService } from '../catalog/catalog';
 import { afterNextGsap } from '../animation/gsap';
 import { SmoothScroll } from '../animation/smooth-scroll';
@@ -45,6 +46,7 @@ export class SiteFooter {
   private readonly catalog = inject(CatalogService);
 
   protected readonly i18n = inject(I18nService);
+  protected readonly consent = inject(ConsentService);
   protected readonly bounceCenter = BOUNCE_CENTER;
   protected readonly brandLinks = this.catalog.footerBrandLinks;
   protected readonly brandName = computed(() => this.catalog.site().brandName);

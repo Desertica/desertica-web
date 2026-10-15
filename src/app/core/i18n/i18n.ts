@@ -89,6 +89,7 @@ export class I18nService {
     this.locale.set(locale);
     this.apply(locale);
     this.persist(locale);
+    this.syncQuery(locale);
   }
 
   private readClientPreference(): AppLocale {
@@ -137,6 +138,20 @@ export class I18nService {
 
     this.transferState.set(LOCALE_STATE_KEY, locale);
     return locale;
+  }
+
+  /** An explicit `?lang=` outranks the cookie, so a manual switch must update it or a reload would undo it. */
+  private syncQuery(locale: AppLocale): void {
+    const view = this.document.defaultView;
+    if (!isPlatformBrowser(this.platformId) || !view) {
+      return;
+    }
+
+    const url = new URL(view.location.href);
+    if (url.searchParams.has(LOCALE_QUERY) && url.searchParams.get(LOCALE_QUERY) !== locale) {
+      url.searchParams.set(LOCALE_QUERY, locale);
+      view.history.replaceState(view.history.state, '', url);
+    }
   }
 
   private persist(locale: AppLocale): void {

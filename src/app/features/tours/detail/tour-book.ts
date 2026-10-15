@@ -35,6 +35,7 @@ import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { DEFAULT_BOOKING } from '../../../core/cms/booking-defaults';
+import { AnalyticsService } from '../../../core/analytics/analytics';
 import { FormsApi } from '../../../core/cms/forms-api';
 import {
   buildTourWhatsappHref,
@@ -324,6 +325,7 @@ export class TourBook {
   private readonly catalog = inject(CatalogService);
   protected readonly booking = this.catalog.booking();
   private readonly forms = inject(FormsApi);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly tour = input.required<CatalogTour>();
   readonly page = input.required<TourPage>();
@@ -483,6 +485,7 @@ export class TourBook {
       return;
     }
 
+    this.analytics.track('click_whatsapp', { placement: 'tour_booking' });
     this.document.defaultView?.open(href, '_blank', 'noopener,noreferrer');
     void this.recordReservation();
   }

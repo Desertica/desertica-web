@@ -2,22 +2,28 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
   inject,
   input,
   untracked,
 } from '@angular/core';
-import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { AnalyticsService, asCurrency } from '../../../core/analytics/analytics';
+import { tourItem } from '../../../core/analytics/items';
+import { PUBLIC_CONFIG } from '../../../core/config/public-config';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { tourHasDetails } from '../../../core/catalog/tour-pages';
-import { TOURS_PATH } from '../../../core/catalog/tours';
+import { type CatalogTour, TOURS_PATH, tourPath } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
+import { touristTripLd } from '../../../core/seo/json-ld';
+import { usePageMeta } from '../../../core/seo/page-meta';
+import { SeoService } from '../../../core/seo/seo';
+import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
+import { BookingPanel } from '../../booking/booking-panel';
 import { TourAssurances } from './tour-assurances';
 import { TourBook } from './tour-book';
 import { TourFeatures } from './tour-features';
@@ -39,6 +45,7 @@ import { TourVideos } from './tour-videos';
     TourFeatures,
     TourAssurances,
     TourBook,
+    BookingPanel,
     TourTimeline,
     TourFullDetails,
     TourVideos,
@@ -48,15 +55,17 @@ import { TourVideos } from './tour-videos';
 })
 export class TourDetail {
   private readonly router = inject(Router);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly seo = inject(SeoService);
+  private readonly analytics = inject(AnalyticsService);
+  private viewed: string | null = null;
 
   readonly id = input.required<string>();
   protected readonly i18n = inject(I18nService);
   private readonly catalog = inject(CatalogService);
   protected readonly resolved = computed(() => this.catalog.resolvedTour(this.id()));
   protected readonly hasDetails = tourHasDetails;
+  /** Online booking replaces the WhatsApp form only while the flag is on. */
+  protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
 
   constructor() {
     effect(() => {
@@ -71,24 +80,56 @@ export class TourDetail {
     effect(() => {
       const data = this.resolved();
       this.i18n.locale();
-      if (!data) {
-        return;
+      if (data) {
+        untracked(() => this.trackView(data.tour));
       }
-
-      const name = this.i18n.t(data.page.seoTitleKey ?? data.tour.titleKey);
-      this.title.setTitle(`${name} | ${this.i18n.t('meta.title')}`);
-      this.meta.updateTag({
-        name: 'description',
-        content: this.i18n.t(data.page.seoDescriptionKey ?? data.page.leadKey),
-      });
     });
 
-    this.destroyRef.onDestroy(() => {
-      this.title.setTitle(this.i18n.t('meta.title'));
-      this.meta.updateTag({
-        name: 'description',
-        content: this.i18n.t('meta.description'),
-      });
+    usePageMeta(() => {
+      const data = this.resolved();
+      this.i18n.locale();
+      if (!data) {
+        return null;
+      }
+
+      const { tour, page } = data;
+      const origin = this.seo.origin();
+      const description = this.i18n.t(page.seoDescriptionKey ?? page.leadKey);
+      const image = page.gallery[0] ?? tour.image;
+      return {
+        title: this.i18n.t(page.seoTitleKey ?? tour.titleKey),
+        description,
+        image,
+        breadcrumbs: [{ name: this.i18n.t('nav.tours'), path: TOURS_PATH }],
+        jsonLd: origin
+          ? [
+              touristTripLd({
+                name: this.i18n.t(tour.titleKey),
+                description,
+                url: localizedUrl(origin, tourPath(tour.id), this.i18n.locale()),
+                image: [absoluteUrl(origin, image)],
+                organizationId: `${origin}/#organization`,
+                price: tour.priceFrom,
+                currency: asCurrency(this.catalog.booking().currencyCode),
+                inLanguage: page.languages,
+              }),
+            ]
+          : [],
+      };
+    });
+  }
+
+  /** One `view_item` per tour per visit to the page, not per language switch. */
+  private trackView(tour: CatalogTour): void {
+    if (this.viewed === tour.id) {
+      return;
+    }
+
+    this.viewed = tour.id;
+    this.analytics.track('view_item', {
+      currency: asCurrency(this.catalog.booking().currencyCode),
+      value: tour.priceFrom,
+      items: [tourItem(tour, this.i18n.t(tour.titleKey))],
     });
   }
 }

@@ -175,6 +175,16 @@
           </div>
 
           <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            @if (turnstileEnabled) {
+              <div hlmField class="w-fit max-w-full">
+                <app-turnstile (tokenChange)="onToken($event)" />
+                @if (showError('captcha')) {
+                  <hlm-field-error [forceShow]="true">{{
+                    'contact.captchaError' | translate: i18n.locale()
+                  }}</hlm-field-error>
+                }
+              </div>
+            } @else {
             <div hlmField class="w-fit max-w-full">
               <div
                 class="border-border bg-muted/30 flex min-h-16 w-fit items-center justify-between gap-4 rounded-3xl border px-3 py-2"
@@ -202,6 +212,8 @@
                 }}</hlm-field-error>
               }
             </div>
+
+            }
 
             <button hlmBtn size="lg" class="min-w-0 w-full flex-1" type="submit">
               {{ 'contact.submit' | translate: i18n.locale() }}
