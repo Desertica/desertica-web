@@ -29,6 +29,7 @@ import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import { AnalyticsService, centsToMajor } from '../../core/analytics/analytics';
 import { tourItem } from '../../core/analytics/items';
 import { AttributionService } from '../../core/analytics/attribution';
+import { ConsentService } from '../../core/analytics/consent';
 import { BookingApi, type CreatePublicBooking, type LegalDocument } from '../../core/api/booking-api';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { clock, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
@@ -75,8 +76,8 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
 
 /**
  * Checkout (booking engine only): countdown on the seat hold, customer, passengers, billing
- * document, the legal documents with the versions the API publishes, and the booking itself. The
- * payment step is a placeholder until Ola 2.
+ * document, the legal documents with the versions the API publishes, and the booking itself. Payment
+ * is the next step (`CheckoutPayment`).
  */
 @Component({
   selector: 'app-checkout',
@@ -334,6 +335,7 @@ export class Checkout {
   private readonly catalog = inject(CatalogService);
   private readonly analytics = inject(AnalyticsService);
   private readonly attribution = inject(AttributionService);
+  private readonly consent = inject(ConsentService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly turnstile = viewChild(Turnstile);
   /** Re-sent when a submission is retried after a network failure, so the API does not double-book. */
@@ -516,12 +518,8 @@ export class Checkout {
       return;
     }
 
-    const { booking, accessToken, paymentOptions } = result.data;
-    this.flow.remember(booking.reference, {
-      accessToken,
-      paymentOptions: paymentOptions ?? [],
-      format: selection.format,
-    });
+    const { booking, accessToken } = result.data;
+    this.flow.remember(booking.reference, { accessToken });
     const tour = this.catalog.tourById(selection.tourSlug);
     this.analytics.track('begin_checkout', {
       currency: selection.currency,
@@ -543,6 +541,7 @@ export class Checkout {
     const value = this.form.getRawValue();
     const optional = (input: string): string | undefined => input.trim() || undefined;
     const attribution = this.attribution.current();
+    const anonymousId = this.consent.anonymousId();
     return {
       holdToken,
       currency,
@@ -573,6 +572,7 @@ export class Checkout {
       notes: optional(value.notes),
       locale: this.i18n.locale(),
       ...(attribution ? { attribution } : {}),
+      ...(anonymousId ? { anonymousId } : {}),
       ...(this.token() ? { turnstileToken: this.token() as string } : {}),
     };
   }

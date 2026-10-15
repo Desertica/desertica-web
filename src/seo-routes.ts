@@ -38,7 +38,7 @@ const STATIC_PATHS: readonly string[] = [
 ];
 
 /** Utility and transactional pages that must never be indexed. */
-export const DISALLOWED_PATHS: readonly string[] = ['/api/', '/checkout', '/booking'];
+export const DISALLOWED_PATHS: readonly string[] = ['/api/', '/checkout', '/booking', '/pay/', '/waiver/', '/payment/'];
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 20;

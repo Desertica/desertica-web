@@ -121,6 +121,8 @@ export const footerLegalLinks: readonly FooterLink[] = [
   { labelKey: 'footer.terms', path: '/terms' },
   { labelKey: 'footer.privacy', path: '/privacy' },
   { labelKey: 'footer.conduct', path: '/conduct' },
+  { labelKey: 'footer.cancellation', path: '/cancellation' },
+  { labelKey: 'footer.cookies', path: '/cookies' },
 ];
 
 const STAMPS: readonly (FooterStamp & { slot: string })[] = [

@@ -109,10 +109,9 @@ describe('BookingFlow', () => {
     expect(flow.hold()).toBeNull();
     expect(mock.calls.at(-1)?.path).toBe('/public/holds/hold-1');
 
-    flow.remember('DES-1', { accessToken: 'tok', paymentOptions: [], format: 'PRIVATE' });
-    expect(flow.remembered('DES-1')).toEqual({ accessToken: 'tok', paymentOptions: [], format: 'PRIVATE' });
-    flow.rememberToken('DES-1', 'new');
+    flow.remember('DES-1', { accessToken: 'tok' });
+    expect(flow.remembered('DES-1')).toEqual({ accessToken: 'tok' });
+    flow.remember('DES-1', { accessToken: 'new' });
     expect(flow.remembered('DES-1')?.accessToken).toBe('new');
-    expect(flow.remembered('DES-1')?.format).toBe('PRIVATE');
   });
 });

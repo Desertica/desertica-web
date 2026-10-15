@@ -36,6 +36,14 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   seoDescription: null,
   assurances: [{ icon: 'lucideShield', title: locale === 'en' ? 'Safe' : 'Seguro', body: 'Body' }],
   meeting: locale === 'en' ? 'Meet' : 'Punto',
+  latitude: '-14.0875',
+  longitude: -75.7626,
+  meetingPointUrl: 'https://maps.example/meet',
+  waiverBody: locale === 'en' ? 'I accept the risks' : null,
+  faqs: [
+    { question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?', answer: locale === 'en' ? 'Yes' : 'Sí' },
+    { question: locale === 'en' ? 'No answer yet' : '', answer: '' },
+  ],
   paragraphs: [{ text: locale === 'en' ? 'First' : 'Primero' }],
   expandedParagraphs: [{ text: 'Long' }],
   practices: [{ icon: 'lucideCar', title: locale === 'en' ? 'Buggy' : 'Buggy ES', body: 'Body' }],
@@ -351,5 +359,37 @@ describe('mapCms global settings', () => {
     expect(page?.seoTitleKey).toBe('cms.tours.a-tour.seoTitle');
     expect(page?.seoDescriptionKey).toBeUndefined();
     expect(snapshot.destinations[0]).toMatchObject({ footerOrder: 2, showInFooter: false });
+  });
+
+  it('maps meeting point coordinates, map link, waiver text and FAQs', () => {
+    const page = snapshot.tourPages['a-tour'];
+    expect(page?.latitude).toBe(-14.0875);
+    expect(page?.longitude).toBe(-75.7626);
+    expect(page?.meetingPointUrl).toBe('https://maps.example/meet');
+    expect(page?.waiverBodyKey).toBe('cms.tours.a-tour.waiverBody');
+    expect(snapshot.messages.en?.['cms.tours.a-tour.waiverBody']).toBe('I accept the risks');
+    expect(snapshot.messages.es?.['cms.tours.a-tour.waiverBody']).toBeUndefined();
+    // Only questions with both texts count, and each locale keeps its own copy.
+    expect(page?.faqs).toEqual([
+      { questionKey: 'cms.tours.a-tour.faqs.0.question', answerKey: 'cms.tours.a-tour.faqs.0.answer' },
+    ]);
+    expect(snapshot.messages.es?.['cms.tours.a-tour.faqs.0.question']).toBe('¿Es seguro?');
+  });
+
+  it('drops out-of-range coordinates and links that are not http(s)', () => {
+    const bad = mapCms(
+      {
+        ...raw,
+        tours: both((l) => [
+          { ...tour(l, 'c-tour', 0), latitude: 120, longitude: 'abc', meetingPointUrl: 'javascript:alert(1)', faqs: [] },
+        ]),
+      },
+      options,
+    );
+    const page = bad.tourPages['c-tour'];
+    expect(page?.latitude).toBeUndefined();
+    expect(page?.longitude).toBeUndefined();
+    expect(page?.meetingPointUrl).toBeUndefined();
+    expect(page?.faqs).toBeUndefined();
   });
 });

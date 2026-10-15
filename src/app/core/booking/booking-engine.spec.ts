@@ -39,6 +39,6 @@ describe('booking engine flag', () => {
 
   it('guards every booking engine route of the app', () => {
     const guarded = routes.filter((route) => route.canMatch?.includes(bookingEngineGuard)).map((route) => route.path);
-    expect(guarded).toEqual(['checkout', 'checkout/payment/:reference', 'booking', 'booking/:reference']);
+    expect(guarded).toEqual(['checkout', 'checkout/payment/:reference', 'pay/:token', 'waiver/:token', 'payment/3ds', 'booking', 'booking/:reference']);
   });
 });

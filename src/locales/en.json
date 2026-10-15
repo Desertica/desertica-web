@@ -44,7 +44,8 @@
     "openMenu": "Open menu",
     "chooseLanguage": "Language",
     "whatsapp": "WhatsApp",
-    "intro": "Loading Desértica"
+    "intro": "Loading Desértica",
+    "newTab": "(opens in a new tab)"
   },
   "whatsapp": {
     "tooltip": "Message us"
@@ -82,6 +83,8 @@
     "privacyLead": "How we handle personal data.",
     "complaintsLead": "Complaints book.",
     "conductLead": "Code of conduct against the sexual exploitation of children and adolescents in tourism.",
+    "cancellationLead": "Cancellation and refund policy.",
+    "cookiesLead": "Which cookies we use and why.",
     "minceturLead": "Travel agency registration with MINCETUR."
   },
   "contact": {
@@ -130,6 +133,8 @@
     "terms": "Terms",
     "privacy": "Privacy",
     "conduct": "ESNNA code of conduct",
+    "cancellation": "Cancellation policy",
+    "cookies": "Cookies policy",
     "complaints": "Complaints book",
     "mincetur": "MINCETUR registration",
     "minceturAlt": "Registered travel and tourism agency, MINCETUR",
@@ -238,7 +243,10 @@
       "cancelBody": "Up to 24 hours before the tour",
       "price": "Final prices:",
       "priceBody": "All taxes and booking fees included"
-    }
+    },
+    "meeting": "Meeting point",
+    "viewMap": "View on map",
+    "faqs": "Frequently asked questions"
   },
   "tours": {
     "duneBuggy": {
@@ -439,18 +447,37 @@
     "missing": "We could not find this booking in this browser. Use your reference and email to open it.",
     "gateway": "Payment method",
     "provider": {
-      "STRIPE": "Card (Stripe, USD)",
-      "CULQI": "Card or wallet (Culqi)"
+      "STRIPE": "Apple Pay, Google Pay or card (USD)",
+      "CULQI": "Card (Culqi)"
     },
     "kind": {
       "FULL": "Full amount",
       "DEPOSIT": "Deposit",
       "BALANCE": "Remaining balance"
     },
-    "continue": "Continue",
+    "continue": "Continue to payment",
     "noOptions": "No payment methods are available for this booking yet.",
-    "placeholder": "Online payment is coming soon. Your booking is saved and we will contact you to complete the payment.",
-    "viewBooking": "View my booking"
+    "viewBooking": "View my booking",
+    "pay": "Pay",
+    "successTitle": "Payment received",
+    "successBody": "Thank you. Your payment is confirmed and your booking is updated. We also sent the details to your email.",
+    "pendingTitle": "We are confirming your payment",
+    "pendingBody": "The payment went through on the card side, but our system has not confirmed it yet. Do not pay again: you will get an email as soon as it is confirmed, and you can check \"My booking\" in a few minutes.",
+    "processing": "Processing your payment…",
+    "confirming": "Confirming your payment with us…",
+    "walletLabel": "Pay with Apple Pay or Google Pay",
+    "cardLabel": "Pay with a card",
+    "errorGateway": "The payment form could not be loaded. Check your connection and try again.",
+    "errorDeclined": "The payment was not completed.",
+    "errorCancelled": "The verification was cancelled. You can try again.",
+    "errorUnavailable": "This payment is no longer available. Open \"My booking\" to see the current state.",
+    "errorGeneric": "We could not start the payment. Please try again.",
+    "nothingDue": "This booking has nothing left to pay.",
+    "linkLoading": "Loading your payment link…",
+    "linkMissing": "This payment link is not valid. Please check the link in your email.",
+    "linkGone": "This payment link has expired or was already used. You can open your booking to see its state.",
+    "linkError": "We could not load this payment link. Please try again.",
+    "threeDsReturn": "Completing the verification with your bank…"
   },
   "myBooking": {
     "title": "My booking",
@@ -478,7 +505,13 @@
     "waiver": {
       "PENDING": "Pending signature",
       "SIGNED": "Signed"
-    }
+    },
+    "format": {
+      "SHARED": "Shared tour",
+      "PRIVATE": "Private tour"
+    },
+    "passengers": "Passengers",
+    "signWaiver": "Sign waiver"
   },
   "complaints": {
     "title": "Complaints book",
@@ -511,5 +544,28 @@
     "errorInvalid": "Please check the fields and try again.",
     "errorUnavailable": "The complaints book is not available right now. Please write to us at the email in the footer.",
     "errorGeneric": "We could not send your complaint. Please try again or write to us by email."
+  },
+  "waiver": {
+    "title": "Liability waiver",
+    "loading": "Loading the waiver…",
+    "missing": "This waiver link is not valid or has expired.",
+    "loadError": "We could not load the waiver. Please try again.",
+    "passenger": "Passenger",
+    "minAge": "Minimum age (years)",
+    "minHeight": "Minimum height",
+    "version": "Waiver version",
+    "thanks": "Thank you. Your waiver is signed and saved.",
+    "alreadySigned": "This waiver is already signed.",
+    "noText": "The text of this waiver is not available online yet. Please contact us before the tour.",
+    "minor": "I am signing on behalf of a minor",
+    "minorHint": "Enter your own name and document as the parent or legal guardian.",
+    "signerName": "Full name of the signer",
+    "emergencyName": "Emergency contact (optional)",
+    "emergencyPhone": "Emergency phone (optional)",
+    "medical": "Medical notes: allergies, conditions, medication (optional)",
+    "accept": "I have read and accept this waiver.",
+    "sign": "Sign waiver",
+    "errorSigned": "This waiver was already signed.",
+    "errorGeneric": "We could not save your signature. Please try again."
   }
 }

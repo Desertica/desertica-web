@@ -1,5 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { BookingApi } from '../api/booking-api';
+import { PUBLIC_CONFIG } from '../config/public-config';
 import { type ConsentState, dataLayerOf, gtagFor } from './data-layer';
 
 /** Bump when the cookie categories or their purposes change, so everyone is asked again. */
@@ -8,7 +10,12 @@ export const CONSENT_STORAGE_KEY = 'desertica-consent';
 
 export type ConsentChoice = { analytics: boolean; marketing: boolean };
 
-type StoredConsent = ConsentChoice & { version: number; decidedAt: string };
+type StoredConsent = ConsentChoice & {
+  version: number;
+  decidedAt: string;
+  /** Random id that links this browser's consent record in the API to a booking made later. */
+  anonymousId?: string;
+};
 
 export const DENIED_CONSENT: ConsentState = {
   ad_storage: 'denied',
@@ -47,13 +54,19 @@ export function consentStateFor(choice: ConsentChoice | null): ConsentState {
 export class ConsentService {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly api = inject(BookingApi);
+  private readonly engine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
   private readonly decision = signal<ConsentChoice | null>(null);
   private readonly ready = signal(false);
   private readonly preferences = signal(false);
   private layer: unknown[] | null = null;
   private memoryOnly: StoredConsent | null = null;
 
+  private readonly visitor = signal<string | null>(null);
+
   readonly choice = this.decision.asReadonly();
+  /** Id of the stored consent, sent with a booking so the API can tell whether marketing was allowed. */
+  readonly anonymousId = this.visitor.asReadonly();
   readonly analytics = computed(() => this.decision()?.analytics === true);
   readonly marketing = computed(() => this.decision()?.marketing === true);
   /** The banner shows until the visitor decides, and again whenever they ask for preferences. */
@@ -72,9 +85,9 @@ export class ConsentService {
     const stored = this.read();
     if (stored) {
       this.decision.set({ analytics: stored.analytics, marketing: stored.marketing });
+      this.visitor.set(stored.anonymousId ?? null);
       this.update(stored);
     }
-
   }
 
   /** Lets the banner render. Called after the first client render so hydration sees the server DOM. */
@@ -96,8 +109,11 @@ export class ConsentService {
       marketing: choice.marketing,
       version: CONSENT_POLICY_VERSION,
       decidedAt: new Date().toISOString(),
+      anonymousId: this.visitor() ?? crypto.randomUUID(),
     };
     this.write(stored);
+    this.visitor.set(stored.anonymousId ?? null);
+    this.record(stored);
     this.decision.set({ analytics: stored.analytics, marketing: stored.marketing });
     this.preferences.set(false);
     this.update(stored);
@@ -109,6 +125,17 @@ export class ConsentService {
 
   closePreferences(): void {
     this.preferences.set(false);
+  }
+
+  /** With the booking engine on, the choice is also filed in the API (best effort, no retry). */
+  private record(stored: StoredConsent): void {
+    if (this.engine && stored.anonymousId) {
+      void this.api.recordConsent({
+        anonymousId: stored.anonymousId,
+        categories: { analytics: stored.analytics, marketing: stored.marketing },
+        policyVersion: stored.version,
+      });
+    }
   }
 
   private update(choice: ConsentChoice): void {

@@ -1,4 +1,5 @@
 import type {
+  TourFaq,
   TourFeature,
   TourFormat,
   TourLanguage,
@@ -106,6 +107,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       assign(target, tourKey(slug, 'seoTitle'), text(entry['seoTitle']));
       assign(target, tourKey(slug, 'seoDescription'), text(entry['seoDescription']));
       assign(target, tourKey(slug, 'meeting'), text(entry['meeting']));
+      assign(target, tourKey(slug, 'waiverBody'), text(entry['waiverBody']));
     }
 
     const tour: CatalogTour = {
@@ -150,6 +152,11 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       seoDescriptionKey: hasText(byLocale, 'seoDescription')
         ? tourKey(slug, 'seoDescription')
         : undefined,
+      latitude: coordinate(base['latitude'], 90),
+      longitude: coordinate(base['longitude'], 180),
+      meetingPointUrl: webUrl(base['meetingPointUrl']),
+      faqs: faqs(slug, byLocale, messages),
+      waiverBodyKey: hasText(byLocale, 'waiverBody') ? tourKey(slug, 'waiverBody') : undefined,
     };
   }
 
@@ -539,6 +546,55 @@ function items(
 
     return key;
   });
+}
+
+/** A question needs both texts in a locale to be shown there, so the pair is stored by index. */
+function faqs(
+  slug: string,
+  byLocale: Grouped,
+  messages: Record<AppLocale, Record<string, string>>,
+): TourFaq[] | undefined {
+  const base = asList(byLocale.en?.['faqs']) ?? asList(byLocale.es?.['faqs']) ?? [];
+  const result = base.flatMap((_, index): TourFaq[] => {
+    const prefix = `cms.tours.${slug}.faqs.${index}`;
+    let complete = false;
+    for (const locale of LOCALES) {
+      const entry = asList(byLocale[locale]?.['faqs'])?.[index];
+      const question = text(entry?.['question']);
+      const answer = text(entry?.['answer']);
+      if (question && answer) {
+        assign(messages[locale], `${prefix}.question`, question);
+        assign(messages[locale], `${prefix}.answer`, answer);
+        complete = true;
+      }
+    }
+
+    return complete ? [{ questionKey: `${prefix}.question`, answerKey: `${prefix}.answer` }] : [];
+  });
+  return result.length ? result : undefined;
+}
+
+/** Strapi returns decimals as numbers (or strings on some versions); out-of-range values are dropped. */
+function coordinate(value: unknown, limit: number): number | undefined {
+  const parsed = typeof value === 'string' && value.trim() ? Number(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed) && Math.abs(parsed) <= limit
+    ? parsed
+    : undefined;
+}
+
+/** Only http(s) links reach the page: the field is free text edited in the CMS. */
+function webUrl(value: unknown): string | undefined {
+  const raw = text(value);
+  if (!raw) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function assign(target: Record<string, string>, key: string, value: string | undefined): void {
