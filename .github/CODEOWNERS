@@ -1,0 +1,6 @@
+* @teuschop
+/.github/ @teuschop
+/Dockerfile @teuschop
+/src/app/core/cms/ @teuschop
+/src/forms-proxy.ts @teuschop
+/src/forms-validation.ts @teuschop
