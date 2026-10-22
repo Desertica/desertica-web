@@ -42,6 +42,7 @@
   "a11y": {
     "toggleTheme": "Toggle color theme",
     "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "chooseLanguage": "Language",
     "whatsapp": "WhatsApp",
     "intro": "Loading Desértica",

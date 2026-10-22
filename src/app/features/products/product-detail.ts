@@ -35,7 +35,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
                   [ngSrc]="src"
                   fill
                   sizes="(min-width: 768px) 50vw, 100vw"
-                  alt=""
+                  [alt]="data.title"
                   class="rounded-none object-cover"
                 />
               </div>

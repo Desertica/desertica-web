@@ -38,7 +38,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
               fill
               priority
               sizes="(min-width: 768px) 48rem, 100vw"
-              alt=""
+              [alt]="data.title"
               class="rounded-none object-cover"
             />
           </div>
