@@ -31,6 +31,17 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
 
 Every route is rendered per request and reads Strapi through a server-side cache (`STRAPI_CACHE_TTL_MS`, 30 s by default). A change published in Strapi (copy, theme, navigation, booking numbers, media, tours) is live within that window: no rebuild and no webhook. The build does not need the CMS. If Strapi is unreachable the last good response is served, and the bundled static catalog if there is none.
 
+## Content Security Policy
+
+Rendered pages carry `Content-Security-Policy-Report-Only` (built in `src/security-headers.ts`) next to the enforced `frame-ancestors 'none'`. Inline scripts are allowed by hash, computed from each page. Allowed hosts: Google Tag Manager and Analytics, Cloudflare Turnstile, Stripe, Culqi, the CMS and `IMAGE_HOSTS`, `images.unsplash.com`, `flagcdn.com`. There is no report endpoint yet, so violations show only in the browser console.
+
+Moving to enforce:
+
+1. On staging, open home, a tour, contact, `/checkout`, `/pay/:token` and `/booking` with consent accepted and the payment gateways on. The console must show no `Content-Security-Policy-Report-Only` violation.
+2. Add every host that showed up (a new analytics or payment domain) to `src/security-headers.ts`.
+3. Change the header name in `reportCsp` (`src/server.ts`) from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`. Roll it out to staging first, then production.
+4. `style-src` keeps `'unsafe-inline'` because Angular inlines component styles; dropping it needs a CSP nonce (`CSP_NONCE`) and is a separate change.
+
 ## Full stack locally
 
 `docker-compose.yml` runs the site, the CMS (built from `../desertica-cms`) and Postgres:

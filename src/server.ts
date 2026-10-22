@@ -17,6 +17,7 @@ import { localeRoutes } from './locale-routes';
 import { createPageCache, pageCacheKey } from './page-cache';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import { stripLocale } from './app/core/i18n/catalogs';
+import { cspReportOnly } from './security-headers';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 /** Angular's `outputHashing: all` names bundles `main-ABCD1234.js`. */
@@ -32,14 +33,21 @@ app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProx
 const cms = cmsConfigFromEnv(process.env);
 const publicConfig = publicConfigFromEnv(process.env);
 const apiUrl = apiUrlFromEnv(process.env);
+const assetOrigins = [
+  ...(cms.publicUrl ? [new URL(cms.publicUrl).origin] : []),
+  ...publicConfig.imageHosts.map((host) => `https://${host}`),
+];
+const isHtml = (type: string | null | undefined) => !!type?.includes('text/html');
+const reportCsp = (res: express.Response, html: Buffer | string) =>
+  res.setHeader('Content-Security-Policy-Report-Only', cspReportOnly(String(html), assetOrigins));
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
 app.disable('x-powered-by');
 app.use(healthz());
 // HTML, JS, CSS and JSON go out compressed (images are already compressed and skipped); Traefik does not do it for us.
 app.use(compression());
-// A full Content-Security-Policy needs GTM, Turnstile, Stripe, Culqi and the CMS media hosts allowed and checked in a browser;
-// until then only framing is locked down, which is what protects /checkout and /pay from clickjacking.
+// Framing is blocked outright (clickjacking on /checkout and /pay). The full policy is report-only for now and is added
+// to each rendered page below, because it carries the hashes of that page's inline scripts.
 app.use((_req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
@@ -140,6 +148,10 @@ app.use((req, res, next) => {
   const key = pageCacheKey(req);
   const hit = key ? pageCache.get(key) : undefined;
   if (hit) {
+    if (isHtml(hit.type)) {
+      reportCsp(res, hit.body);
+    }
+
     res.type(hit.type).send(hit.body);
     return;
   }
@@ -155,8 +167,16 @@ app.use((req, res, next) => {
       if (key && response.status === 200) {
         const page = { type: response.headers.get('content-type') ?? 'text/html', body: Buffer.from(await response.arrayBuffer()) };
         pageCache.set(key, page);
+        if (isHtml(page.type)) {
+          reportCsp(res, page.body);
+        }
+
         res.type(page.type).send(page.body);
         return;
+      }
+
+      if (isHtml(response.headers.get('content-type'))) {
+        reportCsp(res, await response.clone().text());
       }
 
       await writeResponseToNodeResponse(response, res);
