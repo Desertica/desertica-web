@@ -35,6 +35,25 @@ jobs:
             claude/*) echo "::error::Branch names must not start with claude/"; exit 1;;
           esac
 
+  format:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # shortcut: the repo is not formatted yet (122 files fail), so only files this PR touches are checked; run prettier --write on everything and check all once that is done
+      - name: Prettier on changed files
+        run: |
+          git diff --name-only --diff-filter=d "origin/${{ github.base_ref }}...HEAD" \
+            | grep -E '\.(ts|html|css|json|ya?ml|md)$' | grep -v '^package-lock.json$' \
+            | xargs -r npx prettier --check
+
   test-build:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -49,3 +68,13 @@ jobs:
         run: npx ng test --watch=false
       - name: Production build (browser bundle + SSR server)
         run: npm run build
+      - name: Smoke test the built server
+        run: |
+          PORT=4000 node dist/desertica-web/server/server.mjs > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -s -o /dev/null http://localhost:4000/ && break; sleep 1; done
+          # no /health route exists: "/" must redirect to a locale and that page must render
+          loc=$(curl -s -o /dev/null -w '%{redirect_url}' http://localhost:4000/)
+          echo "/ -> $loc"
+          case "$loc" in http://localhost:4000/en/*|http://localhost:4000/es/*) ;; *) cat server.log; echo "::error::/ did not redirect to /en/ or /es/"; exit 1;; esac
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$loc")
+          [ "$code" = 200 ] || { cat server.log; echo "::error::$loc returned $code"; exit 1; }
