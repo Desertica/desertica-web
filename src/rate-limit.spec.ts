@@ -25,6 +25,9 @@ describe('createRateLimiter', () => {
 describe('clientKey', () => {
   it('groups an IPv6 /64 and keeps IPv4 as is', () => {
     expect(clientKey('2001:db8:1:2:aaaa:bbbb:cccc:1')).toBe(clientKey('2001:db8:1:2:1111:2222:3333:4'));
+    expect(clientKey('2001:db8::1:aaaa:bbbb:cccc')).toBe(clientKey('2001:db8:0:0:2:1:2:3'));
+    expect(clientKey('2001:db8::1:aaaa:bbbb:cccc')).not.toBe(clientKey('2001:db8:0:1:aaaa:bbbb:cccc:dddd'));
+    expect(clientKey('::1')).toBe('0:0:0:0');
     expect(clientKey('::ffff:1.2.3.4')).toBe('::ffff:1.2.3.4');
     expect(clientKey('1.2.3.4')).toBe('1.2.3.4');
     expect(clientKey(undefined)).toBe('unknown');

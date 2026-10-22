@@ -175,6 +175,8 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
 
     if (process.env['TRUST_PROXY'] === 'true') {
       console.warn('TRUST_PROXY=true trusts the whole X-Forwarded-For header; use the number of proxies (1 behind Traefik).');
+    } else if (!/^[1-9]\d*$/.test(process.env['TRUST_PROXY'] ?? '')) {
+      console.warn('TRUST_PROXY is not set: behind a proxy every visitor shares one IP, so the rate limits hit everyone. Use 1 behind Traefik.');
     }
   }
 

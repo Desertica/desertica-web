@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, effect, inject } from '@angular/core';
 import { ConsentService } from './consent';
+import { stripLocale } from '../i18n/catalogs';
 import { isCredentialUrl } from './gtm';
 
 export const ATTRIBUTION_STORAGE_KEY = 'desertica-attribution';
@@ -70,7 +71,7 @@ export class AttributionService {
       }
     }
 
-    found.landingPath = view.location.pathname.slice(0, MAX_VALUE);
+    found.landingPath = stripLocale(view.location.pathname).slice(0, MAX_VALUE);
     const referrer = this.document.referrer.slice(0, MAX_VALUE);
     if (referrer) {
       found.referrer = referrer;

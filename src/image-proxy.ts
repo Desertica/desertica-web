@@ -7,6 +7,8 @@ import { clientKey, createRateLimiter } from './rate-limit';
 const MAX_UPSTREAM_BYTES = 25 * 1024 * 1024;
 const CACHE_BYTES = 64 * 1024 * 1024;
 const MAX_JOBS = 3;
+/** A 50-megapixel photo decodes to ~150 MB; the sharp default (268 MP) would let three at once take gigabytes. */
+const MAX_PIXELS = 50_000_000;
 
 export type ImageProxyOptions = {
   /** Hosts (with port when not default) whose images may be resized; anything else is refused. */
@@ -33,50 +35,62 @@ export function imageProxy(options: ImageProxyOptions): Router {
 
   sharp.cache(false);
 
+  // The slot is handed straight to the next waiter, so the number of jobs never goes above MAX_JOBS.
   const slot = async <T>(work: () => Promise<T>): Promise<T> => {
     if (jobs >= MAX_JOBS) {
       await new Promise<void>((resolve) => queue.push(resolve));
+    } else {
+      jobs += 1;
     }
 
-    jobs += 1;
     try {
       return await work();
     } finally {
-      jobs -= 1;
-      queue.shift()?.();
+      const next = queue.shift();
+      if (next) {
+        next();
+      } else {
+        jobs -= 1;
+      }
     }
   };
 
-  const render = async (url: URL, width: number, webp: boolean): Promise<Entry | null> => {
-    const response = await fetch(url, {
-      redirect: 'manual',
-      signal: AbortSignal.timeout(options.timeoutMs ?? 10_000),
-    });
-    const type = response.headers.get('content-type') ?? '';
-    const length = Number(response.headers.get('content-length') ?? 0);
-    if (!response.ok || !type.startsWith('image/') || length > MAX_UPSTREAM_BYTES) {
-      return null;
+  /** Reads at most `max` bytes: `Content-Length` can be missing or wrong. */
+  const readLimited = async (response: Response, max: number): Promise<Buffer | null> => {
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
+      size += chunk.length;
+      if (size > max) {
+        return null;
+      }
+
+      chunks.push(chunk);
     }
 
-    const original = Buffer.from(await response.arrayBuffer());
-    if (original.length > MAX_UPSTREAM_BYTES) {
-      return null;
-    }
+    return Buffer.concat(chunks);
+  };
 
-    const pipeline = sharp(original).rotate().resize({ width, withoutEnlargement: true });
-    return slot(async () =>
-      webp
+  const render = (url: URL, width: number, webp: boolean): Promise<Entry | null> =>
+    slot(async () => {
+      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(options.timeoutMs ?? 10_000) });
+      const type = response.headers.get('content-type') ?? '';
+      if (!response.ok || !type.startsWith('image/') || Number(response.headers.get('content-length') ?? 0) > MAX_UPSTREAM_BYTES) {
+        return null;
+      }
+
+      const original = await readLimited(response, MAX_UPSTREAM_BYTES);
+      if (!original) {
+        return null;
+      }
+
+      const pipeline = sharp(original, { limitInputPixels: MAX_PIXELS }).rotate().resize({ width, withoutEnlargement: true });
+      return webp
         ? { body: await pipeline.webp({ quality: 78 }).toBuffer(), type: 'image/webp' }
-        : { body: await pipeline.jpeg({ quality: 80, mozjpeg: true }).toBuffer(), type: 'image/jpeg' },
-    );
-  };
+        : { body: await pipeline.jpeg({ quality: 80, mozjpeg: true }).toBuffer(), type: 'image/jpeg' };
+    });
 
   router.get('/', async (req, res) => {
-    if (!allowed(`img|${clientKey(req.ip)}`)) {
-      res.status(429).end();
-      return;
-    }
-
     const source = typeof req.query['u'] === 'string' ? req.query['u'] : '';
     const wanted = Number(req.query['w']);
     let url: URL;
@@ -99,6 +113,12 @@ export function imageProxy(options: ImageProxyOptions): Router {
     try {
       let entry = cache.get(key);
       if (!entry) {
+        // Only work that costs a download and a resize counts against the limit; cached images are free.
+        if (!allowed(`img|${clientKey(req.ip)}`)) {
+          res.status(429).end();
+          return;
+        }
+
         let pending = inflight.get(key);
         if (!pending) {
           pending = render(url, width, webp).finally(() => inflight.delete(key));

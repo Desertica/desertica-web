@@ -1,16 +1,17 @@
 import { createPageCache, pageCacheKey } from './page-cache';
 
 const req = (path: string, extra: Record<string, unknown> = {}) =>
-  ({ method: 'GET', path, originalUrl: path, query: {}, ...extra }) as Parameters<typeof pageCacheKey>[0];
+  ({ method: 'GET', path, hostname: 'desertica.pe', query: {}, ...extra }) as Parameters<typeof pageCacheKey>[0];
 
 describe('pageCacheKey', () => {
-  it('shares public pages and keeps the full URL (language and query) in the key', () => {
-    expect(pageCacheKey(req('/es/tours'))).toBe('/es/tours');
-    expect(pageCacheKey(req('/en/', { originalUrl: '/en/?utm_source=ig' }))).toBe('/en/?utm_source=ig');
+  it('keys by host and path, so tracking parameters do not empty the cache and hosts never mix', () => {
+    expect(pageCacheKey(req('/es/tours'))).toBe('desertica.pe/es/tours');
+    expect(pageCacheKey(req('/es/tours', { query: { utm_source: 'ig' } }))).toBe('desertica.pe/es/tours');
+    expect(pageCacheKey(req('/es/tours', { hostname: 'evil.test' }))).toBe('evil.test/es/tours');
   });
 
   it('never shares booking pages, credential links or non-GET requests', () => {
-    for (const path of ['/es/pay/abc', '/en/waiver/abc', '/es/booking/REF', '/en/checkout', '/es/payment/3ds']) {
+    for (const path of ['/es/pay/abc', '/en/waiver/abc', '/es/booking/REF', '/en/checkout', '/es/payment/3ds', '/en/reservations']) {
       expect(pageCacheKey(req(path))).toBeNull();
     }
 

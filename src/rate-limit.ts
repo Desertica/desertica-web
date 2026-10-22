@@ -9,7 +9,16 @@ export function clientKey(ip: string | undefined): string {
     return 'unknown';
   }
 
-  return ip.includes(':') && !ip.startsWith('::ffff:') ? ip.split(':').slice(0, 4).join(':') : ip;
+  return ip.includes(':') && !ip.startsWith('::ffff:') ? expandIpv6(ip).slice(0, 4).join(':') : ip;
+}
+
+/** The eight groups of an IPv6 address, with `::` expanded, so `2001:db8::1:2` and `2001:db8:0:0:1:2` share a /64. */
+function expandIpv6(ip: string): string[] {
+  const [head = '', tail = ''] = ip.split('::');
+  const first = head ? head.split(':') : [];
+  const last = tail ? tail.split(':') : [];
+  const groups = ip.includes('::') ? [...first, ...Array<string>(Math.max(8 - first.length - last.length, 0)).fill('0'), ...last] : first;
+  return groups.map((group) => group.toLowerCase().replace(/^0+(?=.)/, ''));
 }
 
 /** In-memory sliding window. One instance per process: use Redis if the site ever runs several. */

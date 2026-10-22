@@ -56,6 +56,19 @@ describe('IntroService', () => {
     expect(service.status()).toBe('pending');
   });
 
+  it('lets the home page under a language prefix play its own intro, and still covers deep links', () => {
+    window.history.replaceState({}, '', '/es/');
+    expect(TestBed.inject(IntroService).showOverlay()).toBe(false);
+    TestBed.tick();
+    expect(TestBed.inject(IntroService).showOverlay()).toBe(false);
+
+    TestBed.resetTestingModule();
+    window.history.replaceState({}, '', '/es/tours');
+    const deep = TestBed.inject(IntroService);
+    TestBed.tick();
+    expect(deep.showOverlay()).toBe(true);
+  });
+
   it('skips when the intro was already stored', () => {
     sessionStorage.setItem(INTRO_STORAGE_KEY, '1');
     const service = TestBed.inject(IntroService);
