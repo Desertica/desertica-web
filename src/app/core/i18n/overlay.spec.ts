@@ -18,4 +18,17 @@ describe('translate with a CMS overlay', () => {
     );
     expect(translate('missing.key', 'es', { en: {} })).toBe('missing.key');
   });
+
+  // Keys made editable in docs/TEXTOS-EDITABLES.md: they must exist in both catalogs and yield to the CMS.
+  it.each([
+    'booking.title', 'booking.lead', 'booking.noAvailability', 'booking.holdNote', 'booking.taxIncluded',
+    'checkout.title', 'checkout.empty', 'checkout.passengersLead', 'checkout.billingLead',
+    'payment.successTitle', 'payment.successBody', 'payment.pendingTitle', 'payment.pendingBody',
+    'myBooking.lead', 'complaints.lead', 'complaints.legalNote', 'complaints.doneTitle', 'waiver.thanks',
+  ])('lets the CMS override %s', (key) => {
+    for (const locale of ['en', 'es'] as const) {
+      expect(translate(key, locale)).not.toBe(key);
+      expect(translate(key, locale, { [locale]: { [key]: 'Custom' } })).toBe('Custom');
+    }
+  });
 });
