@@ -37,5 +37,8 @@ Use **Node 22**. On Node 26 about 35 tests fail with `localStorage` undefined, a
 
 - `inject()` inside a `computed()` throws NG0203: inject into a field first.
 - The Strapi rate limiter keys on IP. Behind the Express proxy every visitor shares one IP unless `FORMS_PROXY_SECRET` is the same in both apps.
-- The initial bundle already exceeds the 600 kB budget (warning, not an error).
+- The initial bundle is about 0.95 MB; most of it is the framework (Angular, CDK, Spartan), so the warning budget is 1 MB and there is no cheap cut.
 - A CMS-created destination has no route of its own until one is added in `app.routes.ts`.
+- Pages live under `/en` and `/es`. Write `routerLink="/tours"` as before: `APP_BASE_HREF` adds the prefix. Switching language must go through `I18nService.switchLanguage` (a full page load), never `setLocale`. Code that tests a URL path (`/pay`, `/checkout`) must call `stripLocale` first. See `docs/SEO-LOCALE.md`.
+- Images from the CMS load through `/_img` (`src/image-proxy.ts`, WebP at the width each screen needs). A host that serves images must be in `IMAGE_HOSTS` (the CMS host is added automatically) or the request is refused.
+- `TRUST_PROXY` is a number of proxies (1 behind Traefik), not `true`.

@@ -127,6 +127,8 @@ app.use(localeRoutes());
 
 /**
  * Handle all other requests by rendering the Angular application.
+ * shortcut: every page renders on each request (about 12 pages/s per process in a sandbox); with one URL per language
+ * Cloudflare can cache the HTML, so add cache rules in front before campaigns (docs/SEO-LOCALE.md).
  */
 app.use((req, res, next) => {
   angularApp
@@ -143,6 +145,16 @@ app.use((req, res, next) => {
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
+  if (process.env['NODE_ENV'] === 'production') {
+    if (!publicConfig.siteUrl) {
+      console.warn('SITE_URL is not set: canonical, sitemap and robots fall back to the request Host.');
+    }
+
+    if (process.env['TRUST_PROXY'] === 'true') {
+      console.warn('TRUST_PROXY=true trusts the whole X-Forwarded-For header; use the number of proxies (1 behind Traefik).');
+    }
+  }
+
   app.listen(port, (error) => {
     if (error) {
       throw error;
