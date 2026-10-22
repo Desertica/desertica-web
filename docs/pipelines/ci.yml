@@ -2,14 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: ['**']
   pull_request:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # per event too: a push run must never cancel the PR run that the required checks wait for
+  group: ci-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -53,6 +54,17 @@ jobs:
           git diff --name-only --diff-filter=d "origin/${{ github.base_ref }}...HEAD" \
             | grep -E '\.(ts|html|css|json|ya?ml|md)$' | grep -v '^package-lock.json$' \
             | xargs -r npx prettier --check
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
 
   test-build:
     runs-on: ubuntu-latest

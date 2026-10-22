@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "lint": "eslint .",
     "serve:ssr:desertica-web": "node dist/desertica-web/server/server.mjs",
     "start:cms": "STRAPI_URL=http://localhost:1337 ng serve",
     "cms:dev": "npm --prefix ../desertica-cms run develop",
@@ -52,6 +53,8 @@
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
     "@vitest/coverage-v8": "^4.1.11",
+    "angular-eslint": "^21.4.0",
+    "eslint": "^9.39.5",
     "jsdom": "^28.0.0",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.3",
@@ -59,6 +62,7 @@
     "tailwindcss": "^4.1.12",
     "tw-animate-css": "^1.4.0",
     "typescript": "~5.9.2",
+    "typescript-eslint": "^8.72.0",
     "vitest": "^4.0.8"
   }
 }

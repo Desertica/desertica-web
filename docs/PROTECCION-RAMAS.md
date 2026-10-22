@@ -35,6 +35,12 @@ Necesitas ser admin del repositorio.
 
 9. Clic en **Create**.
 
+## Cuando corren los workflows
+
+- `ci.yml` y `security.yml`: en todo PR (cualquier rama base) y en todo push a cualquier rama. En una rama con PR corren dos veces (la del push y la del PR); es lo esperado y los checks que cuentan son los del PR. Una ejecucion nueva cancela la anterior del mismo tipo.
+- `docker.yml`: en todo PR (construye y escanea, no publica) y solo hace push de imagen en `develop` y en tags `v*`. No se abrio a todas las ramas a proposito: publicaria imagenes y desplegaria desde ramas de prueba.
+- `lighthouse.yml`: manual y cada lunes; solo mide produccion y **no** se agrega a los checks requeridos. Necesita la variable de repo `PROD_URL` (Settings -> Secrets and variables -> Actions -> Variables -> New repository variable, por ejemplo `https://tudominio.com`); si esta vacia termina en verde sin hacer nada.
+
 ## Comprobar
 
 Abre un PR hacia la rama protegida: el boton de merge debe estar bloqueado hasta que todos los checks esten en verde y haya 1 aprobacion. Un `git push` directo debe ser rechazado.
