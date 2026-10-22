@@ -1,5 +1,6 @@
 import { IMAGE_LOADER } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
+import { stubWhatsapp } from '../../testing/contact';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -73,6 +74,7 @@ describe('Reservations', () => {
 
   it('remounts the form when another tour on the same axis is chosen', async () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    stubWhatsapp(TestBed);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/reservations?eje=huacachina&tour=dune-buggy', Reservations);
 

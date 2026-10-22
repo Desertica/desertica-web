@@ -115,12 +115,16 @@
         <p class="text-foreground text-sm font-medium tracking-wide uppercase">
           {{ 'footer.contact' | translate: i18n.locale() }}
         </p>
-        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().mailto">{{
-          contact().email
-        }}</a>
-        <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel">{{
-          contact().phone
-        }}</a>
+        @if (contact().mailto) {
+          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().mailto">{{
+            contact().email
+          }}</a>
+        }
+        @if (contact().tel) {
+          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel">{{
+            contact().phone
+          }}</a>
+        }
       </div>
 
       <div class="order-3 flex flex-col gap-3 lg:items-end">
@@ -164,7 +168,9 @@
           {{ 'cookies.preferences' | translate: i18n.locale() }}
         </button>
       </nav>
-      <p>© {{ legal().year }} {{ legal().name }} · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }}</p>
+      <p>
+        © {{ legal().year }} {{ legal().name }}@if (legal().ruc) { · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }} }
+      </p>
     </div>
   </div>
 </footer>

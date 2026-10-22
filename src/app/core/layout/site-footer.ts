@@ -53,11 +53,7 @@ export class SiteFooter {
   protected readonly destinations = this.catalog.footerDestinations;
   protected readonly socials = this.catalog.socials;
   protected readonly contact = this.catalog.contact;
-  protected readonly legal = computed(() => ({
-    year: this.catalog.site().legalYear,
-    name: this.catalog.site().legalName,
-    ruc: this.catalog.site().ruc,
-  }));
+  protected readonly legal = this.catalog.legal;
   protected readonly legalLinks = this.catalog.footerLegalLinks;
   protected readonly stamps = this.catalog.footerStamps;
   protected readonly email = new FormControl('', {
