@@ -147,8 +147,8 @@ export class SeoService {
         url: origin,
         logo,
         legalName: isPlaceholder(site.legalName) ? undefined : site.legalName,
-        email: isPlaceholder(site.email) ? undefined : contact.email,
-        phone: isPlaceholder(site.phone) ? undefined : site.phone,
+        email: contact.email ?? undefined,
+        phone: contact.phone ?? undefined,
         sameAs: [
           site.instagram,
           site.facebook,

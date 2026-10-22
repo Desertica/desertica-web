@@ -95,6 +95,13 @@ describe('formsProxy', () => {
     expect(upstream.received).toHaveLength(0);
   });
 
+  it('says which field is invalid in the 400', async () => {
+    const { post } = await setup({});
+    const response = await post('complaint', { ...complaint, email: 'nope' });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'invalid', field: 'email' });
+  });
+
   it('drops unknown complaint fields', async () => {
     const { upstream, post } = await setup({});
     await post('complaint', { ...complaint, status: 'ANSWERED', handledBy: 'me' });

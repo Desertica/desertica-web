@@ -29,9 +29,16 @@ describe('CMS setting defaults', () => {
   });
 
   it('keeps form limits and intro settings sane', () => {
-    expect(withFormDefaults({ messageMax: 800, nameMax: 0 })).toMatchObject({
-      messageMax: 800,
+    expect(withFormDefaults({ messageMax: 300, nameMax: 0 })).toMatchObject({
+      messageMax: 300,
       nameMax: 80,
+    });
+    // The proxy rejects what is above its ceilings, so the CMS cannot raise them.
+    expect(withFormDefaults({ messageMax: 800, nameMax: 200, emailMax: 500, nameMin: 300 })).toEqual({
+      nameMin: 80,
+      nameMax: 80,
+      emailMax: 254,
+      messageMax: 500,
     });
     expect(withIntroDefaults({ enabled: false, restScale: 0.9 })).toMatchObject({
       enabled: false,

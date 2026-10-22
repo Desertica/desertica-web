@@ -31,6 +31,21 @@ describe('ThemeService', () => {
     document.documentElement.style.colorScheme = '';
   });
 
+  it('keeps working when the browser blocks localStorage', () => {
+    const blocked = () => {
+      throw new DOMException('blocked', 'SecurityError');
+    };
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+
+    const service = TestBed.inject(ThemeService);
+    expect(service.theme()).toBe('light');
+    service.toggle();
+    expect(service.theme()).toBe('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    vi.restoreAllMocks();
+  });
+
   it('defaults to light even when the system scheme is dark', () => {
     const service = TestBed.inject(ThemeService);
 

@@ -1,5 +1,6 @@
 import { IMAGE_LOADER } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
+import { stubWhatsapp } from './testing/contact';
 import { provideRouter } from '@angular/router';
 import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
@@ -63,6 +64,7 @@ describe('App', () => {
   });
 
   it('should render the Desertica header', async () => {
+    stubWhatsapp(TestBed);
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -72,7 +74,7 @@ describe('App', () => {
     expect(compiled.textContent).toContain('Plan your trip');
     expect(compiled.textContent).toContain('Newsletter');
     expect(compiled.textContent).toContain('Nazca');
-    expect(compiled.textContent).toContain('XXXXXXXXXXX');
+    expect(compiled.textContent).not.toContain('XXX');
     expect(compiled.querySelector('#smooth-wrapper')).not.toBeNull();
     expect(compiled.querySelector('#smooth-content')).not.toBeNull();
     expect(compiled.querySelector('a[href="#main-content"]')).not.toBeNull();
@@ -80,7 +82,7 @@ describe('App', () => {
     expect(compiled.querySelector('#smooth-content app-whatsapp-fab')).toBeNull();
     expect(compiled.querySelector('#smooth-content app-site-header')).toBeNull();
     expect(compiled.querySelector('app-whatsapp-fab a')?.getAttribute('href')).toBe(
-      'https://wa.me/519XXXXXXXX',
+      'https://wa.me/51987654321',
     );
     expect(compiled.querySelector('app-whatsapp-fab img')).toBeNull();
     expect(compiled.querySelector('app-whatsapp-fab svg')?.getAttribute('viewBox')).toBe('0 0 720 720');

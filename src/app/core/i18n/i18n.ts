@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
+import { readLocal, writeLocal } from '../storage/safe-storage';
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
@@ -27,23 +28,6 @@ import {
 } from './catalogs';
 
 const LOCALE_STATE_KEY = makeStateKey<AppLocale | null>('locale');
-
-/** Storage can throw when the browser blocks it (private mode, disabled cookies). */
-function readStoredLocale(): string | null {
-  try {
-    return localStorage.getItem(LOCALE_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredLocale(locale: AppLocale): void {
-  try {
-    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-  } catch {
-    // The cookie below still remembers the choice.
-  }
-}
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {
@@ -120,7 +104,7 @@ export class I18nService {
       return resolveLocale({ cookie, query });
     }
 
-    const stored = readStoredLocale();
+    const stored = readLocal(LOCALE_STORAGE_KEY);
     if (isAppLocale(stored)) {
       return stored;
     }
@@ -147,7 +131,7 @@ export class I18nService {
         return resolveLocale({ cookie, query });
       }
 
-      const stored = readStoredLocale();
+      const stored = readLocal(LOCALE_STORAGE_KEY);
       if (isAppLocale(stored)) {
         return stored;
       }
@@ -172,7 +156,7 @@ export class I18nService {
       return;
     }
 
-    writeStoredLocale(locale);
+    writeLocal(LOCALE_STORAGE_KEY, locale);
     this.document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; SameSite=Lax`;
   }
 

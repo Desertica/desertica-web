@@ -7,6 +7,7 @@ import { DEFAULT_PUBLIC_CONFIG, PUBLIC_CONFIG } from '../../../core/config/publi
 import { remoteImageLoader } from '../../../core/images/remote-image-loader';
 import { SeoService } from '../../../core/seo/seo';
 import { loadSnapshot, tourSnapshot } from '../../../testing/cms-snapshot';
+import { stubWhatsapp } from '../../../testing/contact';
 import { stubMatchMedia } from '../../../testing/match-media';
 import { TourDetail } from './tour-detail';
 
@@ -22,6 +23,7 @@ describe('TourDetail with CMS fields', () => {
         { provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, siteUrl: 'https://desertica.pe' } },
       ],
     }).compileComponents();
+    stubWhatsapp(TestBed);
     await loadSnapshot(TestBed, tourSnapshot(extra));
     const fixture = TestBed.createComponent(TourDetail);
     fixture.componentRef.setInput('id', 'dune-buggy');

@@ -33,7 +33,8 @@ jobs:
         run: |
           PORT=4000 node dist/desertica-web/server/server.mjs > server.log 2>&1 &
           for i in $(seq 1 30); do curl -s -o /dev/null http://localhost:4000/ && break; sleep 1; done
-          # no /health route: "/" must redirect to a locale and that page must render
+          curl -sf http://localhost:4000/healthz || { cat server.log; echo "::error::/healthz failed"; exit 1; }
+          # "/" must redirect to a locale and that page must render
           loc=$(curl -s -o /dev/null -w '%{redirect_url}' http://localhost:4000/)
           case "$loc" in http://localhost:4000/en/*|http://localhost:4000/es/*) ;; *) cat server.log; echo "::error::/ did not redirect to /en/ or /es/"; exit 1;; esac
           code=$(curl -s -o /dev/null -w '%{http_code}' "$loc")

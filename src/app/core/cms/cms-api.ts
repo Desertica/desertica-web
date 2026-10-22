@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
 import { LOCALES, type AppLocale } from '../i18n/catalogs';
@@ -185,7 +185,16 @@ export class CmsApi {
       navigation,
     };
     // Tours and destinations are the catalog: without them a snapshot would replace good data with the static fallback.
-    return raw.tours && raw.destinations ? mapCms(raw, options) : null;
+    if (!raw.tours || !raw.destinations) {
+      return null;
+    }
+
+    // Any other resource that failed would blank its part of the site (copy, navigation, media), so with a good snapshot at hand the whole refresh counts as failed.
+    if (cached?.key === base && Object.values(raw).some((value) => value === undefined)) {
+      return null;
+    }
+
+    return mapCms(raw, options);
   }
 
   private async collection(
@@ -243,8 +252,9 @@ export class CmsApi {
         ...(locale ? { locale } : {}),
       });
       return body.data ?? null;
-    } catch {
-      return undefined;
+    } catch (error) {
+      // Strapi answers 404 for a single type that has no published entry: that is "no content", not a failure.
+      return error instanceof HttpErrorResponse && error.status === 404 ? null : undefined;
     }
   }
 
@@ -254,12 +264,12 @@ export class CmsApi {
     path: string,
   ): Promise<RawSingleByLocale | undefined> {
     const entries = await Promise.all(LOCALES.map((locale) => this.single(base, path, locale)));
-    if (entries.every((entry) => entry === undefined)) {
+    if (entries.includes(undefined)) {
       return undefined;
     }
 
     return Object.fromEntries(
-      LOCALES.map((locale, index) => [locale, entries[index] ?? null]),
+      LOCALES.map((locale, index) => [locale, entries[index]]),
     ) as unknown as RawSingleByLocale;
   }
 

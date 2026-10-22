@@ -2,7 +2,7 @@ import { IMAGE_LOADER } from '@angular/common';
 import { RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { remoteImageLoader } from '../../../core/images/remote-image-loader';
 import { TourDetail } from './tour-detail';

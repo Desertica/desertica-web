@@ -4,6 +4,7 @@ import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { tourPage } from '../../../core/catalog/tour-pages';
 import { tourById } from '../../../core/catalog/tours';
+import { stubWhatsapp } from '../../../testing/contact';
 import { TourBook, tourDuePrice } from './tour-book';
 import { formatTourDate } from './tour-whatsapp';
 
@@ -125,6 +126,7 @@ describe('TourBook', () => {
     }
 
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    stubWhatsapp(TestBed);
 
     const fixture = TestBed.createComponent(TourBook);
     fixture.componentRef.setInput('tour', tour);
@@ -146,7 +148,7 @@ describe('TourBook', () => {
 
     expect(open).toHaveBeenCalled();
     const href = String(open.mock.calls[0]?.[0] ?? '');
-    expect(href.startsWith('https://wa.me/519XXXXXXXX?text=')).toBe(true);
+    expect(href.startsWith('https://wa.me/51987654321?text=')).toBe(true);
     const text = decodeURIComponent(href.split('text=')[1] ?? '');
     expect(text).toContain('Dune buggy');
     expect(text).toContain(formatTourDate(date));

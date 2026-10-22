@@ -6,6 +6,8 @@ import { clientKey, createRateLimiter } from './rate-limit';
 
 const MAX_UPSTREAM_BYTES = 25 * 1024 * 1024;
 const CACHE_BYTES = 64 * 1024 * 1024;
+/** Formats worth resizing; SVG and anything else is refused (an SVG is a script carrier, not a photo). */
+const IMAGE_TYPE = /^image\/(jpeg|png|webp|avif|gif)\b/;
 const MAX_JOBS = 3;
 /** A 50-megapixel photo decodes to ~150 MB; the sharp default (268 MP) would let three at once take gigabytes. */
 const MAX_PIXELS = 50_000_000;
@@ -14,6 +16,8 @@ export type ImageProxyOptions = {
   /** Hosts (with port when not default) whose images may be resized; anything else is refused. */
   hosts: readonly string[];
   timeoutMs?: number;
+  /** Size of the in-memory cache; defaults to 64 MB. */
+  cacheBytes?: number;
 };
 
 type Entry = { body: Buffer; type: string };
@@ -21,7 +25,7 @@ type Entry = { body: Buffer; type: string };
 /**
  * Resizes and converts images from the CMS to WebP on demand. The originals are what editors
  * upload (often several MB); phones get a few dozen kB instead.
- * shortcut: the cache is in memory (64 MB) and per process; put Cloudflare in front or a shared
+ * shortcut: the cache is in memory (64 MB, least recently used out first) and per process; put Cloudflare in front or a shared
  * store before running several instances.
  */
 export function imageProxy(options: ImageProxyOptions): Router {
@@ -75,7 +79,7 @@ export function imageProxy(options: ImageProxyOptions): Router {
     slot(async () => {
       const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(options.timeoutMs ?? 10_000) });
       const type = response.headers.get('content-type') ?? '';
-      if (!response.ok || !type.startsWith('image/') || Number(response.headers.get('content-length') ?? 0) > MAX_UPSTREAM_BYTES) {
+      if (!response.ok || !IMAGE_TYPE.test(type) || Number(response.headers.get('content-length') ?? 0) > MAX_UPSTREAM_BYTES) {
         return null;
       }
 
@@ -112,7 +116,11 @@ export function imageProxy(options: ImageProxyOptions): Router {
 
     try {
       let entry = cache.get(key);
-      if (!entry) {
+      if (entry) {
+        // Re-insert so the Map order is least recently used first.
+        cache.delete(key);
+        cache.set(key, entry);
+      } else {
         // Only work that costs a download and a resize counts against the limit; cached images are free.
         if (!allowed(`img|${clientKey(req.ip)}`)) {
           res.status(429).end();
@@ -131,11 +139,15 @@ export function imageProxy(options: ImageProxyOptions): Router {
           return;
         }
 
+        // Concurrent requests for one key share the render and all arrive here: count it once.
         entry = rendered;
-        cache.set(key, entry);
-        cached += entry.body.length;
+        if (!cache.has(key)) {
+          cache.set(key, entry);
+          cached += entry.body.length;
+        }
+
         for (const [oldest, old] of cache) {
-          if (cached <= CACHE_BYTES) {
+          if (cached <= (options.cacheBytes ?? CACHE_BYTES)) {
             break;
           }
 

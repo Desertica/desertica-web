@@ -4,7 +4,7 @@ import { stripLocale } from './app/core/i18n/catalogs';
 export type CachedPage = { type: string; body: Buffer };
 
 /** Pages that carry or lead to a credential or a person's booking: never shared between visitors. */
-const PRIVATE_PAGE = /^\/(pay|waiver|booking|checkout|payment|reservations)(\/|$)/;
+const PRIVATE_PAGE = /^\/(pay|waiver|booking|checkout|payment)(\/|$)/;
 
 /**
  * A page can be shared when the host and path decide its content: public GET, no token, no booking flow. The query is
