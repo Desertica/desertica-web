@@ -4,6 +4,7 @@ import {
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
+import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
@@ -32,6 +33,8 @@ const apiUrl = apiUrlFromEnv(process.env);
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
 app.disable('x-powered-by');
+// HTML, JS, CSS and JSON go out compressed (images are already compressed and skipped); Traefik does not do it for us.
+app.use(compression());
 // A full Content-Security-Policy needs GTM, Turnstile, Stripe, Culqi and the CMS media hosts allowed and checked in a browser;
 // until then only framing is locked down, which is what protects /checkout and /pay from clickjacking.
 app.use((_req, res, next) => {
