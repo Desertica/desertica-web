@@ -245,7 +245,9 @@
     },
     "meeting": "Meeting point",
     "viewMap": "View on map",
-    "faqs": "Frequently asked questions"
+    "faqs": "Frequently asked questions",
+    "askWhatsapp": "Ask on WhatsApp",
+    "askWhatsappMessage": "Hi, I would like more information about \"{tour}\" ({hours} h, from USD {price}): {url}"
   },
   "tours": {
     "duneBuggy": {

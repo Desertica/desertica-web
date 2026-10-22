@@ -12,7 +12,7 @@ import { tourItem } from '../../../core/analytics/items';
 import { PUBLIC_CONFIG } from '../../../core/config/public-config';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideDownload } from '@ng-icons/lucide';
+import { lucideDownload, lucideMessageCircle } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { meetingMapUrl, tourHasDetails } from '../../../core/catalog/tour-pages';
 import { type CatalogTour, TOURS_PATH, tourPath } from '../../../core/catalog/tours';
@@ -33,6 +33,7 @@ import { TourGallery } from './tour-gallery';
 import { TourHeading } from './tour-heading';
 import { TourTimeline } from './tour-timeline';
 import { TourVideos } from './tour-videos';
+import { buildAskWhatsappHref } from './tour-whatsapp';
 
 @Component({
   selector: 'app-tour-detail',
@@ -54,7 +55,7 @@ import { TourVideos } from './tour-videos';
     NotFound,
   ],
   templateUrl: './tour-detail.html',
-  providers: [provideIcons({ lucideDownload })],
+  providers: [provideIcons({ lucideDownload, lucideMessageCircle })],
 })
 export class TourDetail {
   private readonly seo = inject(SeoService);
@@ -69,6 +70,27 @@ export class TourDetail {
   protected readonly mapUrl = meetingMapUrl;
   /** Online booking replaces the WhatsApp form only while the flag is on. */
   protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
+
+  /** WhatsApp link with a ready message about this tour; `null` while the tour is unknown. */
+  protected readonly askHref = computed(() => {
+    const data = this.resolved();
+    const locale = this.i18n.locale();
+    if (!data) {
+      return null;
+    }
+
+    const origin = this.seo.origin();
+    return buildAskWhatsappHref(this.catalog.contact().whatsapp, this.i18n.t('tour.askWhatsappMessage'), {
+      tour: this.i18n.t(data.tour.titleKey),
+      hours: String(data.tour.durationHours),
+      price: String(data.tour.priceFrom),
+      url: origin ? localizedUrl(origin, tourPath(data.tour.id), locale) : '',
+    });
+  });
+
+  protected trackAsk(): void {
+    this.analytics.track('click_whatsapp', { placement: 'tour_ask' });
+  }
 
   constructor() {
     effect(() => {

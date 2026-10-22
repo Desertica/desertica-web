@@ -50,6 +50,21 @@
             [page]="data.page"
           />
         }
+        @if (askHref(); as href) {
+          <a
+            hlmBtn
+            variant="outline"
+            class="w-full"
+            [href]="href"
+            target="_blank"
+            rel="noopener noreferrer"
+            (click)="trackAsk()"
+          >
+            <ng-icon name="lucideMessageCircle" />
+            {{ 'tour.askWhatsapp' | translate: i18n.locale() }}
+            <span class="sr-only">{{ 'a11y.newTab' | translate: i18n.locale() }}</span>
+          </a>
+        }
         <app-tour-assurances [custom]="data.page.assurances" />
         @if (data.page.itineraryFile; as file) {
           <a hlmBtn class="w-full" [href]="file" download>

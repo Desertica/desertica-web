@@ -1,4 +1,5 @@
 import {
+  buildAskWhatsappHref,
   buildTourWhatsappHref,
   formatPickerDate,
   formatTourDate,
@@ -43,5 +44,19 @@ describe('tour WhatsApp helpers', () => {
     expect(formatTourDate('2026-09-20')).toBe('20/09/2026');
     expect(localIsoDate(new Date(2026, 8, 13))).toBe('2026-09-13');
     expect(startOfLocalDay(new Date(2026, 8, 13, 19, 30)).getHours()).toBe(0);
+  });
+
+  it('builds the "more information" message with the tour and its page', () => {
+    const href = buildAskWhatsappHref('https://wa.me/51999', 'Hi, about "{tour}" ({hours} h, from USD {price}): {url}', {
+      tour: 'Dune buggy',
+      hours: '4',
+      price: '79',
+      url: 'https://desertica.pe/tours/dune-buggy',
+    });
+
+    expect(href.startsWith('https://wa.me/51999?text=')).toBe(true);
+    expect(decodeURIComponent(href.split('text=')[1] ?? '')).toBe(
+      'Hi, about "Dune buggy" (4 h, from USD 79): https://desertica.pe/tours/dune-buggy',
+    );
   });
 });
