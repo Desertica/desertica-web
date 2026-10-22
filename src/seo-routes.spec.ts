@@ -142,6 +142,10 @@ describe('legacyRedirects', () => {
     const list = await fetch(`${url}/experiences`, { redirect: 'manual' });
     expect(list.status).toBe(301);
     expect(list.headers.get('location')).toBe('/tours');
+
+    const reservations = await fetch(`${url}/es/reservations?eje=paracas`, { redirect: 'manual' });
+    expect(reservations.status).toBe(301);
+    expect(reservations.headers.get('location')).toBe('/es/tours?eje=paracas');
     server.close();
   });
 });

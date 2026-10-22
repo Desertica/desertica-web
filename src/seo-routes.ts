@@ -118,10 +118,10 @@ export function robotsTxt(origin: string, disallowAll = false): string {
   return ['User-agent: *', ...rules, '', `Sitemap: ${origin}/sitemap.xml`, ''].join('\n');
 }
 
-/** `/experiences/:slug` was a stub; its URLs now redirect permanently to `/tours/:slug`. */
+/** `/experiences/:slug` was a stub and `/reservations` a static page that ignored the CMS: both redirect permanently to `/tours`. */
 export function legacyRedirects(): express.Router {
   const router = express.Router();
-  const paths = ['', ...LOCALES.map((locale) => `/${locale}`)].flatMap((prefix) => [`${prefix}/experiences`, `${prefix}/experiences/:slug`]);
+  const paths = ['', ...LOCALES.map((locale) => `/${locale}`)].flatMap((prefix) => [`${prefix}/experiences`, `${prefix}/experiences/:slug`, `${prefix}/reservations`]);
   router.get(paths, (req, res) => {
     const slug = req.params['slug'];
     const locale = localeFromPath(req.path);

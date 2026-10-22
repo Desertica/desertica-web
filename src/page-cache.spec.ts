@@ -11,7 +11,7 @@ describe('pageCacheKey', () => {
   });
 
   it('never shares booking pages, credential links or non-GET requests', () => {
-    for (const path of ['/es/pay/abc', '/en/waiver/abc', '/es/booking/REF', '/en/checkout', '/es/payment/3ds', '/en/reservations']) {
+    for (const path of ['/es/pay/abc', '/en/waiver/abc', '/es/booking/REF', '/en/checkout', '/es/payment/3ds']) {
       expect(pageCacheKey(req(path))).toBeNull();
     }
 
