@@ -29,7 +29,7 @@ Use **Node 22**. On Node 26 about 35 tests fail with `localStorage` undefined, a
 
 - Every user-facing string needs an entry in both `src/locales/en.json` and `es.json`.
 - Match the surrounding code; Prettier config is in `.prettierrc`. New code gets a spec next to it.
-- Every route renders per request (`src/app/app.routes.server.ts`); content comes from Strapi through the server-side cache, so there is nothing to rebuild after publishing.
+- Every route renders per request (`src/app/app.routes.server.ts`); content comes from Strapi through the server-side cache, so there is nothing to rebuild after publishing. Public pages are also kept 10 s in memory (`src/page-cache.ts`), so a CMS change is live in about 40 s.
 - Do not commit `.cursor/`, `.vscode/` or `.env` files.
 - Commit messages: short imperative subject, then a body when the change needs it. No attribution lines.
 

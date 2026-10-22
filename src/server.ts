@@ -13,6 +13,7 @@ import { apiProxy } from './api-proxy';
 import { imageProxy } from './image-proxy';
 import { formsProxy } from './forms-proxy';
 import { localeRoutes } from './locale-routes';
+import { createPageCache, pageCacheKey } from './page-cache';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import { stripLocale } from './app/core/i18n/catalogs';
 
@@ -130,15 +131,34 @@ app.use(localeRoutes());
 
 /**
  * Handle all other requests by rendering the Angular application.
- * shortcut: every page renders on each request (about 12 pages/s per process in a sandbox); with one URL per language
- * Cloudflare can cache the HTML, so add cache rules in front before campaigns (docs/SEO-LOCALE.md).
+ * Public pages are kept for `PAGE_CACHE_TTL_MS` (10 s, 0 turns it off); a render takes ~80 ms, about 12 pages/s per process.
  */
+const pageCache = createPageCache(Number(process.env['PAGE_CACHE_TTL_MS'] ?? 10_000));
 app.use((req, res, next) => {
+  const key = pageCacheKey(req);
+  const hit = key ? pageCache.get(key) : undefined;
+  if (hit) {
+    res.type(hit.type).send(hit.body);
+    return;
+  }
+
   angularApp
     .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
+    .then(async (response) => {
+      if (!response) {
+        next();
+        return;
+      }
+
+      if (key && response.status === 200) {
+        const page = { type: response.headers.get('content-type') ?? 'text/html', body: Buffer.from(await response.arrayBuffer()) };
+        pageCache.set(key, page);
+        res.type(page.type).send(page.body);
+        return;
+      }
+
+      await writeResponseToNodeResponse(response, res);
+    })
     .catch(next);
 });
 
