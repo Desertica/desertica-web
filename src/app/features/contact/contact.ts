@@ -1,6 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -38,10 +37,8 @@ import {
   applyPhoneInput,
   CONTACT_BAND_IMAGE,
   DEFAULT_PHONE_COUNTRY,
-  GEOJS_COUNTRY_URL,
   isValidWhatsapp,
   toE164,
-  parseGeojsCountry,
   phoneCountries,
   type PhoneCountry,
 } from './phone';
@@ -111,7 +108,8 @@ export class Contact {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(this.limits.messageMax)],
     }),
-    captcha: new FormControl(false, {
+    // Without Turnstile there is no challenge to pass, so the control starts valid.
+    captcha: new FormControl(!this.turnstileEnabled, {
       nonNullable: true,
       validators: [Validators.requiredTrue],
     }),
@@ -124,9 +122,6 @@ export class Contact {
       breadcrumbs: [],
     }));
 
-    afterNextRender(() => {
-      void this.guessCountryFromIp();
-    });
   }
 
   protected readonly countryToString = (item: PhoneCountry | null | undefined): string =>
@@ -251,34 +246,5 @@ export class Contact {
     }
 
     return null;
-  }
-
-  private async guessCountryFromIp(): Promise<void> {
-    if (this.phoneTouched() || this.form.controls.whatsapp.value.trim()) {
-      return;
-    }
-
-    const controller = new AbortController();
-    const abort = () => controller.abort();
-    this.destroyRef.onDestroy(abort);
-    const timer = window.setTimeout(abort, 4000);
-
-    try {
-      const response = await fetch(GEOJS_COUNTRY_URL, { signal: controller.signal });
-      if (!response.ok) {
-        return;
-      }
-
-      const country = parseGeojsCountry(await response.json());
-      if (!country || this.phoneTouched() || this.form.controls.whatsapp.value.trim()) {
-        return;
-      }
-
-      this.setCountry(country);
-    } catch {
-      return;
-    } finally {
-      window.clearTimeout(timer);
-    }
   }
 }

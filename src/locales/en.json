@@ -101,8 +101,6 @@
     "messagePlaceholder": "What did you have in mind?",
     "submit": "Send",
     "thanks": "Message sent. We'll write back soon.",
-    "notRobot": "I'm not a robot",
-    "captchaBrand": "Turnstile",
     "messageCount": "{count} of 500 max characters",
     "nameError": "Enter your name.",
     "nameMinError": "Name must be at least 2 characters.",

@@ -51,12 +51,28 @@ const i18n = new I18n({
   staticCatalog: catalogs,
 });
 
-app.set('trust proxy', process.env['TRUST_PROXY'] === 'true');
+// A hop count ("1" behind one proxy, "2" behind Cloudflare and Traefik) trusts only that many X-Forwarded-For
+// entries; plain "true" trusts the whole header and lets any client pick its own IP to dodge the rate limiter.
+const trustProxy = process.env['TRUST_PROXY'] ?? '';
+app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy === 'true');
 const cms = cmsConfigFromEnv(process.env);
 const publicConfig = publicConfigFromEnv(process.env);
 const apiUrl = apiUrlFromEnv(process.env);
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
+app.disable('x-powered-by');
+// A full Content-Security-Policy needs GTM, Turnstile, Stripe, Culqi and the CMS media hosts allowed and checked in a browser;
+// until then only framing is locked down, which is what protects /checkout and /pay from clickjacking.
+app.use((_req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'Strict-Transport-Security': 'max-age=31536000',
+    'Content-Security-Policy': "frame-ancestors 'none'",
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  });
+  next();
+});
+
 app.use(legacyRedirects());
 
 /** `sitemap.xml` and `robots.txt` are built from the live catalog. */

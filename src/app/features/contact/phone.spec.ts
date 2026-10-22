@@ -3,7 +3,6 @@ import {
   DEFAULT_PHONE_COUNTRY,
   isValidWhatsapp,
   maxNationalDigits,
-  parseGeojsCountry,
   phoneCountries,
   toE164,
 } from './phone';
@@ -14,13 +13,6 @@ describe('phone helpers', () => {
     expect(countries[0]?.code).toBe(DEFAULT_PHONE_COUNTRY);
     expect(countries[0]?.callingCode).toBe('51');
     expect(countries.some((country) => country.code === 'ES')).toBe(true);
-  });
-
-  it('reads a GeoJS country payload and ignores unknown codes', () => {
-    expect(parseGeojsCountry({ country: 'es', ip: '1.1.1.1' })).toBe('ES');
-    expect(parseGeojsCountry('PE')).toBe('PE');
-    expect(parseGeojsCountry({ country: 'ZZ' })).toBeNull();
-    expect(parseGeojsCountry(null)).toBeNull();
   });
 
   it('keeps Peru when typing a national number and switches on an E.164 paste', () => {

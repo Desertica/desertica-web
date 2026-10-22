@@ -63,11 +63,15 @@ type Cached = { key: string; at: number; snapshot: CmsSnapshot };
 
 let cached: Cached | null = null;
 let inflight: { key: string; promise: Promise<CmsSnapshot | null> } | null = null;
+let retryAfter = 0;
+/** Pause before asking a failing Strapi again when there is no snapshot to fall back on. */
+const RETRY_MS = 5_000;
 
 /** Drops the shared server-side cache (tests). */
 export function resetCmsCache(): void {
   cached = null;
   inflight = null;
+  retryAfter = 0;
 }
 
 /**
@@ -88,34 +92,53 @@ export class CmsApi {
     return this.config.publicUrl ?? this.config.url;
   }
 
+  /**
+   * A stale snapshot is returned at once while a refresh runs in the background, so a slow or dead
+   * Strapi never makes visitors wait for the timeout. A failed refresh pushes the next try back by
+   * a few seconds instead of retrying on every request.
+   */
   async load(options: MapOptions): Promise<CmsSnapshot | null> {
     const base = this.config.url;
     if (!base) {
       return null;
     }
 
-    if (cached?.key === base && Date.now() - cached.at < this.config.cacheTtlMs) {
-      return cached.snapshot;
+    const now = Date.now();
+    const hit = cached?.key === base ? cached : null;
+    if (hit && now - hit.at < this.config.cacheTtlMs) {
+      return hit.snapshot;
     }
 
-    if (inflight?.key === base) {
-      return inflight.promise;
-    }
+    if (inflight?.key !== base) {
+      if (!hit && now < retryAfter) {
+        return null;
+      }
 
-    const promise = this.fetchSnapshot(base, options)
-      .then((snapshot) => {
-        if (snapshot) {
-          cached = { key: base, at: Date.now(), snapshot };
-          return snapshot;
+      const failed = () => {
+        retryAfter = Date.now() + Math.min(this.config.cacheTtlMs, RETRY_MS);
+        if (cached?.key === base) {
+          cached.at = Date.now();
         }
 
-        return cached?.key === base ? cached.snapshot : null;
-      })
-      .finally(() => {
-        inflight = null;
-      });
-    inflight = { key: base, promise };
-    return promise;
+        return null;
+      };
+      const promise = this.fetchSnapshot(base, options)
+        .then((snapshot) => {
+          if (!snapshot) {
+            return failed();
+          }
+
+          cached = { key: base, at: Date.now(), snapshot };
+          return snapshot;
+        })
+        .catch(failed)
+        .finally(() => {
+          inflight = null;
+        });
+      inflight = { key: base, promise };
+    }
+
+    return hit?.snapshot ?? inflight!.promise;
   }
 
   private async fetchSnapshot(base: string, options: MapOptions): Promise<CmsSnapshot | null> {
@@ -161,8 +184,8 @@ export class CmsApi {
       booking,
       navigation,
     };
-    const reachable = Object.values(raw).some((value) => value !== undefined);
-    return reachable ? mapCms(raw, options) : null;
+    // Tours and destinations are the catalog: without them a snapshot would replace good data with the static fallback.
+    return raw.tours && raw.destinations ? mapCms(raw, options) : null;
   }
 
   private async collection(

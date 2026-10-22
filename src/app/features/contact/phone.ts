@@ -2,7 +2,6 @@ import {
   AsYouType,
   getCountries,
   getCountryCallingCode,
-  isSupportedCountry,
   Metadata,
   parseIncompletePhoneNumber,
   parsePhoneNumberFromString,
@@ -10,7 +9,6 @@ import {
 } from 'libphonenumber-js/min';
 
 export const DEFAULT_PHONE_COUNTRY: CountryCode = 'PE';
-export const GEOJS_COUNTRY_URL = 'https://get.geojs.io/v1/ip/country.json';
 export const CONTACT_BAND_IMAGE =
   'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1200&h=675&q=80';
 
@@ -56,18 +54,6 @@ export function phoneCountries(locale: string): PhoneCountry[] {
   });
 
   return items;
-}
-
-export function parseGeojsCountry(payload: unknown): CountryCode | null {
-  let code = '';
-  if (typeof payload === 'string') {
-    code = payload;
-  } else if (typeof payload === 'object' && payload !== null && 'country' in payload) {
-    code = String((payload as { country: unknown }).country);
-  }
-
-  code = code.trim().toUpperCase();
-  return isSupportedCountry(code) ? code : null;
 }
 
 export function maxNationalDigits(country: CountryCode): number {

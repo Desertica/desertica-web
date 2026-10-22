@@ -101,8 +101,6 @@
     "messagePlaceholder": "¿Qué tienes pensado?",
     "submit": "Enviar",
     "thanks": "Mensaje enviado. Te escribimos pronto.",
-    "notRobot": "No soy un robot",
-    "captchaBrand": "Turnstile",
     "messageCount": "{count} de 500 caracteres máx.",
     "nameError": "Escribe tu nombre.",
     "nameMinError": "El nombre debe tener al menos 2 caracteres.",

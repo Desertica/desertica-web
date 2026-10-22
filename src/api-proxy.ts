@@ -1,5 +1,5 @@
 import express from 'express';
-import { createRateLimiter } from './rate-limit';
+import { clientKey, createRateLimiter } from './rate-limit';
 
 export type ApiProxyOptions = {
   /** Origin of desertica-api (`API_URL`), without `/api`. `null` answers 404. */
@@ -68,7 +68,7 @@ export function apiProxy(options: ApiProxyOptions): express.Router {
     }
 
     const ip = req.ip ?? 'unknown';
-    if (!(route.write ? writeAllowed : readAllowed)(`${route.write ? 'w' : 'r'}|${ip}`)) {
+    if (!(route.write ? writeAllowed : readAllowed)(`${route.write ? 'w' : 'r'}|${clientKey(ip)}`)) {
       res.status(429).set('Retry-After', '60').json({ error: 'rate_limited' });
       return;
     }

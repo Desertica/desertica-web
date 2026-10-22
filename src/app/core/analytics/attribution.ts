@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, effect, inject } from '@angular/core';
 import { ConsentService } from './consent';
+import { isCredentialUrl } from './gtm';
 
 export const ATTRIBUTION_STORAGE_KEY = 'desertica-attribution';
 
@@ -52,6 +53,11 @@ export class AttributionService {
   capture(): void {
     const view = this.document.defaultView;
     if (!view || this.firstVisit || this.stored()) {
+      return;
+    }
+
+    // /pay/<token> and /waiver/<token> carry a credential in the path; it must never be stored as marketing data.
+    if (isCredentialUrl(view.location)) {
       return;
     }
 

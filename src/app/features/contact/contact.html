@@ -184,35 +184,6 @@
                   }}</hlm-field-error>
                 }
               </div>
-            } @else {
-            <div hlmField class="w-fit max-w-full">
-              <div
-                class="border-border bg-muted/30 flex min-h-16 w-fit items-center justify-between gap-4 rounded-3xl border px-3 py-2"
-              >
-                <div class="flex min-w-0 items-center gap-3">
-                  <input
-                    id="contact-captcha"
-                    type="checkbox"
-                    class="border-input size-5 shrink-0 rounded-sm border accent-primary"
-                    required
-                    [formControl]="form.controls.captcha"
-                  />
-                  <label hlmFieldLabel for="contact-captcha">
-                    {{ 'contact.notRobot' | translate: i18n.locale() }}
-                    <span class="text-destructive" aria-hidden="true">*</span>
-                  </label>
-                </div>
-                <span class="text-muted-foreground shrink-0 text-[0.65rem] tracking-wide uppercase">{{
-                  'contact.captchaBrand' | translate: i18n.locale()
-                }}</span>
-              </div>
-              @if (showError('captcha')) {
-                <hlm-field-error [forceShow]="true">{{
-                  'contact.captchaError' | translate: i18n.locale()
-                }}</hlm-field-error>
-              }
-            </div>
-
             }
 
             <button hlmBtn size="lg" class="min-w-0 w-full flex-1" type="submit">

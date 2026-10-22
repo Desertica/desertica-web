@@ -1,4 +1,5 @@
-import { IMAGE_LOADER } from '@angular/common';
+import { IMAGE_LOADER, registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import {
   ApplicationConfig,
@@ -13,6 +14,9 @@ import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { routes } from './app.routes';
 import { CatalogService } from './core/catalog/catalog';
 import { remoteImageLoader } from './core/images/remote-image-loader';
+
+// The date pipe throws NG0701 for "es" without its locale data; "en" is built in.
+registerLocaleData(localeEs);
 
 export const appConfig: ApplicationConfig = {
   providers: [

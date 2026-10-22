@@ -13,7 +13,7 @@ import {
   complaintIsConsistent,
   sanitize,
 } from './forms-validation';
-import { createRateLimiter } from './rate-limit';
+import { clientKey, createRateLimiter } from './rate-limit';
 
 export type FormsProxyOptions = {
   strapiUrl: string | null;
@@ -81,7 +81,7 @@ export function formsProxy(options: FormsProxyOptions): express.Router {
       }
 
       const ip = req.ip ?? 'unknown';
-      if (!allowed(`${form}|${ip}`)) {
+      if (!allowed(`${form}|${clientKey(ip)}`)) {
         res.status(429).json({ error: 'rate_limited' });
         return;
       }
@@ -94,7 +94,8 @@ export function formsProxy(options: FormsProxyOptions): express.Router {
 
       // The API verifies the (single-use) token itself; for Strapi the proxy has to.
       if (definition.target === 'strapi') {
-        if (options.turnstileSecret) {
+        // shortcut: the legacy reservation form has no Turnstile widget, so only forms that carry a token field are checked; the booking engine replaces it.
+        if (options.turnstileSecret && 'turnstileToken' in definition.fields) {
           const outcome = await verifyTurnstile(data['turnstileToken'], ip);
           if (outcome !== 'ok') {
             res.status(outcome === 'down' ? 502 : 400).json({ error: outcome === 'down' ? 'captcha_unreachable' : 'captcha' });

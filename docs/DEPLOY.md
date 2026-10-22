@@ -19,7 +19,8 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
 | `STRAPI_URL` | to use the CMS | URL the server uses to reach Strapi (private network URL is fine). Empty = bundled static catalog. |
 | `STRAPI_PUBLIC_URL` | if media is served by Strapi | URL browsers use to load uploaded media. Defaults to `STRAPI_URL`. |
 | `FORMS_PROXY_SECRET` | recommended | Same value as in the CMS. Lets the CMS rate-limit by visitor IP instead of the proxy's. |
-| `TRUST_PROXY` | behind a proxy | `true` when a reverse proxy sets `X-Forwarded-For`, so rate limits see the visitor IP. |
+| `TRUST_PROXY` | behind a proxy | Number of proxies in front of the app: `1` behind Traefik/Coolify, `2` with Cloudflare in front too. Plain `true` trusts the whole `X-Forwarded-For` header, so a client can pick its own IP and skip the rate limits; do not use it in production. |
+| `SITE_URL` | yes in production | Public origin, no trailing slash (for example `https://desertica.pe`). Canonical, hreflang, sitemap, robots and JSON-LD use it; without it they fall back to the request `Host`. |
 | `STRAPI_API_TOKEN`, `STRAPI_FORMS_TOKEN` | optional | Only if you remove the Public role permissions in Strapi. |
 | `STRAPI_CACHE_TTL_MS`, `STRAPI_TIMEOUT_MS` | optional | Server-side cache (default 30000) and request timeout (default 5000). |
 | `PORT` | optional | Default 4000. |
@@ -42,7 +43,7 @@ docker compose up --build
 
 1. Deploy the CMS, create the admin user, edit `Site — Settings`, upload media.
 2. Deploy the site with `NG_ALLOWED_HOSTS`, `STRAPI_URL`, `STRAPI_PUBLIC_URL` and the shared `FORMS_PROXY_SECRET`.
-3. Terminate TLS in front of both apps and set `TRUST_PROXY=true`.
+3. Terminate TLS in front of both apps and set `TRUST_PROXY=1` (`2` with Cloudflare in front).
 
 ## Recommended platform: Railway + Cloudflare
 
@@ -54,7 +55,7 @@ For real-environment testing (staging) and a small first production. Railway dep
 2. Variables:
    - `NG_ALLOWED_HOSTS=tudominio.com,www.tudominio.com,healthcheck.railway.app`. The healthcheck must be allowed or it gets 400 and the deploy never turns healthy (confirm the healthcheck host in Railway's docs if it still fails).
    - `STRAPI_URL=http://<cms service>.railway.internal:1337` (private network) and `STRAPI_PUBLIC_URL=https://cms.tudominio.com`.
-   - `FORMS_PROXY_SECRET` (same value as the CMS) and `TRUST_PROXY=true`.
+   - `FORMS_PROXY_SECRET` (same value as the CMS) and `TRUST_PROXY=1` (`2` with Cloudflare in front).
 3. Service settings: healthcheck path `/`, port from `PORT` (4000 by default), domain `tudominio.com`, then the Cloudflare record with proxy on.
 4. Cloudflare cache rules: cache `/fonts/*` and the hashed JS/CSS; leave HTML uncached (it is rendered per request).
 5. Staging: duplicate the environment, point it at `develop` and give it its own database, secrets and domain.
