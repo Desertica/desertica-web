@@ -340,7 +340,7 @@ describe('PaymentStep', () => {
       expect(track).toHaveBeenCalledWith('add_payment_info', expect.objectContaining({ payment_type: 'culqi', value: 31.6 }));
 
       culqi.emitToken();
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      await vi.waitFor(() => expect(root.querySelector('#payment-success')).not.toBeNull());
 
       const charge = mock.calls.find((call) => call.path.endsWith('/culqi-charge'));
       expect(charge?.path).toBe('/public/bookings/DES-2026-0001/payments/culqi-charge');

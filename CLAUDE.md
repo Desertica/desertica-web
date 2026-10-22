@@ -42,3 +42,7 @@ Use **Node 22**. On Node 26 about 35 tests fail with `localStorage` undefined, a
 - Pages live under `/en` and `/es`. Write `routerLink="/tours"` as before: `APP_BASE_HREF` adds the prefix. Switching language must go through `I18nService.switchLanguage` (a full page load), never `setLocale`. Code that tests a URL path (`/pay`, `/checkout`) must call `stripLocale` first. See `docs/SEO-LOCALE.md`.
 - Images from the CMS load through `/_img` (`src/image-proxy.ts`, WebP at the width each screen needs). A host that serves images must be in `IMAGE_HOSTS` (the CMS host is added automatically) or the request is refused.
 - `TRUST_PROXY` is a number of proxies (1 behind Traefik), not `true`.
+
+## Ramas
+
+`main` es solo la base; el trabajo entra por PR a `develop`, `develop` -> `staging` (pruebas) y `staging` -> `prod` (producción). Rama de trabajo: `feat/*`, `fix/*` o `chore/*`, se borra al mezclar. Los checks y la protección están en `docs/PROTECCION-RAMAS.md`; los workflows son `.github/workflows/{ci,security,policy}.yml` y los editas con un PR normal.
