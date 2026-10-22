@@ -58,7 +58,7 @@ export function publicConfigFromEnv(env: Record<string, string | undefined>): Pu
   };
 }
 
-/** The CMS media host, `IMAGE_HOSTS` (for an R2 or CDN host) and Unsplash, which the static catalog uses. */
+/** The public CMS media host (`STRAPI_PUBLIC_URL`; never the internal `STRAPI_URL`, which would reach the browser), `IMAGE_HOSTS` (for an R2 or CDN host) and Unsplash, which the static catalog uses. */
 function imageHostsFromEnv(env: Record<string, string | undefined>): string[] {
   const hostOf = (value: string | undefined) => {
     try {
@@ -70,7 +70,7 @@ function imageHostsFromEnv(env: Record<string, string | undefined>): string[] {
   const listed = (env['IMAGE_HOSTS'] ?? '').split(',').map((host) => host.trim());
   return [
     ...new Set(
-      [...listed, hostOf(env['STRAPI_PUBLIC_URL']), hostOf(env['STRAPI_URL']), 'images.unsplash.com'].filter(Boolean),
+      [...listed, hostOf(env['STRAPI_PUBLIC_URL']), 'images.unsplash.com'].filter(Boolean),
     ),
   ];
 }

@@ -43,14 +43,14 @@ describe('publicConfigFromEnv', () => {
     expect(publicConfigFromEnv({ CULQI_PUBLIC_KEY: 'pk_live_AbC123' }).culqiPublicKey).toBe('pk_live_AbC123');
   });
 
-  it('allows images from the CMS, the extra hosts and Unsplash, without duplicates', () => {
+  it('allows images from the public CMS host, the extra hosts and Unsplash, without duplicates or the internal CMS host', () => {
     expect(
       publicConfigFromEnv({
         STRAPI_URL: 'http://cms:1337',
         STRAPI_PUBLIC_URL: 'https://cms.desertica.pe',
         IMAGE_HOSTS: 'media.desertica.pe, cms.desertica.pe',
       }).imageHosts,
-    ).toEqual(['media.desertica.pe', 'cms.desertica.pe', 'cms:1337', 'images.unsplash.com']);
+    ).toEqual(['media.desertica.pe', 'cms.desertica.pe', 'images.unsplash.com']);
   });
 });
 

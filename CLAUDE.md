@@ -40,7 +40,7 @@ Use **Node 22**. On Node 26 about 35 tests fail with `localStorage` undefined, a
 - The initial bundle is about 0.95 MB; most of it is the framework (Angular, CDK, Spartan), so the warning budget is 1 MB and there is no cheap cut.
 - A CMS-created destination has no route of its own until one is added in `app.routes.ts`.
 - Pages live under `/en` and `/es`. Write `routerLink="/tours"` as before: `APP_BASE_HREF` adds the prefix. Switching language must go through `I18nService.switchLanguage` (a full page load), never `setLocale`. Code that tests a URL path (`/pay`, `/checkout`) must call `stripLocale` first. See `docs/SEO-LOCALE.md`.
-- Images from the CMS load through `/_img` (`src/image-proxy.ts`, WebP at the width each screen needs). A host that serves images must be in `IMAGE_HOSTS` (the CMS host is added automatically) or the request is refused.
+- Images from the CMS load through `/_img` (`src/image-proxy.ts`, WebP at the width each screen needs). A host that serves images must be in `IMAGE_HOSTS` (the `STRAPI_PUBLIC_URL` host is added automatically, the internal `STRAPI_URL` one is not) or the request is refused.
 - `TRUST_PROXY` is a number of proxies (1 behind Traefik), not `true`.
 
 ## Ramas
