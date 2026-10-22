@@ -153,6 +153,7 @@ describe('i18n catalogs', () => {
     expect(parseCookie('theme=dark; locale=es', 'locale')).toBe('es');
     expect(parseCookie('locale=es%20pe', 'locale')).toBe('es pe');
     expect(parseCookie('theme=dark', 'locale')).toBeUndefined();
+    expect(parseCookie('locale=%', 'locale')).toBeUndefined();
   });
 
   it('reads, strips and sets the language prefix of a path', () => {
