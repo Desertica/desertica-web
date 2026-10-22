@@ -13,7 +13,8 @@ import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { routes } from './app.routes';
 import { CatalogService } from './core/catalog/catalog';
-import { remoteImageLoader } from './core/images/remote-image-loader';
+import { PUBLIC_CONFIG } from './core/config/public-config';
+import { optimizedImageLoader } from './core/images/remote-image-loader';
 
 // The date pipe throws NG0701 for "es" without its locale data; "en" is built in.
 registerLocaleData(localeEs);
@@ -31,6 +32,6 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideSpartanHlm(),
     provideNativeDateAdapter(),
-    { provide: IMAGE_LOADER, useValue: remoteImageLoader },
+    { provide: IMAGE_LOADER, useFactory: () => optimizedImageLoader(inject(PUBLIC_CONFIG).imageHosts) },
   ],
 };

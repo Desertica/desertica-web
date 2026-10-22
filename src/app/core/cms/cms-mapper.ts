@@ -7,7 +7,7 @@ import type {
   TourStop,
   TourVideo,
 } from '../catalog/tour-pages';
-import type { CatalogDestination, CatalogTour } from '../catalog/tours';
+import { IMAGE_FOCUS, type CatalogDestination, type CatalogTour } from '../catalog/tours';
 import { LOCALES, type AppLocale } from '../i18n/catalogs';
 import {
   PALETTE_TOKENS,
@@ -118,6 +118,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       durationHours: num(base['durationHours']) ?? 0,
       priceFrom: num(base['priceFrom']) ?? 0,
       image,
+      ...imageFocus(base['imageFocus']),
       featured: base['featured'] === true,
     };
     toursByDestination.set(destinationSlug, [
@@ -639,6 +640,12 @@ function languages(value: unknown): readonly TourLanguage[] {
 
 function format(value: unknown): TourFormat {
   return FORMATS.find((item) => item === value) ?? 'both';
+}
+
+/** Only a non-default focus is kept, so tours without one map exactly as before. */
+function imageFocus(value: unknown): Pick<CatalogTour, 'imageFocus'> {
+  const focus = IMAGE_FOCUS.find((item) => item === value);
+  return focus && focus !== 'center' ? { imageFocus: focus } : {};
 }
 
 function orderOf(value: unknown): number {

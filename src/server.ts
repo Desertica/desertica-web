@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
 import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
 import { apiProxy } from './api-proxy';
+import { imageProxy } from './image-proxy';
 import { formsProxy } from './forms-proxy';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import {
@@ -130,6 +131,9 @@ app.use(
   '/api/public',
   apiProxy({ apiUrl, enabled: publicConfig.bookingEngineEnabled }),
 );
+
+/** Resizes CMS images to WebP at the width each screen needs; see image-proxy.ts. */
+app.use('/_img', imageProxy({ hosts: publicConfig.imageHosts }));
 
 /**
  * Serve static files from /browser. Files with a content hash never change; the rest (brand
