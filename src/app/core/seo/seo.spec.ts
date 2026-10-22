@@ -38,18 +38,18 @@ describe('SeoService', () => {
     TestBed.tick();
 
     expect(document.title).toBe('Dune buggy | Desértica | Tours and experiences in Ica');
-    expect(head('link[rel="canonical"]')?.getAttribute('href')).toBe('https://desertica.pe/tours/dune-buggy');
+    expect(head('link[rel="canonical"]')?.getAttribute('href')).toBe('https://desertica.pe/en/tours/dune-buggy');
     const alternates = Array.from(document.head.querySelectorAll('link[rel="alternate"][hreflang]')).map(
       (link) => [link.getAttribute('hreflang'), link.getAttribute('href')],
     );
     expect(alternates).toEqual([
-      ['en', 'https://desertica.pe/tours/dune-buggy'],
-      ['es', 'https://desertica.pe/tours/dune-buggy?lang=es'],
-      ['x-default', 'https://desertica.pe/tours/dune-buggy'],
+      ['en', 'https://desertica.pe/en/tours/dune-buggy'],
+      ['es', 'https://desertica.pe/es/tours/dune-buggy'],
+      ['x-default', 'https://desertica.pe/en/tours/dune-buggy'],
     ]);
     expect(content('meta[name="description"]')).toBe('Ride the dunes');
     expect(content('meta[property="og:title"]')).toContain('Dune buggy');
-    expect(content('meta[property="og:url"]')).toBe('https://desertica.pe/tours/dune-buggy');
+    expect(content('meta[property="og:url"]')).toBe('https://desertica.pe/en/tours/dune-buggy');
     expect(content('meta[property="og:image"]')).toBe('https://desertica.pe/a.jpg');
     expect(content('meta[property="og:locale"]')).toBe('en_US');
     expect(content('meta[property="og:locale:alternate"]')).toBe('es_PE');
@@ -93,7 +93,7 @@ describe('SeoService', () => {
     TestBed.inject(I18nService).setLocale('es');
     TestBed.tick();
 
-    expect(head('link[rel="canonical"]')?.getAttribute('href')).toBe('https://desertica.pe/tours?lang=es');
+    expect(head('link[rel="canonical"]')?.getAttribute('href')).toBe('https://desertica.pe/es/tours');
     expect(content('meta[property="og:locale"]')).toBe('es_PE');
     expect(content('meta[name="robots"]')).toBe('noindex, nofollow');
 

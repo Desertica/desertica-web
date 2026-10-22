@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { PUBLIC_CONFIG } from '../config/public-config';
+import { stripLocale } from '../i18n/catalogs';
 import { dataLayerOf } from './data-layer';
 
 /**
@@ -10,7 +11,7 @@ import { dataLayerOf } from './data-layer';
  */
 export function isCredentialUrl(location: Pick<Location, 'pathname' | 'search'>): boolean {
   return (
-    /^\/(pay|waiver)\//.test(location.pathname) ||
+    /^\/(pay|waiver)\//.test(stripLocale(location.pathname)) ||
     new URLSearchParams(location.search).has('token')
   );
 }

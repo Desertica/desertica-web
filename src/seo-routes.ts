@@ -1,6 +1,6 @@
 import express from 'express';
 import { tourDestinations } from './app/core/catalog/tours';
-import { DEFAULT_LOCALE, LOCALES, LOCALE_QUERY } from './app/core/i18n/catalogs';
+import { DEFAULT_LOCALE, LOCALES, localeFromPath, withLocale } from './app/core/i18n/catalogs';
 
 /** Slugs the sitemap lists, with the CMS `updatedAt` when there is one. */
 export type SeoEntry = { slug: string; updatedAt?: string };
@@ -66,8 +66,8 @@ export function sitePaths(catalog: SeoCatalog): readonly { path: string; lastmod
   ];
 }
 
-function urlFor(origin: string, path: string, locale: string): string {
-  return `${origin}${path}${locale === DEFAULT_LOCALE ? '' : `?${LOCALE_QUERY}=${locale}`}`;
+function urlFor(origin: string, path: string, locale: (typeof LOCALES)[number]): string {
+  return `${origin}${withLocale(path, locale)}`;
 }
 
 const escapeXml = (value: string): string =>
@@ -110,18 +110,25 @@ export function sitemapXml(origin: string, catalog: SeoCatalog): string {
 export function robotsTxt(origin: string, disallowAll = false): string {
   const rules = disallowAll
     ? ['Disallow: /']
-    : [...DISALLOWED_PATHS.map((path) => `Disallow: ${path}`), 'Allow: /'];
+    : [
+        // Each language has its own prefix, so every private path is listed once per language.
+        ...new Set(LOCALES.flatMap((locale) => DISALLOWED_PATHS.map((path) => `Disallow: ${path.startsWith('/api/') ? path : withLocale(path, locale)}`))),
+        'Allow: /',
+      ];
   return ['User-agent: *', ...rules, '', `Sitemap: ${origin}/sitemap.xml`, ''].join('\n');
 }
 
 /** `/experiences/:slug` was a stub; its URLs now redirect permanently to `/tours/:slug`. */
 export function legacyRedirects(): express.Router {
   const router = express.Router();
-  router.get(['/experiences', '/experiences/:slug'], (req, res) => {
+  const paths = ['', ...LOCALES.map((locale) => `/${locale}`)].flatMap((prefix) => [`${prefix}/experiences`, `${prefix}/experiences/:slug`]);
+  router.get(paths, (req, res) => {
     const slug = req.params['slug'];
+    const locale = localeFromPath(req.path);
     const queryAt = req.originalUrl.indexOf('?');
     const query = queryAt === -1 ? '' : req.originalUrl.slice(queryAt);
-    res.redirect(301, `/tours${typeof slug === 'string' ? `/${encodeURIComponent(slug)}` : ''}${query}`);
+    const prefix = locale ? `/${locale}` : '';
+    res.redirect(301, `${prefix}/tours${typeof slug === 'string' ? `/${encodeURIComponent(slug)}` : ''}${query}`);
   });
   return router;
 }

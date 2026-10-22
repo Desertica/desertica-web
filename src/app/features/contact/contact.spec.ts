@@ -5,7 +5,6 @@ import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { FormsApi } from '../../core/cms/forms-api';
 import { remoteImageLoader } from '../../core/images/remote-image-loader';
 import { Contact } from './contact';
-import { GEOJS_COUNTRY_URL } from './phone';
 
 vi.mock('@spartan-ng/brain/sonner', () => ({
   toast: vi.fn(),
@@ -38,7 +37,7 @@ describe('Contact', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders a centered inquiry form with a photo band and a Turnstile placeholder', async () => {
+  it('renders a centered inquiry form with a photo band', async () => {
     const fixture = TestBed.createComponent(Contact);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
@@ -66,11 +65,9 @@ describe('Contact', () => {
     expect(message?.className).toContain('field-sizing-fixed');
     expect(message?.className).toContain('h-48');
     expect(message?.className).toContain('overflow-y-auto');
-    expect(compiled.querySelector('#contact-captcha')?.getAttribute('type')).toBe('checkbox');
-    expect(compiled.querySelector('#contact-captcha')?.closest('.w-fit')).not.toBeNull();
+    expect(compiled.querySelector('#contact-captcha')).toBeNull();
     expect(compiled.querySelector('.lg\\:flex-row')).not.toBeNull();
-    expect(compiled.textContent).toContain("I'm not a robot");
-    expect(compiled.textContent).toContain('Turnstile');
+    expect(compiled.textContent).not.toContain('robot');
     expect(compiled.querySelector('script[src*="cloudflare"]')).toBeNull();
     const submit = compiled.querySelector('button[type="submit"]');
     expect(submit?.textContent).toContain('Send');
@@ -84,8 +81,7 @@ describe('Contact', () => {
     expect(compiled.querySelector('#contact-email')?.hasAttribute('required')).toBe(true);
     expect(compiled.querySelector('#contact-whatsapp')?.hasAttribute('required')).toBe(true);
     expect(compiled.querySelector('#contact-message')?.hasAttribute('required')).toBe(true);
-    expect(compiled.querySelector('#contact-captcha')?.hasAttribute('required')).toBe(true);
-    expect(compiled.querySelectorAll('.text-destructive').length).toBeGreaterThanOrEqual(5);
+    expect(compiled.querySelectorAll('.text-destructive').length).toBeGreaterThanOrEqual(4);
     expect(compiled.querySelector('#contact-message')?.getAttribute('placeholder')).toBe(
       'What did you have in mind?',
     );
@@ -148,7 +144,6 @@ describe('Contact', () => {
     expect(compiled.textContent).toContain('Enter a valid email');
     expect(compiled.textContent).toContain('valid WhatsApp number');
     expect(compiled.textContent).toContain('Enter a message');
-    expect(compiled.textContent).toContain('not a robot');
     expect(toast).not.toHaveBeenCalled();
   });
 
@@ -223,61 +218,13 @@ describe('Contact', () => {
     expect(compiled.querySelector<HTMLInputElement>('#contact-whatsapp')?.value).toContain('600');
   });
 
-  it('guesses the country from IP when the number is still empty', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({ country: 'ES', ip: '1.1.1.1' }),
-    });
+  it('starts on Peru and calls no third party to guess the visitor country', async () => {
     const fixture = TestBed.createComponent(Contact);
     fixture.detectChanges();
     await fixture.whenStable();
-    await Promise.resolve();
-    await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      GEOJS_COUNTRY_URL,
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
-    );
-    expect(
-      fixture.nativeElement.querySelector('[data-country]')?.getAttribute('data-country'),
-    ).toBe('ES');
-  });
-
-  it('keeps the user country when GeoJS returns later', async () => {
-    fetchMock.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              ok: true,
-              json: async () => ({ country: 'ES', ip: '1.1.1.1' }),
-            });
-          }, 30);
-        }),
-    );
-    const fixture = TestBed.createComponent(Contact);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    setInput(fixture.nativeElement, '#contact-whatsapp', '987654321');
-    fixture.detectChanges();
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(
-      fixture.nativeElement.querySelector('[data-country]')?.getAttribute('data-country'),
-    ).toBe('PE');
-  });
-
-  it('keeps Peru when GeoJS fails', async () => {
-    const fixture = TestBed.createComponent(Contact);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    await Promise.resolve();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(
       fixture.nativeElement.querySelector('[data-country]')?.getAttribute('data-country'),
     ).toBe('PE');
@@ -312,7 +259,6 @@ describe('Contact', () => {
     expect(compiled.querySelector<HTMLInputElement>('#contact-email')?.value).toBe('');
     expect(compiled.querySelector<HTMLInputElement>('#contact-whatsapp')?.value).toBe('');
     expect(compiled.querySelector<HTMLTextAreaElement>('#contact-message')?.value).toBe('');
-    expect(compiled.querySelector<HTMLInputElement>('#contact-captcha')?.checked).toBe(false);
     expect(
       compiled
         .querySelector('#contact-country')

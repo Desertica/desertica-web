@@ -1,18 +1,19 @@
 import { absoluteUrl, alternatesFor, isPlaceholder, localizedUrl, pathOf } from './seo-urls';
 
 describe('seo urls', () => {
-  it('keeps English clean and marks other languages with ?lang=', () => {
-    expect(localizedUrl('https://d.pe', '/tours', 'en')).toBe('https://d.pe/tours');
-    expect(localizedUrl('https://d.pe', '/tours', 'es')).toBe('https://d.pe/tours?lang=es');
-    expect(localizedUrl('https://d.pe', '/', 'es')).toBe('https://d.pe/?lang=es');
-    expect(localizedUrl('https://d.pe', 'tours', 'en')).toBe('https://d.pe/tours');
+  it('puts the language first in the path, for every language', () => {
+    expect(localizedUrl('https://d.pe', '/tours', 'en')).toBe('https://d.pe/en/tours');
+    expect(localizedUrl('https://d.pe', '/tours', 'es')).toBe('https://d.pe/es/tours');
+    expect(localizedUrl('https://d.pe', '/', 'es')).toBe('https://d.pe/es/');
+    expect(localizedUrl('https://d.pe', 'tours', 'en')).toBe('https://d.pe/en/tours');
+    expect(localizedUrl('https://d.pe', '/es/tours', 'en')).toBe('https://d.pe/en/tours');
   });
 
   it('lists every language and x-default pointing at English', () => {
     expect(alternatesFor('https://d.pe', '/tours/dune-buggy')).toEqual([
-      { hreflang: 'en', href: 'https://d.pe/tours/dune-buggy' },
-      { hreflang: 'es', href: 'https://d.pe/tours/dune-buggy?lang=es' },
-      { hreflang: 'x-default', href: 'https://d.pe/tours/dune-buggy' },
+      { hreflang: 'en', href: 'https://d.pe/en/tours/dune-buggy' },
+      { hreflang: 'es', href: 'https://d.pe/es/tours/dune-buggy' },
+      { hreflang: 'x-default', href: 'https://d.pe/en/tours/dune-buggy' },
     ]);
   });
 

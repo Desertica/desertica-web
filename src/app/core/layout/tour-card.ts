@@ -22,6 +22,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
         [priority]="priority()"
         [sizes]="sizes()"
         alt=""
+        [style.object-position]="tour().imageFocus ?? 'center'"
         class="aspect-square w-full rounded-none object-cover"
       />
       <div

@@ -3,6 +3,10 @@ export const TOURS_PATH = '/tours';
 /** Destination slug. Known today: `huacachina`, `paracas`, `nazca`; the CMS may add more. */
 export type DestinationId = string;
 
+/** Which part of a photo stays visible when it is cropped into a card (`object-position`). */
+export const IMAGE_FOCUS = ['center', 'top', 'bottom', 'left', 'right'] as const;
+export type ImageFocus = (typeof IMAGE_FOCUS)[number];
+
 export type CatalogTour = {
   id: string;
   destination: DestinationId;
@@ -11,6 +15,8 @@ export type CatalogTour = {
   durationHours: number;
   priceFrom: number;
   image: string;
+  /** Set by the CMS when the card should not crop around the centre. */
+  imageFocus?: ImageFocus;
   featured: boolean;
 };
 

@@ -56,6 +56,32 @@ describe('I18nService', () => {
     window.history.replaceState({}, '', '/');
   });
 
+  it('takes the language from the URL prefix, over the cookie and the legacy query', () => {
+    document.cookie = 'locale=en; path=/';
+    window.history.replaceState({}, '', '/es/tours');
+    expect(TestBed.inject(I18nService).locale()).toBe('es');
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'server' },
+        { provide: REQUEST, useValue: new Request('http://localhost/es/tours?lang=en', { headers: { cookie: 'locale=en' } }) },
+      ],
+    });
+    expect(TestBed.inject(I18nService).locale()).toBe('es');
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'server' },
+        { provide: REQUEST, useValue: new Request('http://localhost/tours', { headers: { 'accept-language': 'es-PE,es;q=0.9' } }) },
+      ],
+    });
+    expect(TestBed.inject(I18nService).locale()).toBe('es');
+    document.cookie = 'locale=; path=/; max-age=0';
+    window.history.replaceState({}, '', '/');
+  });
+
   it('applies a stored preference after a transferred locale', async () => {
     localStorage.setItem(LOCALE_STORAGE_KEY, 'es');
     TestBed.inject(TransferState).set(makeStateKey<string>('locale'), 'en');

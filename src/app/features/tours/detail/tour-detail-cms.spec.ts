@@ -41,6 +41,16 @@ describe('TourDetail with CMS fields', () => {
     document.head.querySelectorAll('script[type="application/ld+json"]').forEach((node) => node.remove());
   });
 
+  it('offers a WhatsApp button next to booking with a message about this tour', async () => {
+    const root = await mount({});
+    const ask = root.querySelector<HTMLAnchorElement>('a[href*="wa.me"][target="_blank"]');
+
+    expect(ask?.textContent).toContain('Ask on WhatsApp');
+    const text = decodeURIComponent(ask?.href.split('text=')[1] ?? '');
+    expect(text).toContain('Dune buggy');
+    expect(text).toContain('https://desertica.pe/en/tours/dune-buggy');
+  });
+
   it('renders the questions and publishes the same ones as FAQPage, with geo on the trip', async () => {
     const root = await mount({
       latitude: -14.0875,

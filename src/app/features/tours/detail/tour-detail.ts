@@ -7,13 +7,12 @@ import {
   input,
   untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { AnalyticsService, asCurrency } from '../../../core/analytics/analytics';
 import { tourItem } from '../../../core/analytics/items';
 import { PUBLIC_CONFIG } from '../../../core/config/public-config';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideDownload } from '@ng-icons/lucide';
+import { lucideDownload, lucideMessageCircle } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { meetingMapUrl, tourHasDetails } from '../../../core/catalog/tour-pages';
 import { type CatalogTour, TOURS_PATH, tourPath } from '../../../core/catalog/tours';
@@ -24,6 +23,7 @@ import { usePageMeta } from '../../../core/seo/page-meta';
 import { SeoService } from '../../../core/seo/seo';
 import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
 import { BookingPanel } from '../../booking/booking-panel';
+import { NotFound } from '../../not-found/not-found';
 import { TourAssurances } from './tour-assurances';
 import { TourFaqs } from './tour-faqs';
 import { TourBook } from './tour-book';
@@ -33,6 +33,7 @@ import { TourGallery } from './tour-gallery';
 import { TourHeading } from './tour-heading';
 import { TourTimeline } from './tour-timeline';
 import { TourVideos } from './tour-videos';
+import { buildAskWhatsappHref } from './tour-whatsapp';
 
 @Component({
   selector: 'app-tour-detail',
@@ -51,12 +52,12 @@ import { TourVideos } from './tour-videos';
     TourTimeline,
     TourFullDetails,
     TourVideos,
+    NotFound,
   ],
   templateUrl: './tour-detail.html',
-  providers: [provideIcons({ lucideDownload })],
+  providers: [provideIcons({ lucideDownload, lucideMessageCircle })],
 })
 export class TourDetail {
-  private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
   private readonly analytics = inject(AnalyticsService);
   private viewed: string | null = null;
@@ -70,16 +71,28 @@ export class TourDetail {
   /** Online booking replaces the WhatsApp form only while the flag is on. */
   protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
 
-  constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => {
-        if (!this.catalog.resolvedTour(id)) {
-          void this.router.navigateByUrl(TOURS_PATH);
-        }
-      });
-    });
+  /** WhatsApp link with a ready message about this tour; `null` while the tour is unknown. */
+  protected readonly askHref = computed(() => {
+    const data = this.resolved();
+    const locale = this.i18n.locale();
+    if (!data) {
+      return null;
+    }
 
+    const origin = this.seo.origin();
+    return buildAskWhatsappHref(this.catalog.contact().whatsapp, this.i18n.t('tour.askWhatsappMessage'), {
+      tour: this.i18n.t(data.tour.titleKey),
+      hours: String(data.tour.durationHours),
+      price: String(data.tour.priceFrom),
+      url: origin ? localizedUrl(origin, tourPath(data.tour.id), locale) : '',
+    });
+  });
+
+  protected trackAsk(): void {
+    this.analytics.track('click_whatsapp', { placement: 'tour_ask' });
+  }
+
+  constructor() {
     effect(() => {
       const data = this.resolved();
       this.i18n.locale();

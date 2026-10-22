@@ -14,16 +14,16 @@ describe('sitemap and robots', () => {
   it('lists every public route in both languages with alternates', () => {
     const xml = sitemapXml('https://desertica.pe', staticCatalog());
 
-    expect(xml).toContain('<loc>https://desertica.pe/tours/dune-buggy</loc>');
-    expect(xml).toContain('<loc>https://desertica.pe/tours/dune-buggy?lang=es</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/en/tours/dune-buggy</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/es/tours/dune-buggy</loc>');
     expect(xml).toContain(
-      '<xhtml:link rel="alternate" hreflang="es" href="https://desertica.pe/tours/dune-buggy?lang=es"/>',
+      '<xhtml:link rel="alternate" hreflang="es" href="https://desertica.pe/es/tours/dune-buggy"/>',
     );
     expect(xml).toContain(
-      '<xhtml:link rel="alternate" hreflang="x-default" href="https://desertica.pe/tours/dune-buggy"/>',
+      '<xhtml:link rel="alternate" hreflang="x-default" href="https://desertica.pe/en/tours/dune-buggy"/>',
     );
-    expect(xml).toContain('<loc>https://desertica.pe/</loc>');
-    expect(xml).toContain('<loc>https://desertica.pe/huacachina</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/en/</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/es/huacachina</loc>');
     expect(xml).not.toContain('/reservations');
     expect(xml).not.toContain('/experiences');
   });
@@ -48,8 +48,9 @@ describe('sitemap and robots', () => {
 
   it('keeps transactional pages out of robots.txt and points at the sitemap', () => {
     const robots = robotsTxt('https://desertica.pe');
-    expect(robots).toContain('Disallow: /checkout');
-    expect(robots).toContain('Disallow: /booking');
+    expect(robots).toContain('Disallow: /en/checkout');
+    expect(robots).toContain('Disallow: /es/checkout');
+    expect(robots).toContain('Disallow: /es/booking');
     expect(robots).toContain('Disallow: /api/');
     expect(robots).toContain('Sitemap: https://desertica.pe/sitemap.xml');
     expect(robotsTxt('https://staging.test', true)).toContain('Disallow: /\n');
@@ -76,7 +77,7 @@ describe('seoRouter', () => {
 
     const sitemap = await fetch(`${started.url}/sitemap.xml`);
     expect(sitemap.headers.get('content-type')).toContain('application/xml');
-    expect(await sitemap.text()).toContain(`<loc>${started.url}/tours/dune-buggy</loc>`);
+    expect(await sitemap.text()).toContain(`<loc>${started.url}/en/tours/dune-buggy</loc>`);
   });
 
   it('builds the tour list from Strapi and falls back when it is down', async () => {
@@ -106,7 +107,7 @@ describe('seoRouter', () => {
     server = started.server;
 
     const xml = await (await real(`${started.url}/sitemap.xml`)).text();
-    expect(xml).toContain('<loc>https://desertica.pe/tours/cms-tour</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/en/tours/cms-tour</loc>');
     expect(xml).toContain('<lastmod>2026-02-03T00:00:00.000Z</lastmod>');
     expect(xml).not.toContain('Bad%20Slug');
     expect(xml).not.toContain('Bad Slug');
@@ -130,9 +131,13 @@ describe('legacyRedirects', () => {
     app.use(legacyRedirects());
     const { url, server } = await serve(app);
 
-    const tour = await fetch(`${url}/experiences/dune-buggy?lang=es`, { redirect: 'manual' });
+    const tour = await fetch(`${url}/experiences/dune-buggy?utm_source=x`, { redirect: 'manual' });
     expect(tour.status).toBe(301);
-    expect(tour.headers.get('location')).toBe('/tours/dune-buggy?lang=es');
+    expect(tour.headers.get('location')).toBe('/tours/dune-buggy?utm_source=x');
+
+    const prefixed = await fetch(`${url}/es/experiences/dune-buggy`, { redirect: 'manual' });
+    expect(prefixed.status).toBe(301);
+    expect(prefixed.headers.get('location')).toBe('/es/tours/dune-buggy');
 
     const list = await fetch(`${url}/experiences`, { redirect: 'manual' });
     expect(list.status).toBe(301);

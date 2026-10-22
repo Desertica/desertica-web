@@ -16,6 +16,8 @@ export type PublicConfig = {
   culqiPublicKey: string | null;
   /** Public origin of the site, used for canonical, hreflang, sitemap and JSON-LD. */
   siteUrl: string | null;
+  /** Hosts whose images the server may resize and convert (`/_img`); everything else loads as is. */
+  imageHosts: string[];
 };
 
 export const DEFAULT_PUBLIC_CONFIG: PublicConfig = {
@@ -24,6 +26,7 @@ export const DEFAULT_PUBLIC_CONFIG: PublicConfig = {
   turnstileSiteKey: null,
   culqiPublicKey: null,
   siteUrl: null,
+  imageHosts: [],
 };
 
 const CONFIG_KEY = makeStateKey<PublicConfig>('public-config');
@@ -51,7 +54,25 @@ export function publicConfigFromEnv(env: Record<string, string | undefined>): Pu
     // Public keys only: a secret key (`sk_…`) pasted here by mistake must never reach the browser.
     culqiPublicKey: culqi && /^pk_(test|live)_[A-Za-z0-9]+$/.test(culqi) ? culqi : null,
     siteUrl: siteUrl || null,
+    imageHosts: imageHostsFromEnv(env),
   };
+}
+
+/** The CMS media host, `IMAGE_HOSTS` (for an R2 or CDN host) and Unsplash, which the static catalog uses. */
+function imageHostsFromEnv(env: Record<string, string | undefined>): string[] {
+  const hostOf = (value: string | undefined) => {
+    try {
+      return value?.trim() ? new URL(value.trim()).host : '';
+    } catch {
+      return '';
+    }
+  };
+  const listed = (env['IMAGE_HOSTS'] ?? '').split(',').map((host) => host.trim());
+  return [
+    ...new Set(
+      [...listed, hostOf(env['STRAPI_PUBLIC_URL']), hostOf(env['STRAPI_URL']), 'images.unsplash.com'].filter(Boolean),
+    ),
+  ];
 }
 
 /** `API_URL` is the origin of desertica-api (no `/api`); only the server ever reads it. */

@@ -1,6 +1,7 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, afterNextRender, computed, inject, signal } from '@angular/core';
 import { CatalogService } from '../catalog/catalog';
+import { stripLocale } from '../i18n/catalogs';
 
 export const INTRO_STORAGE_KEY = 'desertica-intro';
 
@@ -80,7 +81,7 @@ export class IntroService {
       return false;
     }
 
-    return isHomePath(window.location.pathname);
+    return isHomePath(stripLocale(window.location.pathname));
   }
 
   private remember(): void {

@@ -198,6 +198,21 @@ describe('mapCms', () => {
     expect(snapshot.messages.en?.['cms.destinations.huacachina.lead']).toBe('Dunes');
   });
 
+  it('keeps a non-default image focus and ignores unknown values', () => {
+    const focusOf = (value: unknown) => {
+      const tours = raw.tours as unknown as Record<string, RawEntry[]>;
+      const mapped = mapCms(
+        { ...raw, tours: { ...tours, en: tours['en'].map((tour) => ({ ...tour, imageFocus: value })) } } as unknown as CmsRaw,
+        options,
+      );
+      return mapped.destinations[0]?.tours.find((tour) => tour.id === 'a-tour')?.imageFocus;
+    };
+
+    expect(focusOf('top')).toBe('top');
+    expect(focusOf('center')).toBeUndefined();
+    expect(focusOf('diagonal')).toBeUndefined();
+  });
+
   it('maps tour pages to the key-based model', () => {
     const page = snapshot.tourPages['a-tour'];
     expect(page?.gallery).toEqual(['https://cms.test/uploads/g.jpg']);

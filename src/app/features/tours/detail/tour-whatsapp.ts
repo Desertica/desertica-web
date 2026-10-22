@@ -9,6 +9,14 @@ export type TourWhatsappFields = {
   amount: string;
 };
 
+export type AskWhatsappFields = { tour: string; hours: string; price: string; url: string };
+
+/** "Ask for more information" message for a tour: the visitor edits it in WhatsApp before sending. */
+export function buildAskWhatsappHref(base: string, template: string, fields: AskWhatsappFields): string {
+  const text = Object.entries(fields).reduce((message, [key, value]) => message.replaceAll(`{${key}}`, value), template);
+  return `${base}${base.includes('?') ? '&' : '?'}text=${encodeURIComponent(text)}`;
+}
+
 export function formatPickerDate(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');

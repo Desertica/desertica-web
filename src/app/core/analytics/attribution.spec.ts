@@ -56,6 +56,16 @@ describe('AttributionService', () => {
     expect(attribution.current()).toEqual({ utmSource: 'first', landingPath: '/' });
   });
 
+  it('ignores a visit that lands on a link carrying a credential', () => {
+    history.replaceState({}, '', '/pay/secret-token-123?utm_source=email');
+    const { consent, attribution } = setup();
+    consent.acceptAll();
+    TestBed.tick();
+
+    expect(localStorage.getItem(ATTRIBUTION_STORAGE_KEY)).toBeNull();
+    expect(attribution.current()).toBeNull();
+  });
+
   it('erases the stored attribution when marketing consent is withdrawn', () => {
     const { consent, attribution } = setup();
     consent.acceptAll();

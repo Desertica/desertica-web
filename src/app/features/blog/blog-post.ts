@@ -3,13 +3,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
-  untracked,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../core/catalog/catalog';
+import { NotFound } from '../not-found/not-found';
 import { ContentBody } from '../../core/cms/content-body';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -18,7 +17,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
 @Component({
   selector: 'app-blog-post',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, NgOptimizedImage, RouterLink, TranslatePipe, ContentBody],
+  imports: [DatePipe, NgOptimizedImage, RouterLink, TranslatePipe, ContentBody, NotFound],
   template: `
     @if (post(); as data) {
       <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
@@ -38,19 +37,20 @@ import { usePageMeta } from '../../core/seo/page-meta';
               fill
               priority
               sizes="(min-width: 768px) 48rem, 100vw"
-              alt=""
+              [alt]="data.title"
               class="rounded-none object-cover"
             />
           </div>
         }
         <app-content-body class="mt-8" [markdown]="data.content" />
       </article>
+    } @else {
+      <app-not-found />
     }
   `,
 })
 export class BlogPostPage {
   private readonly catalog = inject(CatalogService);
-  private readonly router = inject(Router);
   protected readonly i18n = inject(I18nService);
 
   readonly slug = input.required<string>();
@@ -64,15 +64,6 @@ export class BlogPostPage {
   });
 
   constructor() {
-    effect(() => {
-      const missing = !this.post();
-      untracked(() => {
-        if (missing) {
-          void this.router.navigateByUrl('/blog');
-        }
-      });
-    });
-
     usePageMeta(() => {
       const post = this.post();
       return post

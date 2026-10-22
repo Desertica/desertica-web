@@ -19,9 +19,11 @@ import {
   EMPTY_OVERLAY,
   type MessageOverlay,
   isAppLocale,
+  localeFromPath,
   parseCookie,
   resolveLocale,
   translate,
+  withLocale,
 } from './catalogs';
 
 const LOCALE_STATE_KEY = makeStateKey<AppLocale | null>('locale');
@@ -60,7 +62,8 @@ export class I18nService {
 
     if (isPlatformBrowser(this.platformId)) {
       afterNextRender(() => {
-        const preferred = this.readClientPreference();
+        // The URL names the language; only a page without a prefix falls back to what the visitor chose before.
+        const preferred = localeFromPath(this.document.defaultView?.location.pathname ?? '/') ?? this.readClientPreference();
         if (preferred !== this.locale()) {
           this.setLocale(preferred);
           return;
@@ -89,7 +92,24 @@ export class I18nService {
     this.locale.set(locale);
     this.apply(locale);
     this.persist(locale);
-    this.syncQuery(locale);
+  }
+
+  /**
+   * The language is part of the URL and the router base differs per language, so switching loads the same page
+   * under the other prefix instead of flipping a signal.
+   */
+  switchLanguage(locale: AppLocale): void {
+    const view = this.document.defaultView;
+    if (!isPlatformBrowser(this.platformId) || !view) {
+      this.setLocale(locale);
+      return;
+    }
+
+    this.persist(locale);
+    const { pathname, search, hash } = view.location;
+    const params = new URLSearchParams(search);
+    params.delete(LOCALE_QUERY);
+    view.location.assign(`${withLocale(pathname, locale)}${params.size ? `?${params}` : ''}${hash}`);
   }
 
   private readClientPreference(): AppLocale {
@@ -115,6 +135,11 @@ export class I18nService {
         return transferred;
       }
 
+      const fromPath = localeFromPath(this.document.defaultView?.location.pathname ?? '/');
+      if (fromPath) {
+        return fromPath;
+      }
+
       const href = this.document.defaultView?.location.href;
       const query = href ? new URL(href).searchParams.get(LOCALE_QUERY) : null;
       const cookie = parseCookie(this.document.cookie, LOCALE_COOKIE);
@@ -132,26 +157,14 @@ export class I18nService {
 
     const url = this.request ? new URL(this.request.url, 'http://localhost') : null;
     const locale = resolveLocale({
+      path: url?.pathname,
       cookie: parseCookie(this.request?.headers.get('cookie'), LOCALE_COOKIE),
       query: url?.searchParams.get(LOCALE_QUERY),
+      acceptLanguage: this.request?.headers.get('accept-language'),
     });
 
     this.transferState.set(LOCALE_STATE_KEY, locale);
     return locale;
-  }
-
-  /** An explicit `?lang=` outranks the cookie, so a manual switch must update it or a reload would undo it. */
-  private syncQuery(locale: AppLocale): void {
-    const view = this.document.defaultView;
-    if (!isPlatformBrowser(this.platformId) || !view) {
-      return;
-    }
-
-    const url = new URL(view.location.href);
-    if (url.searchParams.has(LOCALE_QUERY) && url.searchParams.get(LOCALE_QUERY) !== locale) {
-      url.searchParams.set(LOCALE_QUERY, locale);
-      view.history.replaceState(view.history.state, '', url);
-    }
   }
 
   private persist(locale: AppLocale): void {
