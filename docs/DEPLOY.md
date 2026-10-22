@@ -4,11 +4,11 @@ The site is a Node server (Angular SSR + the forms proxy) that reads content fro
 
 ## Image
 
-`Dockerfile` builds a multi-stage image (Node 22, non-root; the `HEALTHCHECK` calls `/healthz`, a plain `200 ok` that skips rendering and the `Host` check). CI publishes `ghcr.io/desertica/desertica-web` (`latest` from `main`, `sha-<short>`, semver tags) from `.github/workflows/docker.yml`. Locally:
+`Dockerfile` builds a multi-stage image (Node 22, non-root; the `HEALTHCHECK` calls `/healthz`, a plain `200 ok` that skips rendering and the `Host` check). CI (`.github/workflows/ci.yml`) only checks that the image builds; it does not publish it. Locally:
 
 ```bash
 docker build -t desertica-web .
-docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
+docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost -e SITE_URL=http://localhost:4000 desertica-web
 ```
 
 ## Runtime configuration (environment)
@@ -51,6 +51,8 @@ git clone https://github.com/Desertica/desertica-cms.git ../desertica-cms
 cp .env.example .env   # add the CMS secrets and DATABASE_PASSWORD (see the compose file)
 docker compose up --build
 ```
+
+Compose passes `TRUST_PROXY` through and defaults it to `0` (nothing in front of the site). Behind Traefik or Cloudflare set it to the number of proxies, otherwise every visitor shares one IP and the form and image rate limits hit everyone. It is only a warning at start, not a hard requirement (pending).
 
 ## Checklist
 

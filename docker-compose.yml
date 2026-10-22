@@ -60,7 +60,8 @@ services:
       FORMS_PROXY_SECRET: ${FORMS_PROXY_SECRET}
       SITE_URL: ${WEB_PUBLIC_URL:-http://localhost:4000}
       NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS:-localhost}
-      TRUST_PROXY: ${TRUST_PROXY:-false}
+      # Number of proxies in front (1 behind Traefik, 2 with Cloudflare too); 0 is right only when nothing sits in front.
+      TRUST_PROXY: ${TRUST_PROXY:-0}
     ports:
       - "4000:4000"
 
