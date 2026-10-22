@@ -1,3 +1,4 @@
+import { CONTACT_LIMITS } from './app/core/forms/contact-limits';
 import { COMPLAINT_LIMITS } from './app/core/forms/complaint-limits';
 import { ID_DOC_TYPES, type IdDocType, isIdDocType, isValidIdDocument } from './app/core/forms/id-document';
 
@@ -20,18 +21,18 @@ export const RESERVATION_FIELDS: Record<string, FieldSpec> = {
   format: { max: 10, enum: ['shared', 'private'] },
   payment: { max: 10, enum: ['full', 'deposit'] },
   locale: { max: 2, enum: ['es', 'en'] },
-  name: { max: 80 },
-  email: { max: 254, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+  name: { max: CONTACT_LIMITS.name },
+  email: { max: CONTACT_LIMITS.email, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   phone: { max: 32 },
-  notes: { max: 500 },
+  notes: { max: CONTACT_LIMITS.message },
 };
 
 export const CONTACT_FIELDS: Record<string, FieldSpec> = {
-  name: { max: 80, required: true },
-  email: { max: 254, required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+  name: { max: CONTACT_LIMITS.name, required: true },
+  email: { max: CONTACT_LIMITS.email, required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   whatsapp: { max: 32, required: true },
   country: { max: 4 },
-  message: { max: 500, required: true },
+  message: { max: CONTACT_LIMITS.message, required: true },
   locale: { max: 2, enum: ['es', 'en'] },
   /** Cloudflare Turnstile response; checked by the proxy (Strapi) or by the API. */
   turnstileToken: { max: 2048 },
@@ -87,15 +88,17 @@ export const RESERVATION_NUMBERS = {
   amount: { min: 0, max: 100_000 },
 };
 
-/** Returns the cleaned payload, or `null` when a required field is missing or malformed. */
+export type Sanitized = { data: Cleaned } | { invalid: string };
+
+/** Returns the cleaned payload, or the name of the first required, malformed or out-of-range field (`body` when it is not an object). */
 export function sanitize(
   body: unknown,
   fields: Record<string, FieldSpec>,
   numbers: Record<string, NumberSpec>,
   flags: Record<string, FlagSpec> = {},
-): Cleaned | null {
+): Sanitized {
   if (typeof body !== 'object' || body === null) {
-    return null;
+    return { invalid: 'body' };
   }
 
   const input = body as Record<string, unknown>;
@@ -106,7 +109,7 @@ export function sanitize(
     const value = typeof raw === 'string' ? raw.trim() : '';
     if (!value) {
       if (spec.required) {
-        return null;
+        return { invalid: name };
       }
 
       continue;
@@ -117,7 +120,7 @@ export function sanitize(
       (spec.pattern && !spec.pattern.test(value)) ||
       (spec.enum && !spec.enum.includes(value))
     ) {
-      return null;
+      return { invalid: name };
     }
 
     output[name] = value;
@@ -127,7 +130,7 @@ export function sanitize(
     const raw = input[name];
     if (raw === undefined || raw === null || raw === '') {
       if (spec.required) {
-        return null;
+        return { invalid: name };
       }
 
       continue;
@@ -140,7 +143,7 @@ export function sanitize(
       value > spec.max ||
       (spec.integer && !Number.isInteger(value))
     ) {
-      return null;
+      return { invalid: name };
     }
 
     output[name] = value;
@@ -150,18 +153,18 @@ export function sanitize(
     const raw = input[name];
     if (raw === undefined || raw === null || raw === '') {
       if (spec.required) {
-        return null;
+        return { invalid: name };
       }
 
       continue;
     }
 
     if (typeof raw !== 'boolean') {
-      return null;
+      return { invalid: name };
     }
 
     output[name] = raw;
   }
 
-  return output;
+  return { data: output };
 }
