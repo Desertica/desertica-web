@@ -19,9 +19,10 @@ type TipTimeline = {
     class: 'fixed right-6 bottom-6 z-50 inline-flex',
   },
   template: `
+    @if (href(); as href) {
     <a
       class="relative inline-flex focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none"
-      [href]="href()"
+      [href]="href"
       target="_blank"
       rel="noopener noreferrer"
       [attr.aria-label]="'a11y.whatsapp' | translate: i18n.locale()"
@@ -54,6 +55,7 @@ type TipTimeline = {
         {{ 'whatsapp.tooltip' | translate: i18n.locale() }}
       </span>
     </a>
+    }
   `,
 })
 export class WhatsappFab {

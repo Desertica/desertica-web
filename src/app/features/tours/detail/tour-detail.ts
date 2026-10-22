@@ -75,12 +75,13 @@ export class TourDetail {
   protected readonly askHref = computed(() => {
     const data = this.resolved();
     const locale = this.i18n.locale();
-    if (!data) {
+    const whatsapp = this.catalog.contact().whatsapp;
+    if (!data || !whatsapp) {
       return null;
     }
 
     const origin = this.seo.origin();
-    return buildAskWhatsappHref(this.catalog.contact().whatsapp, this.i18n.t('tour.askWhatsappMessage'), {
+    return buildAskWhatsappHref(whatsapp, this.i18n.t('tour.askWhatsappMessage'), {
       tour: this.i18n.t(data.tour.titleKey),
       hours: String(data.tour.durationHours),
       price: String(data.tour.priceFrom),

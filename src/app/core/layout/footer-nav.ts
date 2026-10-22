@@ -1,6 +1,6 @@
 import { type CatalogDestination, FOOTER_DESTINATION_IDS, tourDestinations, tourPath } from '../catalog/tours';
 import type { CmsNavLink, MediaSlot, SiteSettings } from '../cms/cms-models';
-import { contactFromSite, DEFAULT_SITE } from '../cms/site-defaults';
+import { DEFAULT_SITE } from '../cms/site-defaults';
 import {
   simpleFacebook,
   simpleGooglemaps,
@@ -107,15 +107,7 @@ export function buildFooterSocials(site: SiteSettings): readonly FooterSocial[] 
 
 export const footerSocials: readonly FooterSocial[] = buildFooterSocials(DEFAULT_SITE);
 
-export const footerContact = contactFromSite(DEFAULT_SITE);
-
 export const FOOTER_LEGAL_YEAR = DEFAULT_SITE.legalYear;
-
-export const footerLegalEntity = {
-  year: DEFAULT_SITE.legalYear,
-  name: DEFAULT_SITE.legalName,
-  ruc: DEFAULT_SITE.ruc,
-};
 
 export const footerLegalLinks: readonly FooterLink[] = [
   { labelKey: 'footer.terms', path: '/terms' },

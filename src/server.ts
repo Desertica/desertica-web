@@ -8,14 +8,16 @@ import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
-import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
+import { apiUrlFromEnv, assertProductionConfig, publicConfigFromEnv } from './app/core/config/public-config';
 import { apiProxy } from './api-proxy';
+import { healthz } from './healthz';
 import { imageProxy } from './image-proxy';
 import { formsProxy } from './forms-proxy';
 import { localeRoutes } from './locale-routes';
 import { createPageCache, pageCacheKey } from './page-cache';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import { stripLocale } from './app/core/i18n/catalogs';
+import { cspReportOnly } from './security-headers';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 /** Angular's `outputHashing: all` names bundles `main-ABCD1234.js`. */
@@ -31,13 +33,21 @@ app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProx
 const cms = cmsConfigFromEnv(process.env);
 const publicConfig = publicConfigFromEnv(process.env);
 const apiUrl = apiUrlFromEnv(process.env);
+const assetOrigins = [
+  ...(cms.publicUrl ? [new URL(cms.publicUrl).origin] : []),
+  ...publicConfig.imageHosts.map((host) => `https://${host}`),
+];
+const isHtml = (type: string | null | undefined) => !!type?.includes('text/html');
+const reportCsp = (res: express.Response, html: Buffer | string) =>
+  res.setHeader('Content-Security-Policy-Report-Only', cspReportOnly(String(html), assetOrigins));
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
 app.disable('x-powered-by');
+app.use(healthz());
 // HTML, JS, CSS and JSON go out compressed (images are already compressed and skipped); Traefik does not do it for us.
 app.use(compression());
-// A full Content-Security-Policy needs GTM, Turnstile, Stripe, Culqi and the CMS media hosts allowed and checked in a browser;
-// until then only framing is locked down, which is what protects /checkout and /pay from clickjacking.
+// Framing is blocked outright (clickjacking on /checkout and /pay). The full policy is report-only for now and is added
+// to each rendered page below, because it carries the hashes of that page's inline scripts.
 app.use((_req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
@@ -138,6 +148,10 @@ app.use((req, res, next) => {
   const key = pageCacheKey(req);
   const hit = key ? pageCache.get(key) : undefined;
   if (hit) {
+    if (isHtml(hit.type)) {
+      reportCsp(res, hit.body);
+    }
+
     res.type(hit.type).send(hit.body);
     return;
   }
@@ -153,8 +167,16 @@ app.use((req, res, next) => {
       if (key && response.status === 200) {
         const page = { type: response.headers.get('content-type') ?? 'text/html', body: Buffer.from(await response.arrayBuffer()) };
         pageCache.set(key, page);
+        if (isHtml(page.type)) {
+          reportCsp(res, page.body);
+        }
+
         res.type(page.type).send(page.body);
         return;
+      }
+
+      if (isHtml(response.headers.get('content-type'))) {
+        reportCsp(res, await response.clone().text());
       }
 
       await writeResponseToNodeResponse(response, res);
@@ -169,10 +191,7 @@ app.use((req, res, next) => {
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
   if (process.env['NODE_ENV'] === 'production') {
-    if (!publicConfig.siteUrl) {
-      console.warn('SITE_URL is not set: canonical, sitemap and robots fall back to the request Host.');
-    }
-
+    assertProductionConfig(process.env);
     if (process.env['TRUST_PROXY'] === 'true') {
       console.warn('TRUST_PROXY=true trusts the whole X-Forwarded-For header; use the number of proxies (1 behind Traefik).');
     } else if (!/^[1-9]\d*$/.test(process.env['TRUST_PROXY'] ?? '')) {

@@ -1,3 +1,4 @@
+import { CONTACT_LIMITS } from '../forms/contact-limits';
 import type { TourFeature } from '../catalog/tour-pages';
 import type { BookingSettings, FormSettings, IntroStyle } from './cms-models';
 
@@ -71,11 +72,13 @@ export function withBookingDefaults(
 export function withFormDefaults(forms: Partial<FormSettings> | null | undefined): FormSettings {
   const positive = (value: number | undefined, fallback: number): number =>
     typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : fallback;
+  // The proxy rejects anything above its own ceilings, so the CMS may only lower them.
+  const nameMax = Math.min(positive(forms?.nameMax, DEFAULT_FORMS.nameMax), CONTACT_LIMITS.name);
   return {
-    nameMin: positive(forms?.nameMin, DEFAULT_FORMS.nameMin),
-    nameMax: positive(forms?.nameMax, DEFAULT_FORMS.nameMax),
-    emailMax: positive(forms?.emailMax, DEFAULT_FORMS.emailMax),
-    messageMax: positive(forms?.messageMax, DEFAULT_FORMS.messageMax),
+    nameMin: Math.min(positive(forms?.nameMin, DEFAULT_FORMS.nameMin), nameMax),
+    nameMax,
+    emailMax: Math.min(positive(forms?.emailMax, DEFAULT_FORMS.emailMax), CONTACT_LIMITS.email),
+    messageMax: Math.min(positive(forms?.messageMax, DEFAULT_FORMS.messageMax), CONTACT_LIMITS.message),
   };
 }
 

@@ -1,3 +1,4 @@
+import { isPlaceholder } from '../seo/seo-urls';
 import type { SiteSettings } from './cms-models';
 
 /** Placeholder contact data used until the CMS `site-setting` entry is published. */
@@ -19,21 +20,35 @@ export const DEFAULT_SITE: SiteSettings = {
   ruc: 'XXXXXXXXXXX',
 };
 
+/** Contact channels the visitor can use; a value still holding the placeholder is `null` so the page leaves it out. */
 export type SiteContact = {
-  email: string;
-  phone: string;
-  mailto: string;
-  tel: string;
-  whatsapp: string;
+  email: string | null;
+  phone: string | null;
+  mailto: string | null;
+  tel: string | null;
+  whatsapp: string | null;
 };
 
 export function contactFromSite(site: SiteSettings): SiteContact {
+  const real = (value: string) => (isPlaceholder(value) ? null : value);
+  const email = real(site.email);
+  const phone = real(site.phone);
+  const whatsapp = real(site.whatsapp);
   return {
-    email: site.email,
-    phone: site.phone,
-    mailto: `mailto:${site.email}`,
-    tel: `tel:${site.phone.replace(/[^\d+]/g, '')}`,
-    whatsapp: `https://wa.me/${site.whatsapp}`,
+    email,
+    phone,
+    mailto: email && `mailto:${email}`,
+    tel: phone && `tel:${phone.replace(/[^\d+]/g, '')}`,
+    whatsapp: whatsapp && `https://wa.me/${whatsapp}`,
+  };
+}
+
+/** Company name and RUC for the legal line; a placeholder name falls back to the brand and a placeholder RUC is dropped. */
+export function legalFromSite(site: SiteSettings): { year: number; name: string; ruc: string | null } {
+  return {
+    year: site.legalYear,
+    name: isPlaceholder(site.legalName) ? site.brandName : site.legalName,
+    ruc: isPlaceholder(site.ruc) ? null : site.ruc,
   };
 }
 

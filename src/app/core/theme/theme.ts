@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { readLocal, writeLocal } from '../storage/safe-storage';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -30,7 +31,7 @@ export class ThemeService {
       return DEFAULT_THEME;
     }
 
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    const stored = readLocal(THEME_STORAGE_KEY);
     if (stored === 'dark' || stored === 'light') {
       return stored;
     }
@@ -43,7 +44,7 @@ export class ThemeService {
       return;
     }
 
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    writeLocal(THEME_STORAGE_KEY, theme);
   }
 
   private apply(theme: ColorScheme): void {

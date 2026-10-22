@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { NEVER, of, throwError } from 'rxjs';
 import { CmsApi, resetCmsCache } from './cms-api';
@@ -56,5 +56,42 @@ describe('CmsApi cache', () => {
   it('ignores a snapshot that lacks the tours collection', async () => {
     const { api } = setup((url) => (url.endsWith('/tours') ? throwError(() => new Error('500')) : ok(url)));
     expect(await api.load(options)).toBeNull();
+  });
+
+  it('keeps the good snapshot when a secondary resource fails during a refresh', async () => {
+    const page = (data: unknown[]) => of({ data, meta: { pagination: { pageCount: 1 } } });
+    const catalog = (price: number) => (url: string) => {
+      if (url.endsWith('/destinations')) {
+        return page([{ slug: 'huacachina', order: 0, title: 'Huacachina', lead: '', allLabel: '' }]);
+      }
+
+      if (url.endsWith('/tours')) {
+        const tour = { slug: 'dune-buggy', order: 0, durationHours: 3, priceFrom: price, destination: { slug: 'huacachina' }, title: 'Dune buggy', description: '', meeting: '' };
+        return page([tour]);
+      }
+
+      return ok(url);
+    };
+    let get = catalog(79);
+    const { api } = setup((url) => get(url));
+    const priceOf = async () => (await api.load(options))?.destinations[0]?.tours[0]?.priceFrom;
+    const before = await priceOf();
+
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.now() + 5000);
+    get = (url) => (url.endsWith('/translations') ? throwError(() => new Error('500')) : catalog(99)(url));
+    await priceOf();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(await priceOf()).toBe(before);
+
+    // A single type without a published entry (404) is empty content, not a failure.
+    vi.setSystemTime(Date.now() + 5000);
+    get = (url) =>
+      url.endsWith('/navigation')
+        ? throwError(() => new HttpErrorResponse({ status: 404 }))
+        : catalog(99)(url);
+    await priceOf();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(await priceOf()).not.toBe(before);
   });
 });

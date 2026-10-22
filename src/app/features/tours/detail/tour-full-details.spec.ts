@@ -3,7 +3,6 @@ import { provideRouter } from '@angular/router';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { tourPage } from '../../../core/catalog/tour-pages';
 import { tourById } from '../../../core/catalog/tours';
-import { remoteImageLoader } from '../../../core/images/remote-image-loader';
 import { TourFullDetails } from './tour-full-details';
 
 describe('TourFullDetails', () => {

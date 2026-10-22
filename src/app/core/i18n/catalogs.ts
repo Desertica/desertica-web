@@ -31,7 +31,11 @@ export function parseCookie(header: string | null | undefined, name: string): st
 
     const key = part.slice(0, separator).trim();
     if (key === name) {
-      return decodeURIComponent(part.slice(separator + 1).trim());
+      try {
+        return decodeURIComponent(part.slice(separator + 1).trim());
+      } catch {
+        return undefined; // a malformed escape (`locale=%`) is the same as no cookie
+      }
     }
   }
 
