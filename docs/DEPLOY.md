@@ -4,7 +4,7 @@ The site is a Node server (Angular SSR + the forms proxy) that reads content fro
 
 ## Image
 
-`Dockerfile` builds a multi-stage image (Node 22, non-root, healthcheck). CI publishes `ghcr.io/desertica/desertica-web` (`latest` from `main`, `sha-<short>`, semver tags) from `.github/workflows/docker.yml`. Locally:
+`Dockerfile` builds a multi-stage image (Node 22, non-root; the `HEALTHCHECK` calls `/healthz`, a plain `200 ok` that skips rendering and the `Host` check). CI publishes `ghcr.io/desertica/desertica-web` (`latest` from `main`, `sha-<short>`, semver tags) from `.github/workflows/docker.yml`. Locally:
 
 ```bash
 docker build -t desertica-web .
@@ -55,10 +55,10 @@ For real-environment testing (staging) and a small first production. Railway dep
 
 1. Add a service from `Desertica/desertica-web` (branch `main` for production, `develop` for staging) after the CMS service from `desertica-cms` exists (see its `docs/DEPLOY.md`).
 2. Variables:
-   - `NG_ALLOWED_HOSTS=tudominio.com,www.tudominio.com,healthcheck.railway.app`. The healthcheck must be allowed or it gets 400 and the deploy never turns healthy (confirm the healthcheck host in Railway's docs if it still fails).
+   - `NG_ALLOWED_HOSTS=tudominio.com,www.tudominio.com`. The healthcheck uses `/healthz`, which answers before the host check, so its `Host` does not need to be listed.
    - `STRAPI_URL=http://<cms service>.railway.internal:1337` (private network) and `STRAPI_PUBLIC_URL=https://cms.tudominio.com`.
    - `FORMS_PROXY_SECRET` (same value as the CMS) and `TRUST_PROXY=1` (`2` with Cloudflare in front).
-3. Service settings: healthcheck path `/`, port from `PORT` (4000 by default), domain `tudominio.com`, then the Cloudflare record with proxy on.
+3. Service settings: healthcheck path `/healthz`, port from `PORT` (4000 by default), domain `tudominio.com`, then the Cloudflare record with proxy on.
 4. Cloudflare cache rules: cache `/fonts/*` and the hashed JS/CSS; leave HTML uncached (it is rendered per request).
 5. Staging: duplicate the environment, point it at `develop` and give it its own database, secrets and domain.
 

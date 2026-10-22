@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
 import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
 import { apiProxy } from './api-proxy';
+import { healthz } from './healthz';
 import { imageProxy } from './image-proxy';
 import { formsProxy } from './forms-proxy';
 import { localeRoutes } from './locale-routes';
@@ -34,6 +35,7 @@ const apiUrl = apiUrlFromEnv(process.env);
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
 app.disable('x-powered-by');
+app.use(healthz());
 // HTML, JS, CSS and JSON go out compressed (images are already compressed and skipped); Traefik does not do it for us.
 app.use(compression());
 // A full Content-Security-Policy needs GTM, Turnstile, Stripe, Culqi and the CMS media hosts allowed and checked in a browser;
