@@ -89,4 +89,6 @@
   @if (data.page.faqs?.length) {
     <app-tour-faqs [faqs]="data.page.faqs ?? []" />
   }
+} @else {
+  <app-not-found />
 }

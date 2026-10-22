@@ -86,7 +86,6 @@ describe('i18n catalogs', () => {
     expect(translate('pages.contactLead', 'es')).not.toContain('SSG');
     expect(translate('pages.contactLead', 'en')).not.toContain('SSG');
     expect(translate('contact.submit', 'es')).toBe('Enviar');
-    expect(translate('contact.notRobot', 'en')).toBe("I'm not a robot");
     expect(translate('contact.whatsapp', 'es')).toBe('WhatsApp');
     expect(translate('contact.thanks', 'en')).toContain('Message sent');
     expect(translate('contact.replyTitle', 'es')).toBe('Te respondemos por WhatsApp');

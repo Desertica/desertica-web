@@ -566,5 +566,11 @@
     "sign": "Sign waiver",
     "errorSigned": "This waiver was already signed.",
     "errorGeneric": "We could not save your signature. Please try again."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist or has moved.",
+    "home": "Go to the home page",
+    "tours": "See our tours"
   }
 }

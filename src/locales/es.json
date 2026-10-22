@@ -566,5 +566,11 @@
     "sign": "Firmar descargo",
     "errorSigned": "Este descargo ya fue firmado.",
     "errorGeneric": "No pudimos guardar tu firma. Inténtalo de nuevo."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "body": "La página que buscas no existe o cambió de dirección.",
+    "home": "Ir al inicio",
+    "tours": "Ver nuestros tours"
   }
 }

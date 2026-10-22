@@ -106,5 +106,8 @@ export const routes: Routes = [
     canMatch: [bookingEngineGuard],
     loadComponent: () => import('./features/booking/my-booking').then((m) => m.MyBooking),
   },
-  { path: '**', redirectTo: '' },
+  {
+    path: '**',
+    loadComponent: () => import('./features/not-found/not-found').then((m) => m.NotFound),
+  },
 ];

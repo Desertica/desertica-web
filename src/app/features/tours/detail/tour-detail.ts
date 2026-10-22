@@ -7,7 +7,6 @@ import {
   input,
   untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { AnalyticsService, asCurrency } from '../../../core/analytics/analytics';
 import { tourItem } from '../../../core/analytics/items';
 import { PUBLIC_CONFIG } from '../../../core/config/public-config';
@@ -24,6 +23,7 @@ import { usePageMeta } from '../../../core/seo/page-meta';
 import { SeoService } from '../../../core/seo/seo';
 import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
 import { BookingPanel } from '../../booking/booking-panel';
+import { NotFound } from '../../not-found/not-found';
 import { TourAssurances } from './tour-assurances';
 import { TourFaqs } from './tour-faqs';
 import { TourBook } from './tour-book';
@@ -51,12 +51,12 @@ import { TourVideos } from './tour-videos';
     TourTimeline,
     TourFullDetails,
     TourVideos,
+    NotFound,
   ],
   templateUrl: './tour-detail.html',
   providers: [provideIcons({ lucideDownload })],
 })
 export class TourDetail {
-  private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
   private readonly analytics = inject(AnalyticsService);
   private viewed: string | null = null;
@@ -71,15 +71,6 @@ export class TourDetail {
   protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => {
-        if (!this.catalog.resolvedTour(id)) {
-          void this.router.navigateByUrl(TOURS_PATH);
-        }
-      });
-    });
-
     effect(() => {
       const data = this.resolved();
       this.i18n.locale();

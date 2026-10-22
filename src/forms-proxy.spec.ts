@@ -164,7 +164,7 @@ describe('formsProxy', () => {
 
   it('does not demand a Turnstile token from the legacy reservation form, which has no widget', async () => {
     const { upstream, post } = await setup({ turnstileSecret: 'secret' });
-    const reservation = { tourSlug: 'dune-buggy', date: '2026-12-01', language: 'es', name: 'Ana', email: 'ana@example.com' };
+    const reservation = { tourSlug: 'dune-buggy', date: '2026-12-01', language: 'es', adults: 2, name: 'Ana', email: 'ana@example.com' };
 
     expect((await post('reservation', reservation)).status).toBe(201);
     expect(upstream.received[0]?.url).toBe('/api/reservations');

@@ -1,4 +1,5 @@
 import { IMAGE_LOADER } from '@angular/common';
+import { RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
@@ -102,13 +103,14 @@ describe('TourDetail', () => {
     expect(TestBed.inject(Title).getTitle()).toContain('Dune buggy');
   });
 
-  it('redirects unknown ids to the catalog', async () => {
-    const router = TestBed.inject(Router);
-    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+  it('renders a 404 page for unknown ids instead of redirecting', async () => {
+    const response: ResponseInit = { status: 200 };
+    TestBed.overrideProvider(RESPONSE_INIT, { useValue: response });
     const fixture = TestBed.createComponent(TourDetail);
     fixture.componentRef.setInput('id', 'nope');
     await fixture.whenStable();
 
-    expect(navigate).toHaveBeenCalledWith('/tours');
+    expect(fixture.nativeElement.querySelector('app-not-found')).not.toBeNull();
+    expect(response.status).toBe(404);
   });
 });
