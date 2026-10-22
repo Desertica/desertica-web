@@ -80,3 +80,10 @@ export function apiUrlFromEnv(env: Record<string, string | undefined>): string |
   const url = env['API_URL']?.trim().replace(/\/+$/, '');
   return url || null;
 }
+
+/** Production must know its own origin: without `SITE_URL` canonical, sitemap and robots would be built from the request `Host`, which any client can set. */
+export function assertProductionConfig(env: Record<string, string | undefined>): void {
+  if (env['NODE_ENV'] === 'production' && !publicConfigFromEnv(env).siteUrl) {
+    throw new Error('SITE_URL is required in production (for example https://desertica.pe).');
+  }
+}

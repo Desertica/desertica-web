@@ -1,4 +1,4 @@
-import { publicConfigFromEnv } from './public-config';
+import { assertProductionConfig, publicConfigFromEnv } from './public-config';
 
 describe('publicConfigFromEnv', () => {
   it('defaults to no tracking, no booking engine and no Turnstile', () => {
@@ -51,5 +51,14 @@ describe('publicConfigFromEnv', () => {
         IMAGE_HOSTS: 'media.desertica.pe, cms.desertica.pe',
       }).imageHosts,
     ).toEqual(['media.desertica.pe', 'cms.desertica.pe', 'cms:1337', 'images.unsplash.com']);
+  });
+});
+
+describe('assertProductionConfig', () => {
+  it('requires SITE_URL in production only', () => {
+    expect(() => assertProductionConfig({ NODE_ENV: 'production' })).toThrow('SITE_URL');
+    expect(() => assertProductionConfig({ NODE_ENV: 'production', SITE_URL: ' / ' })).toThrow('SITE_URL');
+    expect(() => assertProductionConfig({ NODE_ENV: 'production', SITE_URL: 'https://desertica.pe' })).not.toThrow();
+    expect(() => assertProductionConfig({})).not.toThrow();
   });
 });

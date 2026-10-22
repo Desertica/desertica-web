@@ -8,7 +8,7 @@ import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
-import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
+import { apiUrlFromEnv, assertProductionConfig, publicConfigFromEnv } from './app/core/config/public-config';
 import { apiProxy } from './api-proxy';
 import { healthz } from './healthz';
 import { imageProxy } from './image-proxy';
@@ -171,10 +171,7 @@ app.use((req, res, next) => {
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
   if (process.env['NODE_ENV'] === 'production') {
-    if (!publicConfig.siteUrl) {
-      console.warn('SITE_URL is not set: canonical, sitemap and robots fall back to the request Host.');
-    }
-
+    assertProductionConfig(process.env);
     if (process.env['TRUST_PROXY'] === 'true') {
       console.warn('TRUST_PROXY=true trusts the whole X-Forwarded-For header; use the number of proxies (1 behind Traefik).');
     } else if (!/^[1-9]\d*$/.test(process.env['TRUST_PROXY'] ?? '')) {

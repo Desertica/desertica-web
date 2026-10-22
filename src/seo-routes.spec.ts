@@ -24,6 +24,8 @@ describe('sitemap and robots', () => {
     );
     expect(xml).toContain('<loc>https://desertica.pe/en/</loc>');
     expect(xml).toContain('<loc>https://desertica.pe/es/huacachina</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/en/cancellation</loc>');
+    expect(xml).toContain('<loc>https://desertica.pe/es/cookies</loc>');
     expect(xml).not.toContain('/reservations');
     expect(xml).not.toContain('/experiences');
   });
@@ -112,6 +114,44 @@ describe('seoRouter', () => {
     expect(xml).not.toContain('Bad%20Slug');
     expect(xml).not.toContain('Bad Slug');
     expect(xml).not.toContain('/tours/dune-buggy<');
+  });
+
+  it('keeps the previous posts when the blog collection fails, and asks Strapi again next time', async () => {
+    const real = globalThis.fetch;
+    let blogDown = false;
+    let blogCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const url = String(input);
+        if (!url.startsWith('http://strapi.test/')) {
+          return real(input, init);
+        }
+
+        if (url.includes('/api/blog-posts')) {
+          blogCalls += 1;
+          if (blogDown) {
+            return new Response('boom', { status: 500 });
+          }
+        }
+
+        const data = url.includes('/api/blog-posts') ? [{ slug: 'first-post' }] : [];
+        return new Response(JSON.stringify({ data, meta: { pagination: { pageCount: 1 } } }));
+      }),
+    );
+
+    const app = express();
+    app.use(seoRouter({ strapiUrl: 'http://strapi.test', siteUrl: 'https://desertica.pe', cacheTtlMs: 0 }));
+    const started = await serve(app);
+    server = started.server;
+    const sitemap = async () => (await real(`${started.url}/sitemap.xml`)).text();
+
+    expect(await sitemap()).toContain('/en/blog/first-post');
+    blogDown = true;
+    expect(await sitemap()).toContain('/en/blog/first-post');
+    const calls = blogCalls;
+    expect(await sitemap()).toContain('/en/blog/first-post');
+    expect(blogCalls).toBe(calls + 1);
   });
 
   it('answers staging with a blanket disallow and no sitemap', async () => {

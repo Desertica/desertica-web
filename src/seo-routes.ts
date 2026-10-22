@@ -34,6 +34,8 @@ const STATIC_PATHS: readonly string[] = [
   '/privacy',
   '/complaints',
   '/conduct',
+  '/cancellation',
+  '/cookies',
   '/legal/mincetur',
 ];
 
@@ -150,9 +152,10 @@ export function seoRouter(options: SeoOptions): express.Router {
       return cached.catalog;
     }
 
-    inflight ??= loadCatalog(options)
-      .then((fresh) => {
-        cached = { at: Date.now(), catalog: fresh };
+    inflight ??= loadCatalog(options, cached?.catalog)
+      .then(({ catalog: fresh, complete }) => {
+        // An incomplete copy is served but stays expired, so the next request asks Strapi again.
+        cached = { at: complete ? Date.now() : 0, catalog: fresh };
         return fresh;
       })
       .catch(() => cached?.catalog ?? staticCatalog())
@@ -187,10 +190,11 @@ export function seoRouter(options: SeoOptions): express.Router {
   return router;
 }
 
-async function loadCatalog(options: SeoOptions): Promise<SeoCatalog> {
+/** A collection that fails to load keeps its previous entries instead of vanishing from the sitemap. */
+async function loadCatalog(options: SeoOptions, previous?: SeoCatalog): Promise<{ catalog: SeoCatalog; complete: boolean }> {
   const base = options.strapiUrl;
   if (!base) {
-    return staticCatalog();
+    return { catalog: staticCatalog(), complete: true };
   }
 
   const [tours, posts, products] = await Promise.all([
@@ -198,11 +202,15 @@ async function loadCatalog(options: SeoOptions): Promise<SeoCatalog> {
     fetchEntries(base, 'blog-posts', options),
     fetchEntries(base, 'products', options),
   ]);
+  const keptTours = tours ?? previous?.tours;
   return {
-    // The app falls back to the bundled tours only when the CMS has none, and so does the sitemap.
-    tours: tours?.length ? tours : staticCatalog().tours,
-    posts: posts ?? [],
-    products: products ?? [],
+    catalog: {
+      // The app falls back to the bundled tours only when the CMS has none, and so does the sitemap.
+      tours: keptTours?.length ? keptTours : staticCatalog().tours,
+      posts: posts ?? previous?.posts ?? [],
+      products: products ?? previous?.products ?? [],
+    },
+    complete: !!tours && !!posts && !!products,
   };
 }
 

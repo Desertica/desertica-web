@@ -20,7 +20,7 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
 | `STRAPI_PUBLIC_URL` | if media is served by Strapi | URL browsers use to load uploaded media. Defaults to `STRAPI_URL`. |
 | `FORMS_PROXY_SECRET` | recommended | Same value as in the CMS. Lets the CMS rate-limit by visitor IP instead of the proxy's. |
 | `TRUST_PROXY` | behind a proxy | Number of proxies in front of the app: `1` behind Traefik/Coolify, `2` with Cloudflare in front too. Plain `true` trusts the whole `X-Forwarded-For` header, so a client can pick its own IP and skip the rate limits; do not use it in production. |
-| `SITE_URL` | yes in production | Public origin, no trailing slash (for example `https://desertica.pe`). Canonical, hreflang, sitemap, robots and JSON-LD use it; without it they fall back to the request `Host`. |
+| `SITE_URL` | yes in production | Public origin, no trailing slash (for example `https://desertica.pe`). Canonical, hreflang, sitemap, robots and JSON-LD use it. The server refuses to start in production without it; outside production it falls back to the request `Host`. |
 | `IMAGE_HOSTS` | no | Extra hosts whose images the server resizes to WebP at `/_img` (an R2 or CDN host). The CMS host and `images.unsplash.com` are always allowed. |
 | `PAGE_CACHE_TTL_MS` | no | Seconds-scale cache of rendered public pages, in ms (default `10000`, `0` turns it off). Booking and payment pages are never cached. A CMS change shows up within `STRAPI_CACHE_TTL_MS` + this value (about 40 s). |
 | `STRAPI_API_TOKEN`, `STRAPI_FORMS_TOKEN` | optional | Only if you remove the Public role permissions in Strapi. |
