@@ -218,6 +218,12 @@ const TRANSLATION_RULES = [
   [/^tour\.(video|clip)/, 'tour-detail', 'videos'],
   [/^tour\.crumb$/, 'tour-detail', 'breadcrumb'],
   [/^tour\./, 'tour-detail', 'booking-form'],
+  [/^booking\./, 'booking', 'flow'],
+  [/^checkout\./, 'booking', 'checkout'],
+  [/^payment\./, 'booking', 'payment'],
+  [/^myBooking\./, 'booking', 'my-booking'],
+  [/^complaints\./, 'legal', 'complaints'],
+  [/^waiver\./, 'legal', 'waiver'],
 ];
 
 const humanize = (word) => word.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
@@ -245,12 +251,22 @@ const classify = (key) => {
   return { page, section, label: LABEL_OVERRIDES[key] ?? `${PAGE_TITLES[page]} — ${cap(section.replace(/-/g, ' '))} · ${tail}` };
 };
 
-// Payment, booking and complaint texts stay in the code: they are transactional or legal and tied to how the
-// booking API behaves, so nobody should change them from the CMS without a review.
+// Payment, booking and complaint texts stay in the code (labels, technical errors, enum names, sentence fragments):
+// they are tied to how the booking API behaves. Only the commercial or legal prose below is editable; the decision for
+// each of the 178 keys is in docs/TEXTOS-EDITABLES.md. When in doubt a key stays in the code.
 const CODE_ONLY = /^(checkout|payment|myBooking|booking|waiver|complaints)\./;
+const EDITABLE_FROM_CODE_ONLY = new Set([
+  'booking.title', 'booking.lead', 'booking.noAvailability', 'booking.holdNote', 'booking.taxIncluded',
+  'checkout.title', 'checkout.empty', 'checkout.passengersLead', 'checkout.billingLead',
+  'payment.successTitle', 'payment.successBody', 'payment.pendingTitle', 'payment.pendingBody',
+  'myBooking.lead',
+  'complaints.lead', 'complaints.legalNote', 'complaints.doneTitle',
+  'waiver.thanks',
+]);
+for (const k of EDITABLE_FROM_CODE_ONLY) if (!CODE_ONLY.test(k) || !(k in flatEn)) throw new Error(`EDITABLE_FROM_CODE_ONLY key unknown or not code-only: ${k}`);
 const excludedTranslationKeys = Object.keys(flatEn).filter((k) => catalogKeys.has(k));
 const translations = Object.keys(flatEn)
-  .filter((k) => !catalogKeys.has(k) && !CODE_ONLY.test(k))
+  .filter((k) => !catalogKeys.has(k) && (!CODE_ONLY.test(k) || EDITABLE_FROM_CODE_ONLY.has(k)))
   .map((key) => {
     const { page, section, label } = classify(key);
     const long = flatEn[key].length > 80 || flatEn[key].includes('\n');
