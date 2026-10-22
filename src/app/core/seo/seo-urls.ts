@@ -1,14 +1,11 @@
-import { DEFAULT_LOCALE, LOCALES, LOCALE_QUERY, type AppLocale } from '../i18n/catalogs';
+import { DEFAULT_LOCALE, LOCALES, withLocale, type AppLocale } from '../i18n/catalogs';
 
 /**
- * The language is chosen by cookie, so each language needs its own crawlable URL: English is the
- * clean path and every other language adds `?lang=xx`, which the server honours before the cookie.
- * See docs/SEO-LOCALE.md for why this is not a `/en` / `/es` prefix yet.
+ * Every language has its own path prefix (`/en/tours`, `/es/tours`), so crawlers, shared links and
+ * `hreflang` all point at one URL per language. See docs/SEO-LOCALE.md.
  */
 export function localizedUrl(origin: string, path: string, locale: AppLocale): string {
-  const clean = path.startsWith('/') ? path : `/${path}`;
-  const suffix = locale === DEFAULT_LOCALE ? '' : `?${LOCALE_QUERY}=${locale}`;
-  return `${origin}${clean}${suffix}`;
+  return `${origin}${withLocale(path.startsWith('/') ? path : `/${path}`, locale)}`;
 }
 
 export type Alternate = { hreflang: string; href: string };

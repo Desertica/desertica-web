@@ -205,7 +205,10 @@ const TRANSLATION_RULES = [
   [/^products\./, 'products', 'list'],
   [/^pages\.blog/, 'blog', 'hero'],
   [/^blog\./, 'blog', 'list'],
-  [/^pages\.(terms|privacy|complaints|conduct|mincetur)Lead$/, 'legal', 'lead'],
+  [/^pages\.(terms|privacy|complaints|conduct|mincetur|cancellation|cookies)Lead$/, 'legal', 'lead'],
+  [/^cookies\./, 'legal', 'cookies'],
+  [/^notFound\./, 'global', 'not-found'],
+  [/^tours\./, 'tours', 'page'],
   [/^pages\.(landingLead|mappedRoutes|experienceLead)$/, 'global', 'placeholders'],
   [/^tour\.assure\./, 'tour-detail', 'assurances'],
   [/^tour\..*Error$/, 'tour-detail', 'errors'],
@@ -242,9 +245,12 @@ const classify = (key) => {
   return { page, section, label: LABEL_OVERRIDES[key] ?? `${PAGE_TITLES[page]} — ${cap(section.replace(/-/g, ' '))} · ${tail}` };
 };
 
+// Payment, booking and complaint texts stay in the code: they are transactional or legal and tied to how the
+// booking API behaves, so nobody should change them from the CMS without a review.
+const CODE_ONLY = /^(checkout|payment|myBooking|booking|waiver|complaints)\./;
 const excludedTranslationKeys = Object.keys(flatEn).filter((k) => catalogKeys.has(k));
 const translations = Object.keys(flatEn)
-  .filter((k) => !catalogKeys.has(k))
+  .filter((k) => !catalogKeys.has(k) && !CODE_ONLY.test(k))
   .map((key) => {
     const { page, section, label } = classify(key);
     const long = flatEn[key].length > 80 || flatEn[key].includes('\n');

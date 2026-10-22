@@ -1,5 +1,25 @@
 # Language in the URL: decision
 
+> **Status: option C is implemented.** Every page lives under `/en` or `/es` (`/es/tours/dune-buggy`; the home page is `/es/`).
+> The text below is the analysis that led here; "Where we are" describes the situation before the change.
+>
+> How it works:
+> - `src/locale-routes.ts` redirects a page without a prefix to the visitor's language: legacy `?lang=` (301), then the
+>   `locale` cookie, then `Accept-Language` (302). `/es` redirects to `/es/` (301). Files and `/api` pass through.
+> - `APP_BASE_HREF` is `/es/` or `/en/` (`app.config.ts`), so every `routerLink` gets the prefix and the router still
+>   sees `/tours`. `<base href>` stays `/` because scripts and styles are relative to it.
+> - Switching language loads the same page under the other prefix (`I18nService.switchLanguage`): the router base changes
+>   with the language, so a signal flip is not enough.
+> - `canonical`, `hreflang`, Open Graph, sitemap and JSON-LD use `localizedUrl()`; `x-default` is the English page.
+>   `robots.txt` lists every private path once per language.
+> - Unknown URLs answer a real 404 with `noindex` (`features/not-found`).
+> - **desertica-api** builds the e-mailed links (`/pay/:token`, `/waiver/:token`, `/booking/:ref`). They should carry the
+>   booking's language (`/es/pay/:token`); without it they work through a redirect that picks the language from the
+>   visitor's cookie or browser.
+> - HTML is still `private, no-cache`. With one URL per language it can now be cached by Cloudflare: add a cache rule for
+>   `/en/*` and `/es/*` that bypasses `/pay`, `/waiver`, `/booking`, `/checkout` and `/payment`, and respects
+>   `Set-Cookie` (or strip it for cached paths).
+
 ## Where we are
 
 The language is chosen by the `locale` cookie (falling back to `localStorage`, then English). The same URL

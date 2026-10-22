@@ -42,6 +42,7 @@
   "a11y": {
     "toggleTheme": "Cambiar tema de color",
     "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
     "chooseLanguage": "Idioma",
     "whatsapp": "WhatsApp",
     "intro": "Cargando Desértica",
@@ -101,8 +102,6 @@
     "messagePlaceholder": "¿Qué tienes pensado?",
     "submit": "Enviar",
     "thanks": "Mensaje enviado. Te escribimos pronto.",
-    "notRobot": "No soy un robot",
-    "captchaBrand": "Turnstile",
     "messageCount": "{count} de 500 caracteres máx.",
     "nameError": "Escribe tu nombre.",
     "nameMinError": "El nombre debe tener al menos 2 caracteres.",
@@ -246,7 +245,9 @@
     },
     "meeting": "Punto de encuentro",
     "viewMap": "Ver en el mapa",
-    "faqs": "Preguntas frecuentes"
+    "faqs": "Preguntas frecuentes",
+    "askWhatsapp": "Consultar por WhatsApp",
+    "askWhatsappMessage": "Hola, quisiera más información sobre \"{tour}\" ({hours} h, desde USD {price}): {url}"
   },
   "tours": {
     "duneBuggy": {
@@ -567,5 +568,11 @@
     "sign": "Firmar descargo",
     "errorSigned": "Este descargo ya fue firmado.",
     "errorGeneric": "No pudimos guardar tu firma. Inténtalo de nuevo."
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "body": "La página que buscas no existe o cambió de dirección.",
+    "home": "Ir al inicio",
+    "tours": "Ver nuestros tours"
   }
 }

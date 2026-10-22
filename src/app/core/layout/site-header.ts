@@ -187,7 +187,11 @@ import { isNavGroup, navItemTrack } from './primary-nav';
             >
               <ng-icon name="lucideMenu" />
             </button>
-            <hlm-sheet-content *hlmSheetPortal class="mobile-nav-sheet flex flex-col overflow-hidden">
+            <hlm-sheet-content
+              *hlmSheetPortal
+              class="mobile-nav-sheet flex flex-col overflow-hidden"
+              [closeLabel]="'a11y.closeMenu' | translate: i18n.locale()"
+            >
               <hlm-sheet-header>
                 <h2 hlmSheetTitle>{{ 'menu.title' | translate: i18n.locale() }}</h2>
                 <p hlmSheetDescription class="sr-only">

@@ -1,4 +1,8 @@
-import { parseCookie, resolveLocale, translate } from './catalogs';
+import {
+  localeFromAcceptLanguage,
+  localeFromPath,
+  stripLocale,
+  withLocale, parseCookie, resolveLocale, translate } from './catalogs';
 
 describe('i18n catalogs', () => {
   it('prefers an explicit query over the cookie, so hreflang URLs return their language', () => {
@@ -86,7 +90,6 @@ describe('i18n catalogs', () => {
     expect(translate('pages.contactLead', 'es')).not.toContain('SSG');
     expect(translate('pages.contactLead', 'en')).not.toContain('SSG');
     expect(translate('contact.submit', 'es')).toBe('Enviar');
-    expect(translate('contact.notRobot', 'en')).toBe("I'm not a robot");
     expect(translate('contact.whatsapp', 'es')).toBe('WhatsApp');
     expect(translate('contact.thanks', 'en')).toContain('Message sent');
     expect(translate('contact.replyTitle', 'es')).toBe('Te respondemos por WhatsApp');
@@ -150,5 +153,28 @@ describe('i18n catalogs', () => {
     expect(parseCookie('theme=dark; locale=es', 'locale')).toBe('es');
     expect(parseCookie('locale=es%20pe', 'locale')).toBe('es pe');
     expect(parseCookie('theme=dark', 'locale')).toBeUndefined();
+  });
+
+  it('reads, strips and sets the language prefix of a path', () => {
+    expect(localeFromPath('/es/tours')).toBe('es');
+    expect(localeFromPath('/en')).toBe('en');
+    expect(localeFromPath('/en?x=1')).toBe('en');
+    expect(localeFromPath('/english')).toBeNull();
+    expect(localeFromPath('/tours/es')).toBeNull();
+    expect(stripLocale('/es/tours')).toBe('/tours');
+    expect(stripLocale('/es')).toBe('/');
+    expect(stripLocale('/tours')).toBe('/tours');
+    expect(withLocale('/tours', 'es')).toBe('/es/tours');
+    expect(withLocale('/en/tours', 'es')).toBe('/es/tours');
+    expect(withLocale('/', 'en')).toBe('/en/');
+  });
+
+  it('prefers the URL, then the legacy query, the cookie and the browser language', () => {
+    expect(resolveLocale({ path: '/es/x', query: 'en', cookie: 'en', acceptLanguage: 'en' })).toBe('es');
+    expect(resolveLocale({ query: 'es', cookie: 'en' })).toBe('es');
+    expect(resolveLocale({ cookie: 'es', acceptLanguage: 'en' })).toBe('es');
+    expect(resolveLocale({ acceptLanguage: 'fr,es;q=0.5' })).toBe('es');
+    expect(resolveLocale({ acceptLanguage: 'fr' })).toBe('en');
+    expect(localeFromAcceptLanguage(undefined)).toBeNull();
   });
 });

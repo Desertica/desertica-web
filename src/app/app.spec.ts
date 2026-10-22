@@ -87,6 +87,21 @@ describe('App', () => {
     expect(compiled.querySelector('app-whatsapp-fab ng-icon')).toBeNull();
   });
 
+  it('moves focus to the main content without leaving the page when the skip link is used', async () => {
+    const fixture = TestBed.createComponent(App);
+    document.body.append(fixture.nativeElement);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const link = compiled.querySelector<HTMLAnchorElement>('a[href="#main-content"]');
+    const before = location.href;
+
+    link?.click();
+
+    expect(document.activeElement).toBe(compiled.querySelector('main#main-content'));
+    expect(location.href).toBe(before);
+    fixture.nativeElement.remove();
+  });
+
   it('should toggle and persist the color theme', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();

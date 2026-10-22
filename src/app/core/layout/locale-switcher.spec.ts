@@ -19,7 +19,9 @@ describe('LocaleSwitcher', () => {
     document.documentElement.lang = 'en';
   });
 
-  it('switches the locale from the menu', async () => {
+  it('remembers the language and loads the page under its prefix (the router base changes with it)', async () => {
+    // jsdom cannot navigate; it reports the attempt on the console.
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const fixture = TestBed.createComponent(LocaleSwitcher);
     await fixture.whenStable();
     const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
@@ -35,7 +37,8 @@ describe('LocaleSwitcher', () => {
     spanish?.click();
     await fixture.whenStable();
 
-    expect(TestBed.inject(I18nService).locale()).toBe('es');
-    expect(button.textContent).toContain('ES');
+    expect(localStorage.getItem('locale')).toBe('es');
+    expect(document.cookie).toContain('locale=es');
+    expect(TestBed.inject(I18nService).locale()).toBe('en');
   });
 });
