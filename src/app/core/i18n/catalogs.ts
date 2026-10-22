@@ -38,12 +38,49 @@ export function parseCookie(header: string | null | undefined, name: string): st
   return undefined;
 }
 
+/** Language prefix of a URL path: `/es/tours` is `es`. */
+export function localeFromPath(path: string): AppLocale | null {
+  const match = /^\/(en|es)(?=[/?#]|$)/.exec(path);
+  return match ? (match[1] as AppLocale) : null;
+}
+
+/** `/es/tours` is `/tours` and `/es` is `/`; a path without a prefix is returned as it is. */
+export function stripLocale(path: string): string {
+  const rest = path.replace(/^\/(en|es)(?=[/?#]|$)/, '');
+  return rest.startsWith('/') ? rest : `/${rest}`;
+}
+
+/** The same page in another language: `withLocale('/tours', 'es')` is `/es/tours`; the home page keeps its slash (`/es/`), which is how the router writes it. */
+export function withLocale(path: string, locale: AppLocale): string {
+  return `/${locale}${stripLocale(path)}`;
+}
+
+/** First supported language of an `Accept-Language` header (`es-PE,es;q=0.9,en;q=0.8` is `es`). */
+export function localeFromAcceptLanguage(header: string | null | undefined): AppLocale | null {
+  for (const part of (header ?? '').split(',')) {
+    const code = part.split(';')[0]?.trim().slice(0, 2).toLowerCase();
+    if (isAppLocale(code)) {
+      return code;
+    }
+  }
+
+  return null;
+}
+
 export function resolveLocale(options: {
+  path?: string | null;
   cookie?: string | null;
   query?: string | null;
+  acceptLanguage?: string | null;
 }): AppLocale {
-  // An explicit `?lang=` is part of the URL a crawler or a shared link carries (it is what
-  // `hreflang` points at), so it wins over whatever the visitor chose on an earlier visit.
+  // The language in the URL is what a crawler or a shared link carries (it is what `hreflang` points
+  // at), so it wins over whatever the visitor chose earlier. Then the legacy `?lang=`, the cookie
+  // and finally the browser's own preference.
+  const fromPath = options.path ? localeFromPath(options.path) : null;
+  if (fromPath) {
+    return fromPath;
+  }
+
   if (isAppLocale(options.query)) {
     return options.query;
   }
@@ -52,7 +89,7 @@ export function resolveLocale(options: {
     return options.cookie;
   }
 
-  return DEFAULT_LOCALE;
+  return localeFromAcceptLanguage(options.acceptLanguage) ?? DEFAULT_LOCALE;
 }
 
 export type Messages = Readonly<Record<string, string>>;

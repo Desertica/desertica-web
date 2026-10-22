@@ -36,6 +36,6 @@ export class LocaleSwitcher {
   protected readonly locales = LOCALES;
 
   protected setLocale(locale: AppLocale): void {
-    this.i18n.setLocale(locale);
+    this.i18n.switchLanguage(locale);
   }
 }

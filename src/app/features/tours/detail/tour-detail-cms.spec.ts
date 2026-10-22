@@ -48,7 +48,7 @@ describe('TourDetail with CMS fields', () => {
     expect(ask?.textContent).toContain('Ask on WhatsApp');
     const text = decodeURIComponent(ask?.href.split('text=')[1] ?? '');
     expect(text).toContain('Dune buggy');
-    expect(text).toContain('https://desertica.pe/tours/dune-buggy');
+    expect(text).toContain('https://desertica.pe/en/tours/dune-buggy');
   });
 
   it('renders the questions and publishes the same ones as FAQPage, with geo on the trip', async () => {

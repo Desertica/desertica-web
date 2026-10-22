@@ -4,37 +4,16 @@ import {
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
-import cookieParser from 'cookie-parser';
 import express from 'express';
-import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { cmsConfigFromEnv } from './app/core/cms/cms-config';
 import { apiUrlFromEnv, publicConfigFromEnv } from './app/core/config/public-config';
 import { apiProxy } from './api-proxy';
 import { imageProxy } from './image-proxy';
 import { formsProxy } from './forms-proxy';
+import { localeRoutes } from './locale-routes';
 import { legacyRedirects, seoRouter } from './seo-routes';
-import {
-  catalogs,
-  DEFAULT_LOCALE,
-  LOCALES,
-  LOCALE_COOKIE,
-  LOCALE_QUERY,
-  resolveLocale,
-} from './app/core/i18n/catalogs';
-
-const nodeRequire = createRequire(import.meta.url);
-const { I18n } = nodeRequire('i18n') as {
-  I18n: new (options: {
-    locales: readonly string[];
-    defaultLocale: string;
-    cookie: string;
-    queryParameter: string;
-    objectNotation: boolean;
-    updateFiles: boolean;
-    staticCatalog: typeof catalogs;
-  }) => { init: express.RequestHandler };
-};
+import { stripLocale } from './app/core/i18n/catalogs';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 /** Angular's `outputHashing: all` names bundles `main-ABCD1234.js`. */
@@ -42,15 +21,6 @@ const HASHED_ASSET = /-[A-Z0-9]{8}\.[a-z0-9]+$/;
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
-const i18n = new I18n({
-  locales: LOCALES,
-  defaultLocale: DEFAULT_LOCALE,
-  cookie: LOCALE_COOKIE,
-  queryParameter: LOCALE_QUERY,
-  objectNotation: true,
-  updateFiles: false,
-  staticCatalog: catalogs,
-});
 
 // A hop count ("1" behind one proxy, "2" behind Cloudflare and Traefik) trusts only that many X-Forwarded-For
 // entries; plain "true" trusts the whole header and lets any client pick its own IP to dodge the rate limiter.
@@ -85,30 +55,6 @@ app.use(
     disallowAll: process.env['ROBOTS_DISALLOW_ALL'] === 'true',
   }),
 );
-
-app.use(cookieParser());
-app.use((req, res, next) => {
-  i18n.init(req, res, () => {
-    const queryValue = req.query[LOCALE_QUERY];
-    const locale = resolveLocale({
-      cookie:
-        typeof req.cookies[LOCALE_COOKIE] === 'string' ? req.cookies[LOCALE_COOKIE] : undefined,
-      query: typeof queryValue === 'string' ? queryValue : undefined,
-    });
-
-    (req as express.Request & { setLocale?: (locale: string) => void }).setLocale?.(locale);
-
-    if (req.cookies[LOCALE_COOKIE] !== locale) {
-      res.cookie(LOCALE_COOKIE, locale, {
-        maxAge: 365 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax',
-        path: '/',
-      });
-    }
-
-    next();
-  });
-});
 
 /**
  * Contact and reservation forms are validated here and forwarded to Strapi, so the browser never
@@ -164,7 +110,7 @@ app.use((req, res, next) => {
   // E-mailed links carry a credential in the path (`/pay/:token`, `/waiver/:token`, `/booking/:ref`
   // after the token moves to the session) and those pages load the payment gateways' scripts: no
   // Referer may leave with it.
-  if (/^\/(pay|waiver|booking|checkout|payment)(\/|$)/.test(req.path)) {
+  if (/^\/(pay|waiver|booking|checkout|payment)(\/|$)/.test(stripLocale(req.path))) {
     res.setHeader('Referrer-Policy', 'no-referrer');
   }
 
@@ -175,6 +121,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+/** Pages need a language prefix; see locale-routes.ts. */
+app.use(localeRoutes());
 
 /**
  * Handle all other requests by rendering the Angular application.

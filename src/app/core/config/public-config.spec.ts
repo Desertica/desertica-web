@@ -8,6 +8,7 @@ describe('publicConfigFromEnv', () => {
       turnstileSiteKey: null,
       culqiPublicKey: null,
       siteUrl: null,
+      imageHosts: ['images.unsplash.com'],
     });
   });
 
@@ -26,6 +27,7 @@ describe('publicConfigFromEnv', () => {
       turnstileSiteKey: '0xKEY',
       culqiPublicKey: 'pk_test_abc123',
       siteUrl: 'https://desertica.pe',
+      imageHosts: ['images.unsplash.com'],
     });
   });
 
@@ -39,5 +41,15 @@ describe('publicConfigFromEnv', () => {
     expect(publicConfigFromEnv({ CULQI_PUBLIC_KEY: 'sk_live_abc123' }).culqiPublicKey).toBeNull();
     expect(publicConfigFromEnv({ CULQI_PUBLIC_KEY: 'pk_live_abc"; x' }).culqiPublicKey).toBeNull();
     expect(publicConfigFromEnv({ CULQI_PUBLIC_KEY: 'pk_live_AbC123' }).culqiPublicKey).toBe('pk_live_AbC123');
+  });
+
+  it('allows images from the CMS, the extra hosts and Unsplash, without duplicates', () => {
+    expect(
+      publicConfigFromEnv({
+        STRAPI_URL: 'http://cms:1337',
+        STRAPI_PUBLIC_URL: 'https://cms.desertica.pe',
+        IMAGE_HOSTS: 'media.desertica.pe, cms.desertica.pe',
+      }).imageHosts,
+    ).toEqual(['media.desertica.pe', 'cms.desertica.pe', 'cms:1337', 'images.unsplash.com']);
   });
 });

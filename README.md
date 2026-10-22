@@ -60,7 +60,7 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
 
-SEO: `SeoService` writes canonical, `hreflang`, Open Graph, Twitter and JSON-LD for every route. The language strategy (`?lang=` today, path prefix later) is in [`docs/SEO-LOCALE.md`](docs/SEO-LOCALE.md).
+SEO: `SeoService` writes canonical, `hreflang`, Open Graph, Twitter and JSON-LD for every route. Every page lives under a language prefix (`/en/tours`, `/es/tours`; the home page is `/en/` and `/es/`); the strategy and how it works are in [`docs/SEO-LOCALE.md`](docs/SEO-LOCALE.md). The routes in the table above are written without the prefix.
 
 Every route renders per request (`RenderMode.Server`) and reads Strapi through a short server-side cache, so publishing a change needs no rebuild and the build does not depend on the CMS.
 
