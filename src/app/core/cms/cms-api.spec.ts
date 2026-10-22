@@ -10,7 +10,7 @@ const single = /-setting|navigation/;
 describe('CmsApi cache', () => {
   const setup = (get: (url: string) => unknown) => {
     resetCmsCache();
-    const http = { get: vi.fn((url: string) => get(url)) };
+    const http = { get: vi.fn((url: string, _init?: unknown) => get(url)) };
     TestBed.configureTestingModule({
       providers: [
         { provide: HttpClient, useValue: http },
@@ -34,6 +34,15 @@ describe('CmsApi cache', () => {
     const started = performance.now();
     expect(await api.load(options)).not.toBeNull();
     expect(performance.now() - started).toBeLessThan(40);
+  });
+
+  it('keeps the raw Strapi responses out of the HTML (the snapshot already travels in TransferState)', async () => {
+    const { api, http } = setup(ok);
+    await api.load(options);
+
+    expect(http.get).toHaveBeenCalled();
+    const calls = http.get.mock.calls as unknown as Array<[string, { transferCache?: boolean }]>;
+    expect(calls.every(([, init]) => init.transferCache === false)).toBe(true);
   });
 
   it('does not hammer a failing Strapi when there is no snapshot', async () => {

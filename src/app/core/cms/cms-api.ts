@@ -269,7 +269,8 @@ export class CmsApi {
       : undefined;
     return firstValueFrom(
       this.http
-        .get<T>(`${base}/api/${path}`, { params: new HttpParams({ fromObject: query }), headers })
+        // The browser gets the mapped snapshot in TransferState; copying the raw Strapi responses too added ~250 kB to every page.
+        .get<T>(`${base}/api/${path}`, { params: new HttpParams({ fromObject: query }), headers, transferCache: false })
         .pipe(timeout({ first: this.config.timeoutMs })),
     );
   }
