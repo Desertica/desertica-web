@@ -1,5 +1,6 @@
 {
   "skip": "Saltar al contenido",
+  "preview": { "banner": "Vista previa (borrador)" },
   "nav": {
     "primary": "Principal",
     "footer": "Pie de página",
