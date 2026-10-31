@@ -86,8 +86,14 @@ export function formsProxy(options: FormsProxyOptions): express.Router {
         return;
       }
 
-      const data = sanitize(req.body, definition.fields, definition.numbers ?? {}, definition.flags);
-      if (!data || (definition.check && !definition.check(data))) {
+      const result = sanitize(req.body, definition.fields, definition.numbers ?? {}, definition.flags);
+      if ('invalid' in result) {
+        res.status(400).json({ error: 'invalid', field: result.invalid });
+        return;
+      }
+
+      const data = result.data;
+      if (definition.check && !definition.check(data)) {
         res.status(400).json({ error: 'invalid' });
         return;
       }

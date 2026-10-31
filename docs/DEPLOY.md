@@ -4,11 +4,11 @@ The site is a Node server (Angular SSR + the forms proxy) that reads content fro
 
 ## Image
 
-`Dockerfile` builds a multi-stage image (Node 22, non-root, healthcheck). CI publishes `ghcr.io/desertica/desertica-web` (`latest` from `main`, `sha-<short>`, semver tags) from `.github/workflows/docker.yml`. Locally:
+`Dockerfile` builds a multi-stage image (Node 22, non-root; the `HEALTHCHECK` calls `/healthz`, a plain `200 ok` that skips rendering and the `Host` check). CI (`.github/workflows/ci.yml`) only checks that the image builds; it does not publish it. Locally:
 
 ```bash
 docker build -t desertica-web .
-docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
+docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost -e SITE_URL=http://localhost:4000 desertica-web
 ```
 
 ## Runtime configuration (environment)
@@ -20,8 +20,8 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
 | `STRAPI_PUBLIC_URL` | if media is served by Strapi | URL browsers use to load uploaded media. Defaults to `STRAPI_URL`. |
 | `FORMS_PROXY_SECRET` | recommended | Same value as in the CMS. Lets the CMS rate-limit by visitor IP instead of the proxy's. |
 | `TRUST_PROXY` | behind a proxy | Number of proxies in front of the app: `1` behind Traefik/Coolify, `2` with Cloudflare in front too. Plain `true` trusts the whole `X-Forwarded-For` header, so a client can pick its own IP and skip the rate limits; do not use it in production. |
-| `SITE_URL` | yes in production | Public origin, no trailing slash (for example `https://desertica.pe`). Canonical, hreflang, sitemap, robots and JSON-LD use it; without it they fall back to the request `Host`. |
-| `IMAGE_HOSTS` | no | Extra hosts whose images the server resizes to WebP at `/_img` (an R2 or CDN host). The CMS host and `images.unsplash.com` are always allowed. |
+| `SITE_URL` | yes in production | Public origin, no trailing slash (for example `https://desertica.pe`). Canonical, hreflang, sitemap, robots and JSON-LD use it. The server refuses to start in production without it; outside production it falls back to the request `Host`. |
+| `IMAGE_HOSTS` | no | Extra hosts whose images the server resizes to WebP at `/_img` (an R2 or CDN host). The `STRAPI_PUBLIC_URL` host and `images.unsplash.com` are always allowed; the internal `STRAPI_URL` host is not (it would reach the browser). |
 | `PAGE_CACHE_TTL_MS` | no | Seconds-scale cache of rendered public pages, in ms (default `10000`, `0` turns it off). Booking and payment pages are never cached. A CMS change shows up within `STRAPI_CACHE_TTL_MS` + this value (about 40 s). |
 | `STRAPI_API_TOKEN`, `STRAPI_FORMS_TOKEN` | optional | Only if you remove the Public role permissions in Strapi. |
 | `STRAPI_CACHE_TTL_MS`, `STRAPI_TIMEOUT_MS` | optional | Server-side cache (default 30000) and request timeout (default 5000). |
@@ -30,6 +30,17 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost desertica-web
 ## When content changes show up
 
 Every route is rendered per request and reads Strapi through a server-side cache (`STRAPI_CACHE_TTL_MS`, 30 s by default). A change published in Strapi (copy, theme, navigation, booking numbers, media, tours) is live within that window: no rebuild and no webhook. The build does not need the CMS. If Strapi is unreachable the last good response is served, and the bundled static catalog if there is none.
+
+## Content Security Policy
+
+Rendered pages carry `Content-Security-Policy-Report-Only` (built in `src/security-headers.ts`) next to the enforced `frame-ancestors 'none'`. Inline scripts are allowed by hash, computed from each page. Allowed hosts: Google Tag Manager and Analytics, Cloudflare Turnstile, Stripe, Culqi, the CMS and `IMAGE_HOSTS`, `images.unsplash.com`, `flagcdn.com`. There is no report endpoint yet, so violations show only in the browser console.
+
+Moving to enforce:
+
+1. On staging, open home, a tour, contact, `/checkout`, `/pay/:token` and `/booking` with consent accepted and the payment gateways on. The console must show no `Content-Security-Policy-Report-Only` violation.
+2. Add every host that showed up (a new analytics or payment domain) to `src/security-headers.ts`.
+3. Change the header name in `reportCsp` (`src/server.ts`) from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`. Roll it out to staging first, then production.
+4. `style-src` keeps `'unsafe-inline'` because Angular inlines component styles; dropping it needs a CSP nonce (`CSP_NONCE`) and is a separate change.
 
 ## Full stack locally
 
@@ -40,6 +51,8 @@ git clone https://github.com/Desertica/desertica-cms.git ../desertica-cms
 cp .env.example .env   # add the CMS secrets and DATABASE_PASSWORD (see the compose file)
 docker compose up --build
 ```
+
+Compose passes `TRUST_PROXY` through and defaults it to `0` (nothing in front of the site). Behind Traefik or Cloudflare set it to the number of proxies, otherwise every visitor shares one IP and the form and image rate limits hit everyone. It is only a warning at start, not a hard requirement (pending).
 
 ## Checklist
 
@@ -55,10 +68,10 @@ For real-environment testing (staging) and a small first production. Railway dep
 
 1. Add a service from `Desertica/desertica-web` (branch `main` for production, `develop` for staging) after the CMS service from `desertica-cms` exists (see its `docs/DEPLOY.md`).
 2. Variables:
-   - `NG_ALLOWED_HOSTS=tudominio.com,www.tudominio.com,healthcheck.railway.app`. The healthcheck must be allowed or it gets 400 and the deploy never turns healthy (confirm the healthcheck host in Railway's docs if it still fails).
+   - `NG_ALLOWED_HOSTS=tudominio.com,www.tudominio.com`. The healthcheck uses `/healthz`, which answers before the host check, so its `Host` does not need to be listed.
    - `STRAPI_URL=http://<cms service>.railway.internal:1337` (private network) and `STRAPI_PUBLIC_URL=https://cms.tudominio.com`.
    - `FORMS_PROXY_SECRET` (same value as the CMS) and `TRUST_PROXY=1` (`2` with Cloudflare in front).
-3. Service settings: healthcheck path `/`, port from `PORT` (4000 by default), domain `tudominio.com`, then the Cloudflare record with proxy on.
+3. Service settings: healthcheck path `/healthz`, port from `PORT` (4000 by default), domain `tudominio.com`, then the Cloudflare record with proxy on.
 4. Cloudflare cache rules: cache `/fonts/*` and the hashed JS/CSS; leave HTML uncached (it is rendered per request).
 5. Staging: duplicate the environment, point it at `develop` and give it its own database, secrets and domain.
 

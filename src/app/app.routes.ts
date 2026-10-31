@@ -64,10 +64,6 @@ export const routes: Routes = [
   // Legacy URL: Express answers it with a permanent redirect; this keeps in-app navigation consistent.
   { path: 'experiences/:slug', redirectTo: 'tours/:slug' },
   { path: 'experiences', redirectTo: 'tours' },
-  {
-    path: 'reservations',
-    loadComponent: () => import('./features/reservations/reservations').then((m) => m.Reservations),
-  },
   // Booking engine: these routes only exist while BOOKING_ENGINE_ENABLED is true.
   {
     path: 'checkout',

@@ -58,7 +58,7 @@ export function publicConfigFromEnv(env: Record<string, string | undefined>): Pu
   };
 }
 
-/** The CMS media host, `IMAGE_HOSTS` (for an R2 or CDN host) and Unsplash, which the static catalog uses. */
+/** The public CMS media host (`STRAPI_PUBLIC_URL`; never the internal `STRAPI_URL`, which would reach the browser), `IMAGE_HOSTS` (for an R2 or CDN host) and Unsplash, which the static catalog uses. */
 function imageHostsFromEnv(env: Record<string, string | undefined>): string[] {
   const hostOf = (value: string | undefined) => {
     try {
@@ -70,7 +70,7 @@ function imageHostsFromEnv(env: Record<string, string | undefined>): string[] {
   const listed = (env['IMAGE_HOSTS'] ?? '').split(',').map((host) => host.trim());
   return [
     ...new Set(
-      [...listed, hostOf(env['STRAPI_PUBLIC_URL']), hostOf(env['STRAPI_URL']), 'images.unsplash.com'].filter(Boolean),
+      [...listed, hostOf(env['STRAPI_PUBLIC_URL']), 'images.unsplash.com'].filter(Boolean),
     ),
   ];
 }
@@ -79,4 +79,11 @@ function imageHostsFromEnv(env: Record<string, string | undefined>): string[] {
 export function apiUrlFromEnv(env: Record<string, string | undefined>): string | null {
   const url = env['API_URL']?.trim().replace(/\/+$/, '');
   return url || null;
+}
+
+/** Production must know its own origin: without `SITE_URL` canonical, sitemap and robots would be built from the request `Host`, which any client can set. */
+export function assertProductionConfig(env: Record<string, string | undefined>): void {
+  if (env['NODE_ENV'] === 'production' && !publicConfigFromEnv(env).siteUrl) {
+    throw new Error('SITE_URL is required in production (for example https://desertica.pe).');
+  }
 }

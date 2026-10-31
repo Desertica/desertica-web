@@ -79,7 +79,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
         <h1 class="font-heading text-4xl">{{ 'complaints.title' | translate: i18n.locale() }}</h1>
         <p class="text-muted-foreground">{{ 'complaints.lead' | translate: i18n.locale() }}</p>
         <p class="text-sm">
-          {{ legal().name }} · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }}
+          {{ legal().name }}@if (legal().ruc) { · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }} }
         </p>
         @if (intro(); as markdown) {
           <app-content-body [markdown]="markdown" />
@@ -262,10 +262,7 @@ export class ComplaintsBook {
   protected readonly token = signal<string | null>(null);
   protected readonly filed = signal<{ correlative: number; dueAt: string } | null>(null);
   protected readonly turnstileRequired = computed(() => this.turnstile()?.enabled === true);
-  protected readonly legal = computed(() => ({
-    name: this.catalog.site().legalName,
-    ruc: this.catalog.site().ruc,
-  }));
+  protected readonly legal = this.catalog.legal;
   /** Optional introduction written in the CMS `page` entry for `complaints`. */
   protected readonly intro = computed(() => {
     const page = this.catalog.page('complaints');

@@ -480,13 +480,17 @@ export class TourBook {
       return;
     }
 
-    const href = this.whatsappHref();
-    if (!isPlatformBrowser(this.platformId) || !href) {
+    if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    this.analytics.track('click_whatsapp', { placement: 'tour_booking' });
-    this.document.defaultView?.open(href, '_blank', 'noopener,noreferrer');
+    // Without a WhatsApp number (the CMS still has the placeholder) the request is only recorded.
+    const href = this.whatsappHref();
+    if (href) {
+      this.analytics.track('click_whatsapp', { placement: 'tour_booking' });
+      this.document.defaultView?.open(href, '_blank', 'noopener,noreferrer');
+    }
+
     void this.recordReservation();
   }
 
@@ -521,7 +525,12 @@ export class TourBook {
     const date = this.form.controls.date.value;
     const payment = this.form.controls.payment.value;
     const people = this.form.controls.adults.value + this.form.controls.children.value;
-    return buildTourWhatsappHref(this.catalog.contact().whatsapp, this.i18n.t('tour.whatsappMessage'), {
+    const whatsapp = this.catalog.contact().whatsapp;
+    if (!whatsapp) {
+      return '';
+    }
+
+    return buildTourWhatsappHref(whatsapp, this.i18n.t('tour.whatsappMessage'), {
       tour: this.i18n.t(this.tour().titleKey),
       date: date ? formatTourDate(date) : '',
       language: this.i18n.t(`lang.${this.form.controls.language.value}`),

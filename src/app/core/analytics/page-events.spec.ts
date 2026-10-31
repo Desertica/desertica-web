@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { toast } from '@spartan-ng/brain/sonner';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
+import { stubWhatsapp } from '../../testing/contact';
 import { stubMatchMedia } from '../../testing/match-media';
 import { settleMotion } from '../../testing/settle-motion';
 import { Contact } from '../../features/contact/contact';
@@ -71,6 +72,7 @@ describe('analytics events on the pages', () => {
   });
 
   it('publishes click_whatsapp from the floating button', async () => {
+    stubWhatsapp(TestBed);
     const fixture = TestBed.createComponent(WhatsappFab);
     await fixture.whenStable();
     await settleMotion();

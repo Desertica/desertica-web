@@ -6,10 +6,14 @@ import {
   complaintIsConsistent,
   RESERVATION_FIELDS,
   RESERVATION_NUMBERS,
-  sanitize,
+  sanitize as sanitizeResult,
 } from './forms-validation';
 
 describe('forms validation', () => {
+  const sanitize = (...args: Parameters<typeof sanitizeResult>) => {
+    const result = sanitizeResult(...args);
+    return 'data' in result ? result.data : null;
+  };
   const contact = {
     name: ' Ana ',
     email: 'ana@desertica.pe',
@@ -33,6 +37,15 @@ describe('forms validation', () => {
     expect(sanitize({ ...contact, locale: 'fr' }, CONTACT_FIELDS, {})).toBeNull();
     expect(sanitize(null, CONTACT_FIELDS, {})).toBeNull();
     expect(sanitize('x', CONTACT_FIELDS, {})).toBeNull();
+  });
+
+  it('names the first invalid field', () => {
+    expect(sanitizeResult({ ...contact, message: 'x'.repeat(501) }, CONTACT_FIELDS, {})).toEqual({ invalid: 'message' });
+    expect(sanitizeResult({ ...contact, name: '' }, CONTACT_FIELDS, {})).toEqual({ invalid: 'name' });
+    expect(sanitizeResult(null, CONTACT_FIELDS, {})).toEqual({ invalid: 'body' });
+    expect(sanitizeResult({ tourSlug: 'a', date: '2026-12-01', language: 'en', adults: 99 }, RESERVATION_FIELDS, RESERVATION_NUMBERS)).toEqual({
+      invalid: 'adults',
+    });
   });
 
   it('validates reservations including numeric ranges', () => {

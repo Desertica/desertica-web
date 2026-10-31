@@ -7,7 +7,7 @@ describe('imageProxy', () => {
   const open: Started[] = [];
   afterEach(() => open.splice(0).forEach((started) => started.close()));
 
-  const setup = async () => {
+  const setup = async (cacheBytes?: number) => {
     const png = await sharp({ create: { width: 3000, height: 2000, channels: 3, background: '#a64e34' } }).png().toBuffer();
     let hits = 0;
     const origin = express();
@@ -15,10 +15,11 @@ describe('imageProxy', () => {
       hits += 1;
       res.type('png').send(png);
     });
+    origin.get('/uploads/logo.svg', (_req, res) => res.type('image/svg+xml').send('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>'));
     origin.get('/uploads/note.txt', (_req, res) => res.type('text').send('hello'));
     const upstream = await startApp(origin);
     const proxy = express();
-    proxy.use('/_img', imageProxy({ hosts: [new URL(upstream.url).host] }));
+    proxy.use('/_img', imageProxy({ hosts: [new URL(upstream.url).host], cacheBytes }));
     const app = await startApp(proxy);
     open.push(upstream, app);
     const get = (query: string, accept = 'image/webp') => fetch(`${app.url}/_img?${query}`, { headers: { accept } });
@@ -52,6 +53,35 @@ describe('imageProxy', () => {
     expect((await get(`w=0&u=${src}`)).status).toBe(400);
     expect((await get('w=640')).status).toBe(400);
     expect((await get(`w=640&u=${encodeURIComponent(`${upstream.url}/uploads/note.txt`)}`)).status).toBe(404);
+    expect((await get(`w=640&u=${encodeURIComponent(`${upstream.url}/uploads/logo.svg`)}`)).status).toBe(404);
     expect((await get(`w=640&u=${encodeURIComponent(`${upstream.url}/uploads/missing.png`)}`)).status).toBe(404);
+  });
+
+  describe('memory cache', () => {
+    const size = async (width: number) => {
+      const { get, src } = await setup();
+      return (await (await get(`w=${width}&u=${src}`)).arrayBuffer()).byteLength;
+    };
+
+    it('counts a render shared by concurrent requests once', async () => {
+      const bytes = await size(500);
+      const { get, src, hits } = await setup(Math.floor(bytes * 1.5));
+      await Promise.all([get(`w=500&u=${src}`), get(`w=500&u=${src}`)]);
+      await get(`w=500&u=${src}`);
+      expect(hits()).toBe(1);
+    });
+
+    it('evicts the least recently used image, not the oldest one', async () => {
+      const [small, medium, large] = [await size(320), await size(640), await size(1024)];
+      expect(medium).toBeGreaterThan(small);
+      const { get, src, hits } = await setup(small + large);
+      await get(`w=320&u=${src}`);
+      await get(`w=640&u=${src}`);
+      await get(`w=320&u=${src}`);
+      await get(`w=1024&u=${src}`);
+      expect(hits()).toBe(3);
+      await get(`w=320&u=${src}`);
+      expect(hits()).toBe(3);
+    });
   });
 });

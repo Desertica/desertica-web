@@ -2,7 +2,7 @@
 
 Tourism booking frontend for desert experiences in Ica and Huacachina, Peru.
 
-This repository is an **Angular 21** map: routes, render modes, and folders are in place. The home narrative (wordmark intro, Why, gallery) is GSAP. Catalog and booking stay placeholders. Place names (Desertica, Ica, Huacachina) stay as proper nouns.
+Angular 21 frontend with SSR on every route. The home narrative (wordmark intro, Why, gallery) is GSAP; catalog, pages, blog and products come from Strapi, and the booking engine (checkout, payment links) is behind `BOOKING_ENGINE_ENABLED`. Place names (Desertica, Ica, Huacachina) stay as proper nouns.
 
 ## Stack
 
@@ -17,7 +17,7 @@ This repository is an **Angular 21** map: routes, render modes, and folders are 
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22 (`engines` is `>=22 <25`)
 - npm 10+ (`packageManager` is pinned in `package.json`)
 
 Install uses `legacy-peer-deps=true` (see [`.npmrc`](.npmrc)).
@@ -41,8 +41,8 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/tours/:id`         | **SSR** (`RenderMode.Server`) | Tour detail (`dune-buggy` is the first filled page) |
 | `/products`          | **SSR** (`RenderMode.Server`)    | Products from Strapi (empty state until published) |
 | `/products/:slug`    | **SSR** (`RenderMode.Server`)    | Product detail from Strapi                |
-| `/about`             | **SSR** (`RenderMode.Server`) | About placeholder                         |
-| `/contact`           | **SSR** (`RenderMode.Server`) | Contact placeholder                       |
+| `/about`             | **SSR** (`RenderMode.Server`) | About page                                |
+| `/contact`           | **SSR** (`RenderMode.Server`) | Contact form (stored in Strapi or sent to the API) |
 | `/blog`              | **SSR** (`RenderMode.Server`)    | Posts from Strapi (empty state until published) |
 | `/blog/:slug`        | **SSR** (`RenderMode.Server`)    | Post detail from Strapi                   |
 | `/nazca`             | **SSR** (`RenderMode.Server`) | Destination hub: Strapi page + its tours  |
@@ -52,11 +52,14 @@ Per-route modes live in [`src/app/app.routes.server.ts`](src/app/app.routes.serv
 | `/privacy`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/complaints`        | **SSR** (`RenderMode.Server`) | Libro de Reclamaciones form (files through the API) |
 | `/conduct`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/cancellation`      | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
+| `/cookies`           | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
 | `/legal/mincetur`    | **SSR** (`RenderMode.Server`) | Legal page from Strapi (`page` entry)     |
-| `/experiences/:slug` | Express **301**               | Permanent redirect to `/tours/:slug`      |
+| `/experiences`, `/experiences/:slug` | Express **301** | Permanent redirect to `/tours`, `/tours/:slug` |
 | `/sitemap.xml`, `/robots.txt` | Express          | Built from the live catalog (see `src/seo-routes.ts`) |
 | `/checkout`, `/checkout/payment/:reference`, `/booking[/:reference]`, `/pay/:token`, `/waiver/:token`, `/payment/3ds` | **SSR** | Booking engine and the e-mailed links (payment link, waiver, 3DS return); only with `BOOKING_ENGINE_ENABLED=true` |
-| `/reservations`      | **SSR** (`RenderMode.Server`)    | Plan your trip / reservations placeholder |
+| `/reservations`      | Express **301**               | Permanent redirect to `/tours` (the static page was retired) |
+| `/healthz`           | Express                       | Liveness probe for Docker: `200 ok`, no render, no `Host` check |
 
 Client routes: [`src/app/app.routes.ts`](src/app/app.routes.ts).
 
@@ -93,13 +96,23 @@ src/app/
     content/                   # CMS page (legal, destination hubs)
     blog/                      # Strapi posts (SSR)
     products/                  # Strapi products (SSR)
-    reservations/              # CSR placeholder
-src/forms-proxy.ts             # /api/forms/* -> Strapi (validation + rate limit)
+    booking/, payment/         # booking engine (checkout, my booking, payment step)
+    complaints/                # Libro de Reclamaciones
+src/server.ts                  # Express: headers, /healthz, redirects, proxies, static files, SSR
+src/healthz.ts                 # /healthz probe
+src/security-headers.ts        # Content-Security-Policy-Report-Only with per-page script hashes
+src/seo-routes.ts              # sitemap.xml, robots.txt, legacy 301s
+src/locale-routes.ts           # language prefix redirects (/tours -> /en/tours)
+src/page-cache.ts              # 10 s in-memory cache of rendered public pages
+src/forms-proxy.ts             # /api/forms/* -> Strapi or the API (validation + rate limit)
+src/forms-validation.ts        # field specs for those forms
+src/api-proxy.ts               # /api/public/* -> desertica-api (booking engine)
+src/image-proxy.ts             # /_img: resizes CMS images to WebP
+src/rate-limit.ts, src/image-widths.ts
 scripts/build-cms-seed.mjs     # regenerates the CMS seed (../desertica-cms/seed/catalog.json) from the static catalog
 libs/ui/                       # Spartan helm copies
 public/brand/                  # mark and lockup
 public/legal/                  # MINCETUR distintivo + INDECOPI AvisoVirtual
-public/splashes/               # looping DrawSVG pages (not wired into Angular routes)
 ```
 
 ## Strapi CMS
@@ -141,8 +154,6 @@ Motion stays on GSAP only (no Lenis, no carousel). Plugins load on the client th
 - Home: the wordmark SVG is the hero. DrawSVG plays once per tab (`sessionStorage` `desertica-intro`), then the same mark settles. Why Desértica uses SplitText. Featured tours use a pin+scrub gallery, then three destination cards and a closing CTA.
 - `/tours` lists every tour by destination. Cards, header, footer, and the home gallery go to `/tours/:id`. Destination headings still use `/tours#huacachina`.
 - Footer bounce (MorphSVG) waits for the smoother proxy via `whenReady()`.
-
-[`public/splashes/`](public/splashes/) are looping HTML pages and are not routed.
 
 ## MCP servers
 

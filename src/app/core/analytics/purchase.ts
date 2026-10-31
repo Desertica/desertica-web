@@ -1,8 +1,9 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import type { PublicBooking } from '../api/booking-api';
 import { CatalogService } from '../catalog/catalog';
 import { I18nService } from '../i18n/i18n';
+import { readLocal, writeLocal } from '../storage/safe-storage';
 import { AnalyticsService, centsToMajor } from './analytics';
 import { tourItem } from './items';
 
@@ -20,7 +21,6 @@ type Tracked = { paidCents: number; count: number };
  */
 @Injectable({ providedIn: 'root' })
 export class PurchaseTracker {
-  private readonly document = inject(DOCUMENT);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly analytics = inject(AnalyticsService);
   private readonly catalog = inject(CatalogService);
@@ -32,7 +32,6 @@ export class PurchaseTracker {
       return false;
     }
 
-    const storage = this.document.defaultView?.localStorage;
     const tracked = this.read(booking.reference);
     const collected = booking.paidCents - tracked.paidCents;
     if (collected <= 0) {
@@ -40,14 +39,8 @@ export class PurchaseTracker {
     }
 
     const count = tracked.count + 1;
-    try {
-      storage?.setItem(
-        KEY + booking.reference,
-        JSON.stringify({ paidCents: booking.paidCents, count } satisfies Tracked),
-      );
-    } catch {
-      // Without storage a reload could repeat the event, which the shared id lets GA4 drop.
-    }
+    // Without storage a reload could repeat the event, which the shared id lets GA4 drop.
+    writeLocal(KEY + booking.reference, JSON.stringify({ paidCents: booking.paidCents, count } satisfies Tracked));
 
     const tour = this.catalog.tourById(booking.tourSlug);
     const id = `${booking.reference}-${count}`;
@@ -70,7 +63,7 @@ export class PurchaseTracker {
 
   private read(reference: string): Tracked {
     try {
-      const raw = this.document.defaultView?.localStorage.getItem(KEY + reference);
+      const raw = readLocal(KEY + reference);
       if (!raw) {
         return { paidCents: 0, count: 0 };
       }

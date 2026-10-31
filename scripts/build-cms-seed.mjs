@@ -200,7 +200,6 @@ const TRANSLATION_RULES = [
   [/^pages\.tours(Lead)$/, 'tours', 'hero'],
   [/^pages\.toursCta/, 'tours', 'cta'],
   [/^gallery\./, 'tours', 'card'],
-  [/^pages\.reservations/, 'booking', 'hero'],
   [/^pages\.(products)/, 'products', 'hero'],
   [/^products\./, 'products', 'list'],
   [/^pages\.blog/, 'blog', 'hero'],

@@ -1,9 +1,7 @@
 import { tourDestinations } from '../catalog/tours';
 import {
   buildFooterDestinations,
-  footerContact,
   footerDestinations,
-  footerLegalEntity,
   footerSocials,
   footerStamps,
 } from './footer-nav';
@@ -29,19 +27,13 @@ describe('footer nav', () => {
     );
   });
 
-  it('keeps legal placeholders in RUC and company length', () => {
-    expect(footerLegalEntity.ruc).toHaveLength(11);
-    expect(footerLegalEntity.name.endsWith('S.A.C.')).toBe(true);
-  });
-
   it('points stamps at document routes', () => {
     expect(footerStamps.map((item) => item.path)).toEqual(['/legal/mincetur', '/complaints']);
     expect(footerStamps.every((item) => item.optimized)).toBe(true);
     expect(footerStamps[1]?.src).toBe('/legal/libro-reclamaciones.png');
   });
 
-  it('exposes a WhatsApp deep link and official mark', () => {
-    expect(footerContact.whatsapp).toBe('https://wa.me/519XXXXXXXX');
+  it('exposes the official WhatsApp mark', () => {
     expect(simpleWhatsapp).toContain('<title>WhatsApp</title>');
     expect(simpleWhatsapp).toContain('viewBox="0 0 24 24"');
   });

@@ -7,7 +7,6 @@ import { BookingFlow } from '../../core/booking/booking-flow';
 import { publicBooking } from '../../testing/booking-fixtures';
 import { stubMatchMedia } from '../../testing/match-media';
 import { mockApi } from '../../testing/mock-api';
-import { settle } from '../../testing/settle';
 import { MyBooking } from './my-booking';
 
 describe('MyBooking', () => {
