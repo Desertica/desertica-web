@@ -8,6 +8,8 @@ import type {
   TourVideo,
 } from '../catalog/tour-pages';
 import { IMAGE_FOCUS, type CatalogDestination, type CatalogTour } from '../catalog/tours';
+import { PLACEHOLDER_IMAGE } from '../images/placeholder-image';
+import { featureIcon } from '../icons/feature-icons';
 import { LOCALES, type AppLocale } from '../i18n/catalogs';
 import {
   PALETTE_TOKENS,
@@ -65,6 +67,8 @@ export const mediaAltKey = (slot: string): string => `cms.media.${slot}.alt`;
 export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   const messages: Record<AppLocale, Record<string, string>> = { en: {}, es: {} };
   const media = (value: unknown) => mediaUrl(value, options.mediaBase);
+  const placeholder =
+    (raw.site && mediaUrl(raw.site['placeholderImage'], options.mediaBase)) || PLACEHOLDER_IMAGE;
 
   for (const locale of LOCALES) {
     for (const entry of raw.translations?.[locale] ?? []) {
@@ -86,8 +90,11 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       continue;
     }
 
+    // `imageUrl`/`galleryUrls` are the old external fields: still the only image the seed has, so they rank after the upload.
     const image =
-      media(base['image']) ?? text(base['imageUrl']) ?? options.fallbackImage('tour', slug);
+      media(base['image']) ??
+      text(base['imageUrl']) ??
+      (options.fallbackImage('tour', slug) || placeholder);
     const destinationSlug = text(asRecord(base['destination'])?.['slug']);
     if (!destinationSlug) {
       continue;
@@ -189,7 +196,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       image:
         media(base['image']) ??
         text(base['imageUrl']) ??
-        options.fallbackImage('destination', slug),
+        (options.fallbackImage('destination', slug) || placeholder),
       tours,
       footerOrder: num(base['footerOrder']),
       showInFooter: base['showInFooter'] !== false,
@@ -291,6 +298,7 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     brandName: field('brandName'),
     legalYear: num(entry['legalYear']) ?? 0,
     shareImage: mediaUrl(entry['shareImage'], mediaBase) ?? text(entry['shareImageUrl']) ?? '',
+    placeholderImage: mediaUrl(entry['placeholderImage'], mediaBase) ?? '',
     email: field('email'),
     phone: field('phone'),
     whatsapp: field('whatsapp').replace(/\D/g, ''),
@@ -478,7 +486,7 @@ function features(
     }
 
     return {
-      icon: text(item['icon']) ?? '',
+      icon: featureIcon(text(item['icon'])),
       titleKey: `${prefix}.title`,
       bodyKey: `${prefix}.body`,
     };

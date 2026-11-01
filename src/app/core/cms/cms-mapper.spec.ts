@@ -41,7 +41,10 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   meetingPointUrl: 'https://maps.example/meet',
   waiverBody: locale === 'en' ? 'I accept the risks' : null,
   faqs: [
-    { question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?', answer: locale === 'en' ? 'Yes' : 'Sí' },
+    {
+      question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?',
+      answer: locale === 'en' ? 'Yes' : 'Sí',
+    },
     { question: locale === 'en' ? 'No answer yet' : '', answer: '' },
   ],
   paragraphs: [{ text: locale === 'en' ? 'First' : 'Primero' }],
@@ -202,7 +205,10 @@ describe('mapCms', () => {
     const focusOf = (value: unknown) => {
       const tours = raw.tours as unknown as Record<string, RawEntry[]>;
       const mapped = mapCms(
-        { ...raw, tours: { ...tours, en: tours['en'].map((tour) => ({ ...tour, imageFocus: value })) } } as unknown as CmsRaw,
+        {
+          ...raw,
+          tours: { ...tours, en: tours['en'].map((tour) => ({ ...tour, imageFocus: value })) },
+        } as unknown as CmsRaw,
         options,
       );
       return mapped.destinations[0]?.tours.find((tour) => tour.id === 'a-tour')?.imageFocus;
@@ -298,6 +304,56 @@ describe('mediaUrl', () => {
   });
 });
 
+describe('mapCms placeholder', () => {
+  const bare = (extra: RawEntry = {}) => ({
+    tours: both((l) => [
+      {
+        ...tour(l, 'x', 0),
+        image: null,
+        imageUrl: null,
+        gallery: [],
+        galleryUrls: [],
+        itinerary: [],
+        ...extra,
+      },
+    ]),
+    destinations: both((l) => [{ ...destination(l), image: null, imageUrl: null }]),
+  });
+  const none = { mediaBase: 'https://cms.test', fallbackImage: () => '' };
+
+  it('uses the own wireframe when nothing is set', () => {
+    const snapshot = mapCms(bare(), none);
+    expect(snapshot.destinations[0].image).toBe('/placeholder.svg');
+    expect(snapshot.destinations[0].tours[0].image).toBe('/placeholder.svg');
+    expect(snapshot.tourPages['x'].gallery).toEqual([
+      '/placeholder.svg',
+      '/placeholder.svg',
+      '/placeholder.svg',
+    ]);
+  });
+
+  it('uses the CMS placeholderImage and still prefers uploads, then the old url', () => {
+    const site = { placeholderImage: { url: '/uploads/ph.png' } };
+    const snapshot = mapCms({ ...bare(), site }, none);
+    expect(snapshot.destinations[0].image).toBe('https://cms.test/uploads/ph.png');
+    expect(snapshot.site?.placeholderImage).toBe('https://cms.test/uploads/ph.png');
+
+    const legacy = mapCms(
+      { ...bare(), destinations: both((l) => [{ ...destination(l), image: null }]), site },
+      none,
+    );
+    expect(legacy.destinations[0].image).toBe('https://img/dest.jpg');
+  });
+
+  it('maps unknown feature icons to lucideStar', () => {
+    const snapshot = mapCms(
+      bare({ practices: [{ icon: 'lucideShield', title: 'a', body: 'b' }] }),
+      none,
+    );
+    expect(snapshot.tourPages['x'].practices[0].icon).toBe('lucideStar');
+  });
+});
+
 describe('mapSite', () => {
   it('strips non-digits from the WhatsApp number', () => {
     expect(mapSite({ whatsapp: '+51 (999) 000-111' }).whatsapp).toBe('51999000111');
@@ -386,7 +442,10 @@ describe('mapCms global settings', () => {
     expect(snapshot.messages.es?.['cms.tours.a-tour.waiverBody']).toBeUndefined();
     // Only questions with both texts count, and each locale keeps its own copy.
     expect(page?.faqs).toEqual([
-      { questionKey: 'cms.tours.a-tour.faqs.0.question', answerKey: 'cms.tours.a-tour.faqs.0.answer' },
+      {
+        questionKey: 'cms.tours.a-tour.faqs.0.question',
+        answerKey: 'cms.tours.a-tour.faqs.0.answer',
+      },
     ]);
     expect(snapshot.messages.es?.['cms.tours.a-tour.faqs.0.question']).toBe('¿Es seguro?');
   });
@@ -396,7 +455,13 @@ describe('mapCms global settings', () => {
       {
         ...raw,
         tours: both((l) => [
-          { ...tour(l, 'c-tour', 0), latitude: 120, longitude: 'abc', meetingPointUrl: 'javascript:alert(1)', faqs: [] },
+          {
+            ...tour(l, 'c-tour', 0),
+            latitude: 120,
+            longitude: 'abc',
+            meetingPointUrl: 'javascript:alert(1)',
+            faqs: [],
+          },
         ]),
       },
       options,

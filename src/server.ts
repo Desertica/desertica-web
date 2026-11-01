@@ -138,8 +138,8 @@ app.use((req, res, next) => {
   next();
 });
 
-/** `?preview=<exp>.<sig>` from the CMS shows drafts; off without PREVIEW_SECRET. See preview.ts. */
-app.use(previewGate(process.env['PREVIEW_SECRET']?.trim() || undefined));
+/** `?preview=<exp>.<sig>` from the CMS shows drafts; off without FORMS_PROXY_SECRET. See preview.ts. */
+app.use(previewGate(process.env['FORMS_PROXY_SECRET']?.trim() || undefined));
 
 /** Pages need a language prefix; see locale-routes.ts. */
 app.use(localeRoutes());

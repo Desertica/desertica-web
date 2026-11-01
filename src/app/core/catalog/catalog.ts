@@ -12,6 +12,7 @@ import {
 import { withBookingDefaults, withFormDefaults, withIntroDefaults } from '../cms/booking-defaults';
 import { CmsApi } from '../cms/cms-api';
 import type { BlogPost, CmsPage, CmsSnapshot, MediaSlot, Product } from '../cms/cms-models';
+import { PLACEHOLDER_IMAGE } from '../images/placeholder-image';
 import { contactFromSite, legalFromSite, withSiteDefaults } from '../cms/site-defaults';
 import { type AppLocale } from '../i18n/catalogs';
 import { I18nService } from '../i18n/i18n';
@@ -57,6 +58,7 @@ export class CatalogService {
   );
   readonly featuredTours = computed(() => this.tours().filter((tour) => tour.featured));
   readonly site = computed(() => withSiteDefaults(this.snapshot()?.site));
+  readonly placeholder = computed(() => this.site().placeholderImage || PLACEHOLDER_IMAGE);
   readonly contact = computed(() => contactFromSite(this.site()));
   readonly legal = computed(() => legalFromSite(this.site()));
   readonly socials = computed(() => buildFooterSocials(this.site()));

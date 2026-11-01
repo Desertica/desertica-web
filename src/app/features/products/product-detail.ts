@@ -28,7 +28,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
         >
         <div class="mt-8 grid gap-8 md:grid-cols-2">
           <div class="flex flex-col gap-3">
-            @for (src of data.images; track src) {
+            @for (src of data.shown; track src) {
               <div class="relative aspect-square w-full overflow-hidden">
                 <img
                   [ngSrc]="src"
@@ -76,7 +76,12 @@ export class ProductDetail {
     }
 
     const images = [product.image, ...product.gallery].filter((src): src is string => !!src);
-    return { price: product.price, images, ...fields };
+    return {
+      price: product.price,
+      images,
+      shown: images.length ? images : [this.catalog.placeholder()],
+      ...fields,
+    };
   });
 
   constructor() {
