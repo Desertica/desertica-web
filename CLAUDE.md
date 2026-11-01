@@ -30,7 +30,7 @@ Use **Node 22** (`engines` is `>=22 <25`). On Node 26 about 35 tests fail with `
 - Every user-facing string needs an entry in both `src/locales/en.json` and `es.json`.
 - Match the surrounding code; Prettier config is in `.prettierrc`. New code gets a spec next to it.
 - Every route renders per request (`src/app/app.routes.server.ts`); content comes from Strapi through the server-side cache, so there is nothing to rebuild after publishing. Public pages are also kept 10 s in memory (`src/page-cache.ts`), so a CMS change is live in about 40 s.
-- Draft preview: with `PREVIEW_SECRET` set, `?preview=<exp>.<sig>` (signed by the CMS, bound to the path, see `src/preview.ts`) renders drafts. `server.ts` passes `{preview}` as the SSR request context, `CmsApi.loadDraft` asks Strapi `status=draft` and bypasses the snapshot cache, the page cache skips any request with `preview`, and `CatalogService.preview` drives the banner and noindex. The token is never put in TransferState or links.
+- Draft preview: with `FORMS_PROXY_SECRET` set (same secret as the forms proxy and the CMS), `?preview=<exp>.<sig>` (signed by the CMS, bound to the path, see `src/preview.ts`) renders drafts. `server.ts` passes `{preview}` as the SSR request context, `CmsApi.loadDraft` asks Strapi `status=draft` and bypasses the snapshot cache, the page cache skips any request with `preview`, and `CatalogService.preview` drives the banner and noindex. The token is never put in TransferState or links.
 - Do not commit `.cursor/`, `.vscode/` or `.env` files.
 - Commit messages: short imperative subject, then a body when the change needs it. No attribution lines.
 

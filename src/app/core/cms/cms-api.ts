@@ -48,7 +48,7 @@ const POPULATE: Readonly<Record<string, Record<string, string>>> = {
   pages: { 'populate[heroImage]': 'true' },
   'blog-posts': { 'populate[cover]': 'true' },
   products: { 'populate[image]': 'true', 'populate[gallery]': 'true' },
-  'site-setting': { 'populate[shareImage]': 'true' },
+  'site-setting': { 'populate[shareImage]': 'true', 'populate[placeholderImage]': 'true' },
   'theme-setting': { 'populate[light]': 'true', 'populate[dark]': 'true' },
   'booking-setting': { 'populate[assurances]': 'true' },
   navigation: {

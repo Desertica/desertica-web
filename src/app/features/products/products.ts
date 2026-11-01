@@ -18,6 +18,7 @@ export class Products {
   private readonly catalog = inject(CatalogService);
 
   protected readonly i18n = inject(I18nService);
+  protected readonly placeholder = this.catalog.placeholder;
   protected readonly image = this.catalog.mediaImage('products.hero', TOURS_BANNER_IMAGE);
   protected readonly toursPath = TOURS_PATH;
   /** Published Strapi products in the current language; empty shows the coming soon screen. */

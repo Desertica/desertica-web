@@ -3,7 +3,7 @@ import type { RequestHandler } from 'express';
 
 /**
  * Draft preview token from the CMS: `<exp>.<sig>`, `exp` = unix seconds, `sig` = hex HMAC-SHA256 of
- * `<exp>:<pathname>` keyed with `PREVIEW_SECRET`. Binding the path means a link for one page opens no other.
+ * `<exp>:<pathname>` keyed with `FORMS_PROXY_SECRET` (the secret shared with the CMS). Binding the path means a link for one page opens no other.
  * Without a secret the preview is off and nothing is valid.
  */
 export function verifyPreviewToken(
