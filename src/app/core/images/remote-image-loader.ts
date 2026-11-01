@@ -10,7 +10,9 @@ export function remoteImageLoader(config: ImageLoaderConfig): string {
  * Sends images from the given hosts through the server's `/_img` resizer (WebP, right width).
  * Vector and animated files stay as they are.
  */
-export function optimizedImageLoader(hosts: readonly string[]): (config: ImageLoaderConfig) => string {
+export function optimizedImageLoader(
+  hosts: readonly string[],
+): (config: ImageLoaderConfig) => string {
   return ({ src, width }) => {
     let url: URL;
     try {

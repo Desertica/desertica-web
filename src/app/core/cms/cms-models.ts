@@ -7,6 +7,8 @@ export type SiteSettings = {
   legalYear: number;
   /** Image used for `og:image`; empty when none is set. */
   shareImage: string;
+  /** Fill-in image for missing or broken images; empty uses the web's own wireframe. */
+  placeholderImage: string;
   email: string;
   phone: string;
   /** Digits only, e.g. `519XXXXXXXXX`. */

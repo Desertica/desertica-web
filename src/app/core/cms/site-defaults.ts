@@ -6,6 +6,7 @@ export const DEFAULT_SITE: SiteSettings = {
   brandName: 'Desértica',
   legalYear: 2026,
   shareImage: '',
+  placeholderImage: '',
   email: 'xxxxxx@desertica.pe',
   phone: '+51 9XX XXX XXX',
   whatsapp: '519XXXXXXXX',
