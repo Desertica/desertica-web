@@ -10,6 +10,7 @@ import { HlmToaster } from '@spartan-ng/helm/sonner';
 import { AnalyticsService } from './core/analytics/analytics';
 import { IntroService } from './core/animation/intro';
 import { SmoothScroll } from './core/animation/smooth-scroll';
+import { CatalogService } from './core/catalog/catalog';
 import { I18nService } from './core/i18n/i18n';
 import { TranslatePipe } from './core/i18n/translate-pipe';
 import { CookieBanner } from './core/layout/cookie-banner';
@@ -46,6 +47,7 @@ export class App {
   protected readonly intro = inject(IntroService);
   protected readonly theme = inject(ThemeService).theme;
   protected readonly i18n = inject(I18nService);
+  protected readonly catalog = inject(CatalogService);
   private readonly analytics = inject(AnalyticsService);
   // Instantiated here so its effect writes the SEO tags for every route, including pages with no own meta.
   private readonly seo = inject(SeoService);

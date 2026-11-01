@@ -141,7 +141,17 @@ export class CmsApi {
     return hit?.snapshot ?? inflight!.promise;
   }
 
-  private async fetchSnapshot(base: string, options: MapOptions): Promise<CmsSnapshot | null> {
+  /**
+   * Draft preview: content collections come with `status=draft`. Never reads or writes the shared cache, so a draft
+   * cannot reach a visitor; a failure answers `null` instead of falling back to anything.
+   */
+  loadDraft(options: MapOptions): Promise<CmsSnapshot | null> {
+    const base = this.config.url;
+    return base ? this.fetchSnapshot(base, options, true).catch(() => null) : Promise.resolve(null);
+  }
+
+  private async fetchSnapshot(base: string, options: MapOptions, draft = false): Promise<CmsSnapshot | null> {
+    const status: Record<string, string> = draft ? { status: 'draft' } : {};
     const [
       destinations,
       tours,
@@ -156,13 +166,13 @@ export class CmsApi {
       booking,
       navigation,
     ] = await Promise.all([
-        this.collection(base, 'destinations', { sort: 'order:asc' }),
-        this.collection(base, 'tours', { sort: 'order:asc' }),
+        this.collection(base, 'destinations', { sort: 'order:asc', ...status }),
+        this.collection(base, 'tours', { sort: 'order:asc', ...status }),
         this.collection(base, 'translations', { sort: 'key:asc' }),
         this.collection(base, 'media-slots'),
-        this.collection(base, 'pages'),
-        this.collection(base, 'blog-posts', { sort: 'publishedDate:desc' }),
-        this.collection(base, 'products', { sort: 'order:asc' }),
+        this.collection(base, 'pages', status),
+        this.collection(base, 'blog-posts', { sort: 'publishedDate:desc', ...status }),
+        this.collection(base, 'products', { sort: 'order:asc', ...status }),
         this.single(base, 'site-setting'),
         this.single(base, 'theme-setting'),
         this.single(base, 'form-setting'),
@@ -190,7 +200,7 @@ export class CmsApi {
     }
 
     // Any other resource that failed would blank its part of the site (copy, navigation, media), so with a good snapshot at hand the whole refresh counts as failed.
-    if (cached?.key === base && Object.values(raw).some((value) => value === undefined)) {
+    if (!draft && cached?.key === base && Object.values(raw).some((value) => value === undefined)) {
       return null;
     }
 

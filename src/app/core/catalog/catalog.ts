@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   Injectable,
   PLATFORM_ID,
+  REQUEST_CONTEXT,
   TransferState,
   computed,
   inject,
@@ -28,6 +29,7 @@ import { tourPage, type TourPage } from './tour-pages';
 import { type CatalogDestination, type CatalogTour, tourDestinations } from './tours';
 
 const SNAPSHOT_KEY = makeStateKey<CmsSnapshot | null>('cms-snapshot');
+const PREVIEW_KEY = makeStateKey<boolean>('cms-preview');
 
 /**
  * Single source for destinations, tours, site settings, media and CMS pages. Content comes from
@@ -41,7 +43,10 @@ export class CatalogService {
   private readonly transfer = inject(TransferState);
   private readonly themeStyles = inject(CmsThemeStyles);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly requestContext = inject(REQUEST_CONTEXT, { optional: true }) as { preview?: boolean } | null;
   private readonly snapshot = signal<CmsSnapshot | null>(null);
+  /** True when the page shows CMS drafts (verified on the server; the token itself never gets here). */
+  readonly preview = signal(false);
 
   readonly destinations = computed<readonly CatalogDestination[]>(() => {
     const cms = this.snapshot()?.destinations;
@@ -84,6 +89,7 @@ export class CatalogService {
       const transferred = this.transfer.get(SNAPSHOT_KEY, null);
       if (transferred) {
         this.apply(transferred);
+        this.preview.set(this.transfer.get(PREVIEW_KEY, false));
       }
 
       return;
@@ -93,10 +99,17 @@ export class CatalogService {
       return;
     }
 
-    const snapshot = await this.api.load({
+    const options = {
       mediaBase: this.api.publicUrl,
-      fallbackImage: (kind, slug) => this.fallbackImage(kind, slug),
-    });
+      fallbackImage: (kind: 'destination' | 'tour', slug: string) => this.fallbackImage(kind, slug),
+    };
+    const draft = this.requestContext?.preview === true ? await this.api.loadDraft(options) : null;
+    const snapshot = draft ?? (await this.api.load(options));
+    if (draft) {
+      this.preview.set(true);
+      this.transfer.set(PREVIEW_KEY, true);
+    }
+
     if (snapshot) {
       this.transfer.set(SNAPSHOT_KEY, snapshot);
       this.apply(snapshot);

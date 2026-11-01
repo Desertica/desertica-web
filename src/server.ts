@@ -14,7 +14,9 @@ import { healthz } from './healthz';
 import { imageProxy } from './image-proxy';
 import { formsProxy } from './forms-proxy';
 import { localeRoutes } from './locale-routes';
+import { previewGate } from './preview';
 import { createPageCache, pageCacheKey } from './page-cache';
+import { clientKey, createRateLimiter } from './rate-limit';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import { stripLocale } from './app/core/i18n/catalogs';
 import { cspReportOnly } from './security-headers';
@@ -136,6 +138,9 @@ app.use((req, res, next) => {
   next();
 });
 
+/** `?preview=<exp>.<sig>` from the CMS shows drafts; off without PREVIEW_SECRET. See preview.ts. */
+app.use(previewGate(process.env['PREVIEW_SECRET']?.trim() || undefined));
+
 /** Pages need a language prefix; see locale-routes.ts. */
 app.use(localeRoutes());
 
@@ -144,8 +149,16 @@ app.use(localeRoutes());
  * Public pages are kept for `PAGE_CACHE_TTL_MS` (10 s, 0 turns it off); a render takes ~80 ms, about 12 pages/s per process.
  */
 const pageCache = createPageCache(Number(process.env['PAGE_CACHE_TTL_MS'] ?? 10_000));
+/** Previews skip the page cache, so each one is a full render: cap them per client. */
+const previewAllowed = createRateLimiter(30, 60_000);
 app.use((req, res, next) => {
-  const key = pageCacheKey(req);
+  const preview = res.locals['preview'] === true;
+  if (preview && !previewAllowed(clientKey(req.ip))) {
+    res.status(429).type('text/plain').send('Too many requests');
+    return;
+  }
+
+  const key = preview ? null : pageCacheKey(req);
   const hit = key ? pageCache.get(key) : undefined;
   if (hit) {
     if (isHtml(hit.type)) {
@@ -157,7 +170,7 @@ app.use((req, res, next) => {
   }
 
   angularApp
-    .handle(req)
+    .handle(req, preview ? { preview } : undefined)
     .then(async (response) => {
       if (!response) {
         next();
