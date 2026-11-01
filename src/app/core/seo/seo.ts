@@ -99,7 +99,7 @@ export class SeoService {
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({
       name: 'robots',
-      content: seo.noindex ? 'noindex, nofollow' : 'index, follow',
+      content: seo.noindex || this.catalog.preview() ? 'noindex, nofollow' : 'index, follow',
     });
 
     this.meta.updateTag({ property: 'og:type', content: seo.type ?? 'website' });
