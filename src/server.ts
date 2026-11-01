@@ -26,7 +26,11 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const HASHED_ASSET = /-[A-Z0-9]{8}\.[a-z0-9]+$/;
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+// Traefik sends all five X-Forwarded-* headers. Angular trusts only host and proto by default and serves the empty
+// client-side shell for any request that carries another one, so without this list nothing is rendered on the server.
+const angularApp = new AngularNodeAppEngine({
+  trustProxyHeaders: ['x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-for', 'x-forwarded-server'],
+});
 
 // A hop count ("1" behind one proxy, "2" behind Cloudflare and Traefik) trusts only that many X-Forwarded-For
 // entries; plain "true" trusts the whole header and lets any client pick its own IP to dodge the rate limiter.
