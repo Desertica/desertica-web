@@ -16,6 +16,7 @@ import { formsProxy } from './forms-proxy';
 import { localeRoutes } from './locale-routes';
 import { previewGate } from './preview';
 import { createPageCache, pageCacheKey } from './page-cache';
+import { clientKey, createRateLimiter } from './rate-limit';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import { stripLocale } from './app/core/i18n/catalogs';
 import { cspReportOnly } from './security-headers';
@@ -148,8 +149,15 @@ app.use(localeRoutes());
  * Public pages are kept for `PAGE_CACHE_TTL_MS` (10 s, 0 turns it off); a render takes ~80 ms, about 12 pages/s per process.
  */
 const pageCache = createPageCache(Number(process.env['PAGE_CACHE_TTL_MS'] ?? 10_000));
+/** Previews skip the page cache, so each one is a full render: cap them per client. */
+const previewAllowed = createRateLimiter(30, 60_000);
 app.use((req, res, next) => {
   const preview = res.locals['preview'] === true;
+  if (preview && !previewAllowed(clientKey(req.ip))) {
+    res.status(429).type('text/plain').send('Too many requests');
+    return;
+  }
+
   const key = preview ? null : pageCacheKey(req);
   const hit = key ? pageCache.get(key) : undefined;
   if (hit) {
