@@ -17,6 +17,13 @@ export const DEFAULT_SITE: SiteSettings = {
   linkedin: 'https://www.linkedin.com/company/desertica',
   google: 'https://maps.google.com/?q=Desertica',
   tripadvisor: 'https://www.tripadvisor.com/desertica',
+  showInstagram: false,
+  showFacebook: false,
+  showTiktok: false,
+  showYoutube: false,
+  showLinkedin: false,
+  showGoogle: false,
+  showTripadvisor: false,
   legalName: 'XXXXXXXXXXXX S.A.C.',
   ruc: 'XXXXXXXXXXX',
 };
@@ -53,15 +60,25 @@ export function legalFromSite(site: SiteSettings): { year: number; name: string;
   };
 }
 
+export type SocialId = 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'linkedin' | 'google' | 'tripadvisor';
+
+/** The network URL, or '' unless its CMS switch is on and the URL is not empty. Every social use (footer, JSON-LD) goes through here. */
+export function socialUrl(site: SiteSettings, id: SocialId): string {
+  const flag = `show${id[0]!.toUpperCase()}${id.slice(1)}` as keyof SiteSettings;
+  return site[flag] ? site[id].trim() : '';
+}
+
 /** Fills empty CMS fields with the defaults so the footer never renders blanks. */
 export function withSiteDefaults(site: Partial<SiteSettings> | null | undefined): SiteSettings {
   const merged: SiteSettings = { ...DEFAULT_SITE };
   for (const key of Object.keys(DEFAULT_SITE) as (keyof SiteSettings)[]) {
     const value = site?.[key];
     if (typeof value === 'string' && value.trim()) {
-      (merged as Record<string, string | number>)[key] = value;
+      (merged as Record<string, string | number | boolean>)[key] = value;
     } else if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-      (merged as Record<string, string | number>)[key] = value;
+      (merged as Record<string, string | number | boolean>)[key] = value;
+    } else if (typeof value === 'boolean') {
+      (merged as Record<string, string | number | boolean>)[key] = value;
     }
   }
 

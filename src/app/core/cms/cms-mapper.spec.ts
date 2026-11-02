@@ -358,6 +358,11 @@ describe('mapSite', () => {
   it('strips non-digits from the WhatsApp number', () => {
     expect(mapSite({ whatsapp: '+51 (999) 000-111' }).whatsapp).toBe('51999000111');
   });
+
+  it('reads the social switches, off unless explicitly true', () => {
+    const site = mapSite({ instagram: 'https://i.example/x', showInstagram: true, showFacebook: 'true' });
+    expect([site.showInstagram, site.showFacebook, site.showTiktok]).toEqual([true, false, false]);
+  });
 });
 
 describe('mapCms global settings', () => {

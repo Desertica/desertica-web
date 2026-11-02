@@ -1,6 +1,6 @@
 import { type CatalogDestination, FOOTER_DESTINATION_IDS, tourDestinations, tourPath } from '../catalog/tours';
 import type { CmsNavLink, MediaSlot, SiteSettings } from '../cms/cms-models';
-import { DEFAULT_SITE } from '../cms/site-defaults';
+import { DEFAULT_SITE, type SocialId, socialUrl } from '../cms/site-defaults';
 import {
   simpleFacebook,
   simpleGooglemaps,
@@ -84,7 +84,7 @@ export const footerDestinations: readonly FooterDestination[] =
   buildFooterDestinations(tourDestinations);
 
 const SOCIAL_LINKS: readonly {
-  id: 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'linkedin' | 'google' | 'tripadvisor';
+  id: SocialId;
   labelKey: string;
   svg: string;
 }[] = [
@@ -98,9 +98,9 @@ const SOCIAL_LINKS: readonly {
 ];
 
 export function buildFooterSocials(site: SiteSettings): readonly FooterSocial[] {
-  return SOCIAL_LINKS.filter((item) => site[item.id]).map((item) => ({
+  return SOCIAL_LINKS.filter((item) => socialUrl(site, item.id)).map((item) => ({
     labelKey: item.labelKey,
-    href: site[item.id],
+    href: socialUrl(site, item.id),
     svg: item.svg,
   }));
 }
