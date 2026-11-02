@@ -39,8 +39,9 @@ app.set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProx
 const cms = cmsConfigFromEnv(process.env);
 const publicConfig = publicConfigFromEnv(process.env);
 const apiUrl = apiUrlFromEnv(process.env);
+const cmsOrigin = cms.publicUrl ? new URL(cms.publicUrl).origin : undefined;
 const assetOrigins = [
-  ...(cms.publicUrl ? [new URL(cms.publicUrl).origin] : []),
+  ...(cmsOrigin ? [cmsOrigin] : []),
   ...publicConfig.imageHosts.map((host) => `https://${host}`),
 ];
 const isHtml = (type: string | null | undefined) => !!type?.includes('text/html');
@@ -143,7 +144,7 @@ app.use((req, res, next) => {
 });
 
 /** `?preview=<exp>.<sig>` from the CMS shows drafts; off without FORMS_PROXY_SECRET. See preview.ts. */
-app.use(previewGate(process.env['FORMS_PROXY_SECRET']?.trim() || undefined));
+app.use(previewGate(process.env['FORMS_PROXY_SECRET']?.trim() || undefined, cmsOrigin));
 
 /** Pages need a language prefix; see locale-routes.ts. */
 app.use(localeRoutes());
