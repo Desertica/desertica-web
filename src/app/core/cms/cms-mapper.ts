@@ -302,6 +302,7 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     email: field('email'),
     phone: field('phone'),
     whatsapp: field('whatsapp').replace(/\D/g, ''),
+    whatsapp2: field('whatsapp2').replace(/\D/g, ''),
     instagram: field('instagram'),
     facebook: field('facebook'),
     tiktok: field('tiktok'),
