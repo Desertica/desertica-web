@@ -10,6 +10,7 @@ export const DEFAULT_SITE: SiteSettings = {
   email: 'xxxxxx@desertica.pe',
   phone: '+51 9XX XXX XXX',
   whatsapp: '519XXXXXXXX',
+  whatsapp2: '',
   instagram: 'https://www.instagram.com/desertica',
   facebook: 'https://www.facebook.com/desertica',
   tiktok: 'https://www.tiktok.com/@desertica',
@@ -35,6 +36,8 @@ export type SiteContact = {
   mailto: string | null;
   tel: string | null;
   whatsapp: string | null;
+  /** Every WhatsApp line set, for the footer; `whatsapp` stays the first one for the floating button. */
+  whatsappLines: { href: string; label: string }[];
 };
 
 export function contactFromSite(site: SiteSettings): SiteContact {
@@ -48,6 +51,9 @@ export function contactFromSite(site: SiteSettings): SiteContact {
     mailto: email && `mailto:${email}`,
     tel: phone && `tel:${phone.replace(/[^\d+]/g, '')}`,
     whatsapp: whatsapp && `https://wa.me/${whatsapp}`,
+    whatsappLines: [whatsapp, site.whatsapp2 && real(site.whatsapp2)]
+      .filter((n): n is string => !!n)
+      .map((n) => ({ href: `https://wa.me/${n}`, label: `+${n}` })),
   };
 }
 
