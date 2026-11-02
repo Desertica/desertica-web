@@ -24,13 +24,17 @@ export function verifyPreviewToken(
 /**
  * Marks the request as a draft preview (`res.locals['preview']`) when `?preview=` verifies. The page must never
  * be stored by a browser, a proxy or a search engine; an invalid or expired token is ignored and the normal page is served.
+ * The CMS shows the preview in an iframe, so a valid preview may be framed by `frameAncestor` (the CMS origin) and nobody else.
  */
-export function previewGate(secret: string | undefined): RequestHandler {
+export function previewGate(secret: string | undefined, frameAncestor?: string): RequestHandler {
   return (req, res, next) => {
     if ((req.method === 'GET' || req.method === 'HEAD') && verifyPreviewToken(req.query['preview'], req.path, secret)) {
       res.locals['preview'] = true;
       res.setHeader('Cache-Control', 'no-store');
       res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+      if (frameAncestor) {
+        res.setHeader('Content-Security-Policy', `frame-ancestors ${frameAncestor}`);
+      }
     }
 
     next();

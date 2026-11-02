@@ -23,11 +23,11 @@ describe('verifyPreviewToken', () => {
 });
 
 describe('previewGate', () => {
-  const run = (query: Record<string, unknown>, secret: string | undefined = SECRET, path = '/es/tours/a') => {
+  const run = (query: Record<string, unknown>, secret: string | undefined = SECRET, path = '/es/tours/a', frameAncestor?: string) => {
     const headers: Record<string, string> = {};
     const res = { locals: {} as Record<string, unknown>, setHeader: (k: string, v: string) => (headers[k] = v) };
     const next = vi.fn();
-    previewGate(secret)({ method: 'GET', path, query } as never, res as never, next);
+    previewGate(secret, frameAncestor)({ method: 'GET', path, query } as never, res as never, next);
     expect(next).toHaveBeenCalled();
     return { res, headers };
   };
@@ -36,6 +36,12 @@ describe('previewGate', () => {
     const { res, headers } = run({ preview: token('/es/tours/a', Math.floor(Date.now() / 1000) + 600) });
     expect(res.locals['preview']).toBe(true);
     expect(headers).toEqual({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' });
+  });
+
+  it('lets only the CMS frame a valid preview', () => {
+    const preview = token('/es/tours/a', Math.floor(Date.now() / 1000) + 600);
+    expect(run({ preview }, SECRET, '/es/tours/a', 'https://cms.test').headers['Content-Security-Policy']).toBe('frame-ancestors https://cms.test');
+    expect(run({ preview }).headers['Content-Security-Policy']).toBeUndefined();
   });
 
   it('changes nothing for an expired, foreign or unsigned token', () => {
