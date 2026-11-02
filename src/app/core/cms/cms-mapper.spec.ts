@@ -19,6 +19,7 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   order,
   durationHours: 4,
   priceFrom: 79,
+  pricePen: 300,
   featured,
   format: 'both',
   languages: ['es', 'en'],
@@ -194,6 +195,7 @@ describe('mapCms', () => {
       descriptionKey: 'cms.tours.a-tour.description',
       durationHours: 4,
       priceFrom: 79,
+      pricePen: 300,
       image: 'https://cms.test/uploads/g.jpg',
       featured: true,
     });
