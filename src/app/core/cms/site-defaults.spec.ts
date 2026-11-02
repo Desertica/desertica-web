@@ -1,4 +1,4 @@
-import { contactFromSite, DEFAULT_SITE, legalFromSite, withSiteDefaults } from './site-defaults';
+import { contactFromSite, DEFAULT_SITE, legalFromSite, socialUrl, withSiteDefaults } from './site-defaults';
 
 describe('site defaults', () => {
   it('drops placeholder contact channels and legal data', () => {
@@ -22,5 +22,12 @@ describe('site defaults', () => {
       whatsapp: 'https://wa.me/51987654321',
     });
     expect(legalFromSite(site)).toEqual({ year: 2026, name: 'Desértica S.A.C.', ruc: '20123456789' });
+  });
+
+  it('keeps a social off until its switch is on, and keeps the switch from the CMS', () => {
+    expect(socialUrl(DEFAULT_SITE, 'instagram')).toBe('');
+    const site = withSiteDefaults({ showInstagram: true, showFacebook: false, facebook: 'https://f.example/x' });
+    expect(socialUrl(site, 'instagram')).toBe(DEFAULT_SITE.instagram);
+    expect(socialUrl(site, 'facebook')).toBe('');
   });
 });

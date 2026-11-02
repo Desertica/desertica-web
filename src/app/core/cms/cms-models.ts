@@ -20,6 +20,14 @@ export type SiteSettings = {
   linkedin: string;
   google: string;
   tripadvisor: string;
+  /** Per-network switches: a network shows only when its switch is on and its URL is not empty. */
+  showInstagram: boolean;
+  showFacebook: boolean;
+  showTiktok: boolean;
+  showYoutube: boolean;
+  showLinkedin: boolean;
+  showGoogle: boolean;
+  showTripadvisor: boolean;
   legalName: string;
   ruc: string;
 };
