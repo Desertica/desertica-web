@@ -65,6 +65,9 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
         {{ 'gallery.from' | translate: i18n.locale() }}
         {{ 'gallery.currency' | translate: i18n.locale() }}
         {{ tour().priceFrom }}
+        @if (tour().pricePen) {
+          · S/ {{ tour().pricePen }}
+        }
       </span>
     </div>
   `,

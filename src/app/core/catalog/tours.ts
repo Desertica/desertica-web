@@ -14,6 +14,8 @@ export type CatalogTour = {
   descriptionKey: string;
   durationHours: number;
   priceFrom: number;
+  /** Same price in soles; set only when the CMS has it, and shown next to the dollar one. */
+  pricePen?: number;
   image: string;
   /** Set by the CMS when the card should not crop around the centre. */
   imageFocus?: ImageFocus;

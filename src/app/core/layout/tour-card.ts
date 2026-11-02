@@ -43,6 +43,9 @@ import { TranslatePipe } from '../i18n/translate-pipe';
           </p>
           <p class="font-heading text-2xl tracking-wide">
             {{ 'gallery.currency' | translate: i18n.locale() }} {{ tour().priceFrom }}
+            @if (tour().pricePen) {
+              <span class="text-base">· S/ {{ tour().pricePen }}</span>
+            }
           </p>
         </div>
       </div>
