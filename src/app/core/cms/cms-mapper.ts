@@ -309,6 +309,13 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     linkedin: field('linkedin'),
     google: field('google'),
     tripadvisor: field('tripadvisor'),
+    showInstagram: entry['showInstagram'] === true,
+    showFacebook: entry['showFacebook'] === true,
+    showTiktok: entry['showTiktok'] === true,
+    showYoutube: entry['showYoutube'] === true,
+    showLinkedin: entry['showLinkedin'] === true,
+    showGoogle: entry['showGoogle'] === true,
+    showTripadvisor: entry['showTripadvisor'] === true,
     legalName: field('legalName'),
     ruc: field('ruc'),
   };
