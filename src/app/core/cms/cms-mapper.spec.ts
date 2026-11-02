@@ -194,7 +194,7 @@ describe('mapCms', () => {
       descriptionKey: 'cms.tours.a-tour.description',
       durationHours: 4,
       priceFrom: 79,
-      image: 'https://img/tour.jpg',
+      image: 'https://cms.test/uploads/g.jpg',
       featured: true,
     });
     expect(snapshot.messages.es?.['cms.tours.a-tour.title']).toBe('Titulo a-tour');
@@ -251,7 +251,7 @@ describe('mapCms', () => {
         expandedBodyKey: 'cms.tours.a-tour.itinerary.0.expanded',
       },
       {
-        image: 'https://img/tour.jpg',
+        image: 'https://cms.test/uploads/g.jpg',
         titleKey: 'cms.tours.a-tour.itinerary.1.title',
         bodyKey: 'cms.tours.a-tour.itinerary.1.body',
         expandedBodyKey: undefined,

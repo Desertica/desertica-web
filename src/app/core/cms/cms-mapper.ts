@@ -91,8 +91,11 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
     }
 
     // `imageUrl`/`galleryUrls` are the old external fields: still the only image the seed has, so they rank after the upload.
+    const gallery = mediaList(base['gallery'], options.mediaBase, stringList(base['galleryUrls']));
+    // No main image uploaded: the first uploaded gallery photo stands in for it (cards, hero, share).
     const image =
       media(base['image']) ??
+      mediaList(base['gallery'], options.mediaBase, [])[0] ??
       text(base['imageUrl']) ??
       (options.fallbackImage('tour', slug) || placeholder);
     const destinationSlug = text(asRecord(base['destination'])?.['slug']);
@@ -133,7 +136,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       { ...tour, ...{ order: num(base['order']) ?? 0 } } as CatalogTour,
     ]);
 
-    const gallery = mediaList(base['gallery'], options.mediaBase, stringList(base['galleryUrls']));
     const tourAssurances = features(`cms.tours.${slug}`, 'assurances', byLocale, messages);
     tourPages[slug] = {
       gallery: gallery.length ? gallery : [image, image, image],
