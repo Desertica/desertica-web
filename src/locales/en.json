@@ -230,6 +230,10 @@
     "galleryLabel": "Tour photos",
     "timelineLabel": "The day",
     "photoAlt": "{tour}, photo {n}",
+    "galleryOpen": "Enlarge photo {n}",
+    "galleryClose": "Close",
+    "galleryPrev": "Previous photo",
+    "galleryNext": "Next photo",
     "downloadItinerary": "Download itinerary",
     "assure": {
       "payLater": "Book now, pay later:",
