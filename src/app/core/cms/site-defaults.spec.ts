@@ -22,8 +22,8 @@ describe('site defaults', () => {
       tel: 'tel:+51987654321',
       whatsapp: 'https://wa.me/51987654321',
       whatsappLines: [
-        { href: 'https://wa.me/51987654321', label: '+51987654321' },
-        { href: 'https://wa.me/51912345678', label: '+51912345678' },
+        { href: 'https://wa.me/51987654321', label: '+51 987 654 321' },
+        { href: 'https://wa.me/51912345678', label: '+51 912 345 678' },
       ],
     });
     expect(legalFromSite(site)).toEqual({ year: 2026, name: 'Desértica S.A.C.', ruc: '20123456789' });

@@ -53,8 +53,13 @@ export function contactFromSite(site: SiteSettings): SiteContact {
     whatsapp: whatsapp && `https://wa.me/${whatsapp}`,
     whatsappLines: [whatsapp, site.whatsapp2 && real(site.whatsapp2)]
       .filter((n): n is string => !!n)
-      .map((n) => ({ href: `https://wa.me/${n}`, label: `+${n}` })),
+      .map((n) => ({ href: `https://wa.me/${n}`, label: spacedNumber(n) })),
   };
+}
+
+/** `51907800729` → `+51 907 800 729`; any other length stays `+digits`. */
+function spacedNumber(digits: string): string {
+  return /^51\d{9}$/.test(digits) ? `+51 ${digits.slice(2).replace(/(\d{3})(?=\d)/g, '$1 ')}` : `+${digits}`;
 }
 
 /** Company name and RUC for the legal line; a placeholder name falls back to the brand and a placeholder RUC is dropped. */
