@@ -85,7 +85,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   const toursByDestination = new Map<string, CatalogTour[]>();
 
   for (const [slug, byLocale] of tourEntries) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = withMediaFromAnyLocale(byLocale);
     if (!base) {
       continue;
     }
@@ -173,7 +173,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const destinations: CatalogDestination[] = [];
   for (const [slug, byLocale] of groupBySlug(raw.destinations)) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = withMediaFromAnyLocale(byLocale);
     if (!base) {
       continue;
     }
@@ -636,6 +636,21 @@ function asRecord(value: unknown): RawEntry | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? (value as RawEntry)
     : undefined;
+}
+
+/** English entry, but a photo saved only on the Spanish entry still counts: Strapi does not copy shared media across locales until each one is saved. */
+function withMediaFromAnyLocale(byLocale: Partial<Record<string, RawEntry>>): RawEntry | undefined {
+  const base = byLocale['en'] ?? byLocale['es'];
+  if (!base) {
+    return undefined;
+  }
+  const filled = { ...base };
+  for (const key of ['image', 'gallery']) {
+    if (!(asList(filled[key])?.length || asRecord(filled[key]))) {
+      filled[key] = byLocale['es']?.[key] ?? filled[key];
+    }
+  }
+  return filled;
 }
 
 function asList(value: unknown): RawEntry[] | undefined {
