@@ -54,20 +54,20 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 
       <dialog
         #viewer
-        class="m-auto h-[min(90svh,56rem)] w-[min(96vw,80rem)] max-w-none overflow-hidden bg-black/95 p-0 backdrop:bg-black/80"
+        class="m-auto max-h-none max-w-none overflow-visible bg-transparent p-0 backdrop:bg-black/85"
         (click)="$event.target === viewer && viewer.close()"
         (keydown.arrowLeft)="step(-1)"
         (keydown.arrowRight)="step(1)"
       >
-        <div class="relative size-full">
+        <div class="relative flex items-center justify-center">
           <img
             [src]="photos()[current()]"
             [alt]="alt(current())"
-            class="size-full object-contain"
+            class="max-h-[82svh] max-w-[92vw] rounded-lg object-contain"
           />
           <button
             type="button"
-            class="absolute top-3 right-3 rounded-full bg-black/60 p-2 text-white"
+            class="absolute -top-12 right-0 rounded-full bg-white/15 p-2 text-white"
             [attr.aria-label]="'tour.galleryClose' | translate: i18n.locale()"
             (click)="viewer.close()"
           >
@@ -90,7 +90,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
             >
               <ng-icon name="lucideChevronRight" />
             </button>
-            <span class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-sm text-white"
+            <span class="absolute -bottom-11 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-sm text-white"
               >{{ current() + 1 }} / {{ photos().length }}</span
             >
           }
