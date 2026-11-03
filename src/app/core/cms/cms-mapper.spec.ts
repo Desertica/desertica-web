@@ -334,6 +334,17 @@ describe('mapCms placeholder', () => {
     ]);
   });
 
+  it('takes a gallery uploaded only on the Spanish entry', () => {
+    const raw = bare();
+    raw.tours = {
+      en: [{ ...tour('en', 'x', 0), image: null, imageUrl: null, gallery: [], galleryUrls: [], itinerary: [] }],
+      es: [{ ...tour('es', 'x', 0), image: null, imageUrl: null, gallery: [{ url: '/uploads/es.jpg' }], galleryUrls: [], itinerary: [] }],
+    };
+    const snapshot = mapCms(raw, none);
+    expect(snapshot.tourPages['x'].gallery).toEqual(['https://cms.test/uploads/es.jpg']);
+    expect(snapshot.destinations[0].tours[0].image).toBe('https://cms.test/uploads/es.jpg');
+  });
+
   it('uses the CMS placeholderImage and still prefers uploads, then the old url', () => {
     const site = { placeholderImage: { url: '/uploads/ph.png' } };
     const snapshot = mapCms({ ...bare(), site }, none);
