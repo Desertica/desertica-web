@@ -16,6 +16,7 @@ import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { BrandMark } from './brand-mark';
+import { simpleWhatsapp } from './footer-social-icons';
 
 const BOUNCE_DOWN = 'M0,0C0,0,464,156,1139,156S2278,0,2278,0';
 const BOUNCE_CENTER = 'M0,0C0,0,464,0,1139,0s1139,0,1139,0';
@@ -51,8 +52,12 @@ export class SiteFooter {
   protected readonly brandLinks = this.catalog.footerBrandLinks;
   protected readonly brandName = computed(() => this.catalog.site().brandName);
   protected readonly destinations = this.catalog.footerDestinations;
-  protected readonly socials = this.catalog.socials;
   protected readonly contact = this.catalog.contact;
+  /** WhatsApp lines show as icons next to the social networks, never as a number. */
+  protected readonly socials = computed(() => [
+    ...this.contact().whatsappLines.map(({ href }) => ({ labelKey: 'footer.social.whatsapp', href, svg: simpleWhatsapp })),
+    ...this.catalog.socials(),
+  ]);
   protected readonly legal = this.catalog.legal;
   protected readonly legalLinks = this.catalog.footerLegalLinks;
   protected readonly stamps = this.catalog.footerStamps;
