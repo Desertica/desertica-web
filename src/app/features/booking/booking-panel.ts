@@ -17,7 +17,6 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmSkeleton } from '@spartan-ng/helm/skeleton';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
-import { asCurrency } from '../../core/analytics/analytics';
 import {
   type AvailableDeparture,
   BookingApi,
@@ -25,6 +24,7 @@ import {
   type Quote,
   type TourFormat,
 } from '../../core/api/booking-api';
+import { CURRENCIES, CurrencyService } from '../../core/currency/currency';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
@@ -33,7 +33,6 @@ import type { CatalogTour } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 
-const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
 
 /**
  * Online booking on the tour page (shown instead of the WhatsApp form while the booking engine is
@@ -266,7 +265,9 @@ export class BookingPanel {
   protected readonly currencies = CURRENCIES;
   protected readonly today = new Date();
 
-  protected readonly currency = signal<Currency>(asCurrency(this.rules.currencyCode));
+  // The header switcher and this toggle are the same choice.
+  private readonly currencyChoice = inject(CurrencyService);
+  protected readonly currency = this.currencyChoice.currency;
   protected readonly format = signal<TourFormat>('SHARED');
   protected readonly language = signal<string>('es');
   protected readonly adults = signal(this.rules.adultsDefault);
@@ -349,7 +350,7 @@ export class BookingPanel {
 
   protected onCurrency(value: unknown): void {
     if (value === 'USD' || value === 'PEN') {
-      this.currency.set(value);
+      this.currencyChoice.set(value);
     }
   }
 

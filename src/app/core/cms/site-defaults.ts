@@ -10,7 +10,7 @@ export const DEFAULT_SITE: SiteSettings = {
   email: 'xxxxxx@desertica.pe',
   phone: '+51 9XX XXX XXX',
   whatsapp: '519XXXXXXXX',
-  whatsapp2: '',
+  phone2: '',
   instagram: 'https://www.instagram.com/desertica',
   facebook: 'https://www.facebook.com/desertica',
   tiktok: 'https://www.tiktok.com/@desertica',
@@ -35,8 +35,10 @@ export type SiteContact = {
   phone: string | null;
   mailto: string | null;
   tel: string | null;
+  phone2: string | null;
+  tel2: string | null;
   whatsapp: string | null;
-  /** Every WhatsApp line set, for the footer; `whatsapp` stays the first one for the floating button. */
+  /** The WhatsApp link(s) shown as icons in the footer (one number; a second number to call is `phone2`). */
   whatsappLines: { href: string }[];
 };
 
@@ -44,16 +46,17 @@ export function contactFromSite(site: SiteSettings): SiteContact {
   const real = (value: string) => (isPlaceholder(value) ? null : value);
   const email = real(site.email);
   const phone = real(site.phone);
+  const phone2 = real(site.phone2);
   const whatsapp = real(site.whatsapp);
   return {
     email,
     phone,
     mailto: email && `mailto:${email}`,
     tel: phone && `tel:${phone.replace(/[^\d+]/g, '')}`,
+    phone2,
+    tel2: phone2 && `tel:${phone2.replace(/[^\d+]/g, '')}`,
     whatsapp: whatsapp && `https://wa.me/${whatsapp}`,
-    whatsappLines: [whatsapp, site.whatsapp2 && real(site.whatsapp2)]
-      .filter((n): n is string => !!n)
-      .map((n) => ({ href: `https://wa.me/${n}` })),
+    whatsappLines: whatsapp ? [{ href: `https://wa.me/${whatsapp}` }] : [],
   };
 }
 

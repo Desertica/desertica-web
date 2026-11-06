@@ -221,6 +221,75 @@ describe('mapCms', () => {
     expect(focusOf('diagonal')).toBeUndefined();
   });
 
+  describe('values shared by both languages', () => {
+    const priceOf = (en: RawEntry, es: RawEntry) => {
+      const tours = raw.tours as unknown as Record<string, RawEntry[]>;
+      const mapped = mapCms(
+        { ...raw, tours: { en: tours['en'].map((t) => ({ ...t, ...en })), es: tours['es'].map((t) => ({ ...t, ...es })) } } as unknown as CmsRaw,
+        options,
+      );
+      return mapped.destinations[0]?.tours.find((tour) => tour.id === 'a-tour');
+    };
+
+    it('takes them from the most recently published language, not always English', () => {
+      const tour = priceOf(
+        { priceFrom: 79, pricePen: undefined, publishedAt: '2026-11-01T10:00:00.000Z' },
+        { priceFrom: 99, pricePen: 350, publishedAt: '2026-11-05T10:00:00.000Z' },
+      );
+      expect(tour?.priceFrom).toBe(99);
+      expect(tour?.pricePen).toBe(350);
+    });
+
+    it('keeps English first without dates or when English is the newest', () => {
+      expect(priceOf({ priceFrom: 79 }, { priceFrom: 99 })?.priceFrom).toBe(79);
+      expect(
+        priceOf(
+          { priceFrom: 79, publishedAt: '2026-11-05T10:00:00.000Z' },
+          { priceFrom: 99, publishedAt: '2026-11-01T10:00:00.000Z' },
+        )?.priceFrom,
+      ).toBe(79);
+    });
+  });
+
+  describe('tour description (body)', () => {
+    const pageWith = (en: unknown, es: unknown) => {
+      const tours = raw.tours as unknown as Record<string, RawEntry[]>;
+      const withBody = (entries: RawEntry[], body: unknown) =>
+        entries.map((entry) => ({ ...entry, body }));
+      const mapped = mapCms(
+        { ...raw, tours: { en: withBody(tours['en'], en), es: withBody(tours['es'], es) } } as unknown as CmsRaw,
+        options,
+      );
+      return { page: mapped.tourPages['a-tour'], messages: mapped.messages };
+    };
+
+    it('shows the first paragraph as the lead, the rest below, and repeats all in the accordion', () => {
+      const { page, messages } = pageWith('One\n\nTwo\n\n\nThree', 'Uno\n\nDos\n\nTres');
+      expect(page?.leadKey).toBe('cms.tours.a-tour.body.0');
+      expect(page?.descriptionKeys).toEqual(['cms.tours.a-tour.body.1', 'cms.tours.a-tour.body.2']);
+      expect(page?.expandedDescriptionKeys).toEqual([
+        'cms.tours.a-tour.body.0',
+        'cms.tours.a-tour.body.1',
+        'cms.tours.a-tour.body.2',
+      ]);
+      expect(messages.en?.['cms.tours.a-tour.body.2']).toBe('Three');
+      expect(messages.es?.['cms.tours.a-tour.body.1']).toBe('Dos');
+    });
+
+    it('works with a single language', () => {
+      const { page, messages } = pageWith(null, 'Solo español');
+      expect(page?.leadKey).toBe('cms.tours.a-tour.body.0');
+      expect(messages.es?.['cms.tours.a-tour.body.0']).toBe('Solo español');
+      expect(messages.en?.['cms.tours.a-tour.body.0']).toBeUndefined();
+    });
+
+    it('keeps the older fields when the tour has no body', () => {
+      const { page } = pageWith('   ', null);
+      expect(page?.leadKey).toBe('cms.tours.a-tour.lead');
+      expect(page?.descriptionKeys).toEqual(['cms.tours.a-tour.paragraphs.0']);
+    });
+  });
+
   it('maps tour pages to the key-based model', () => {
     const page = snapshot.tourPages['a-tour'];
     expect(page?.gallery).toEqual(['https://cms.test/uploads/g.jpg']);
