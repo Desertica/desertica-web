@@ -38,8 +38,8 @@ export type SiteContact = {
   phone2: string | null;
   tel2: string | null;
   whatsapp: string | null;
-  /** The WhatsApp line for the footer (one number; a second number to call is `phone2`). */
-  whatsappLines: { href: string; label: string }[];
+  /** The WhatsApp link(s) shown as icons in the footer (one number; a second number to call is `phone2`). */
+  whatsappLines: { href: string }[];
 };
 
 export function contactFromSite(site: SiteSettings): SiteContact {
@@ -56,13 +56,8 @@ export function contactFromSite(site: SiteSettings): SiteContact {
     phone2,
     tel2: phone2 && `tel:${phone2.replace(/[^\d+]/g, '')}`,
     whatsapp: whatsapp && `https://wa.me/${whatsapp}`,
-    whatsappLines: whatsapp ? [{ href: `https://wa.me/${whatsapp}`, label: spacedNumber(whatsapp) }] : [],
+    whatsappLines: whatsapp ? [{ href: `https://wa.me/${whatsapp}` }] : [],
   };
-}
-
-/** `51907800729` → `+51 907 800 729`; any other length stays `+digits`. */
-function spacedNumber(digits: string): string {
-  return /^51\d{9}$/.test(digits) ? `+51 ${digits.slice(2).replace(/(\d{3})(?=\d)/g, '$1 ')}` : `+${digits}`;
 }
 
 /** Company name and RUC for the legal line; a placeholder name falls back to the brand and a placeholder RUC is dropped. */
