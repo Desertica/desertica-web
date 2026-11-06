@@ -45,6 +45,7 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "chooseLanguage": "Idioma",
+    "chooseCurrency": "Moneda",
     "whatsapp": "WhatsApp",
     "intro": "Cargando Desértica",
     "newTab": "(se abre en una pestaña nueva)"
@@ -59,6 +60,10 @@
   "lang": {
     "en": "English",
     "es": "Español"
+  },
+  "currencies": {
+    "USD": "Dólares (USD)",
+    "PEN": "Soles (PEN)"
   },
   "pages": {
     "landingLead": "Landing (SSG). Experiencias y reservas vienen después.",
@@ -335,7 +340,8 @@
   "gallery": {
     "from": "DESDE",
     "hours": "HORAS",
-    "currency": "$USD"
+    "currency": "$USD",
+    "currencyPen": "S/PEN"
   },
   "meta": {
     "title": "Desértica | Tours y experiencias en Ica",

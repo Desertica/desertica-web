@@ -125,6 +125,11 @@
             contact().phone
           }}</a>
         }
+        @if (contact().tel2) {
+          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel2">{{
+            contact().phone2
+          }}</a>
+        }
         @for (line of contact().whatsappLines; track line.href) {
           <a
             class="text-muted-foreground hover:text-foreground py-0.5"

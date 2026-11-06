@@ -12,6 +12,7 @@ import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
+import { CurrencySwitcher } from './currency-switcher';
 import { LocaleSwitcher } from './locale-switcher';
 import { CatalogService } from '../catalog/catalog';
 import { isNavGroup, navItemTrack } from './primary-nav';
@@ -26,6 +27,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
     NgIcon,
     HlmNavigationMenuImports,
     HlmSheetImports,
+    CurrencySwitcher,
     LocaleSwitcher,
     TranslatePipe,
     PlanTripHover,
@@ -283,8 +285,9 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                     </div>
                   }
                 }
-                <div class="mt-4">
+                <div class="mt-4 flex items-center gap-1">
                   <app-locale-switcher />
+                  <app-currency-switcher />
                 </div>
               </nav>
             </hlm-sheet-content>
@@ -292,6 +295,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
 
           <span class="hidden lg:contents">
             <app-locale-switcher />
+            <app-currency-switcher />
           </span>
 
           <button

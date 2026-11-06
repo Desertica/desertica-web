@@ -20,6 +20,7 @@ import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { faqLd, touristTripLd } from '../../../core/seo/json-ld';
 import { usePageMeta } from '../../../core/seo/page-meta';
+import { snippet } from '../../../core/seo/snippet';
 import { SeoService } from '../../../core/seo/seo';
 import { absoluteUrl, localizedUrl } from '../../../core/seo/seo-urls';
 import { BookingPanel } from '../../booking/booking-panel';
@@ -111,7 +112,7 @@ export class TourDetail {
 
       const { tour, page } = data;
       const origin = this.seo.origin();
-      const description = this.i18n.t(page.seoDescriptionKey ?? page.leadKey);
+      const description = snippet(this.i18n.t(page.seoDescriptionKey ?? page.leadKey));
       const image = page.gallery[0] ?? tour.image;
       return {
         title: this.i18n.t(page.seoTitleKey ?? tour.titleKey),
