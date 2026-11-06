@@ -2,7 +2,7 @@ import { contactFromSite, DEFAULT_SITE, legalFromSite, socialUrl, withSiteDefaul
 
 describe('site defaults', () => {
   it('drops placeholder contact channels and legal data', () => {
-    expect(contactFromSite(DEFAULT_SITE)).toEqual({ email: null, phone: null, mailto: null, tel: null, whatsapp: null, whatsappLines: [] });
+    expect(contactFromSite(DEFAULT_SITE)).toEqual({ email: null, phone: null, mailto: null, tel: null, phone2: null, tel2: null, whatsapp: null, whatsappLines: [] });
     expect(legalFromSite(DEFAULT_SITE)).toEqual({ year: 2026, name: 'Desértica', ruc: null });
   });
 
@@ -11,7 +11,7 @@ describe('site defaults', () => {
       email: 'hola@desertica.pe',
       phone: '+51 987 654 321',
       whatsapp: '51987654321',
-      whatsapp2: '51912345678',
+      phone2: '+51 912 345 678',
       legalName: 'Desértica S.A.C.',
       ruc: '20123456789',
     });
@@ -20,11 +20,10 @@ describe('site defaults', () => {
       phone: '+51 987 654 321',
       mailto: 'mailto:hola@desertica.pe',
       tel: 'tel:+51987654321',
+      phone2: '+51 912 345 678',
+      tel2: 'tel:+51912345678',
       whatsapp: 'https://wa.me/51987654321',
-      whatsappLines: [
-        { href: 'https://wa.me/51987654321' },
-        { href: 'https://wa.me/51912345678' },
-      ],
+      whatsappLines: [{ href: 'https://wa.me/51987654321' }],
     });
     expect(legalFromSite(site)).toEqual({ year: 2026, name: 'Desértica S.A.C.', ruc: '20123456789' });
   });

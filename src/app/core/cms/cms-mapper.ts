@@ -138,11 +138,16 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
     ]);
 
     const tourAssurances = features(`cms.tours.${slug}`, 'assurances', byLocale, messages);
+    // `body` is the whole description; the page shows it as lead + paragraphs and the accordion repeats it.
+    // Tours without one keep the older lead / paragraphs / expandedParagraphs fields.
+    const body = bodyKeys(slug, byLocale, messages);
     tourPages[slug] = {
       gallery: gallery.length ? gallery : [image, image, image],
-      leadKey: tourKey(slug, 'lead'),
-      descriptionKeys: items(slug, 'paragraphs', byLocale, messages),
-      expandedDescriptionKeys: items(slug, 'expandedParagraphs', byLocale, messages),
+      leadKey: body[0] ?? tourKey(slug, 'lead'),
+      descriptionKeys: body.length ? body.slice(1) : items(slug, 'paragraphs', byLocale, messages),
+      expandedDescriptionKeys: body.length
+        ? body
+        : items(slug, 'expandedParagraphs', byLocale, messages),
       meetingKey: tourKey(slug, 'meeting'),
       languages: languages(base['languages']),
       format: format(base['format']),
@@ -210,7 +215,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const mediaSlots: Record<string, MediaSlot> = {};
   for (const [slot, byLocale] of groupBy(raw.mediaSlots, 'key')) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = baseOf(byLocale);
     if (!base) {
       continue;
     }
@@ -228,7 +233,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const pages: Record<string, CmsPage> = {};
   for (const [slug, byLocale] of groupBySlug(raw.pages)) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = baseOf(byLocale);
     pages[slug] = {
       slug,
       heroImage: media(base?.['heroImage']) ?? text(base?.['heroImageUrl']),
@@ -243,7 +248,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   }
 
   const posts: BlogPost[] = [...groupBySlug(raw.posts)].map(([slug, byLocale]) => {
-    const base = byLocale.en ?? byLocale.es ?? {};
+    const base = baseOf(byLocale) ?? {};
     return {
       slug,
       publishedDate: text(base['publishedDate']) ?? '',
@@ -262,7 +267,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const products: Product[] = [...groupBySlug(raw.products)]
     .map(([slug, byLocale]) => {
-      const base = byLocale.en ?? byLocale.es ?? {};
+      const base = baseOf(byLocale) ?? {};
       return {
         slug,
         order: num(base['order']) ?? 0,
@@ -304,8 +309,8 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     placeholderImage: mediaUrl(entry['placeholderImage'], mediaBase) ?? '',
     email: field('email'),
     phone: field('phone'),
+    phone2: field('phone2'),
     whatsapp: field('whatsapp').replace(/\D/g, ''),
-    whatsapp2: field('whatsapp2').replace(/\D/g, ''),
     instagram: field('instagram'),
     facebook: field('facebook'),
     tiktok: field('tiktok'),
@@ -447,6 +452,18 @@ function hasText(byLocale: Grouped, field: string): boolean {
 
 type Grouped = Partial<Record<AppLocale, RawEntry>>;
 
+/**
+ * The entry that carries the values shared by every language (price, order, photo...). Strapi writes a change of such a
+ * field to the drafts of all languages but only to the published row of the language that was published, so the other
+ * language keeps the old value until it is published too: the most recently published row has the current one.
+ * Without dates (or on a tie) English comes first, as before.
+ */
+function baseOf(byLocale: Grouped): RawEntry | undefined {
+  const stamp = (entry: RawEntry | undefined) => Date.parse(String(entry?.['publishedAt'] ?? '')) || 0;
+  const { en, es } = byLocale;
+  return es && stamp(es) > stamp(en) ? es : (en ?? es);
+}
+
 function groupBySlug(source: RawByLocale | undefined): Map<string, Grouped> {
   return groupBy(source, 'slug');
 }
@@ -550,6 +567,29 @@ function videos(value: unknown, mediaBase: string | null): TourVideo[] {
   });
 }
 
+/** One i18n key per paragraph of `body` (blank line = new paragraph); a language without it simply has no text. */
+function bodyKeys(
+  slug: string,
+  byLocale: Grouped,
+  messages: Record<AppLocale, Record<string, string>>,
+): string[] {
+  const parts = Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      (text(byLocale[locale]?.['body']) ?? '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean),
+    ]),
+  ) as Record<AppLocale, string[]>;
+  const count = Math.max(...LOCALES.map((locale) => parts[locale].length));
+  return Array.from({ length: count }, (_, index) => {
+    const key = `cms.tours.${slug}.body.${index}`;
+    for (const locale of LOCALES) {
+      assign(messages[locale], key, parts[locale][index]);
+    }
+
+    return key;
+  });
+}
+
 function items(
   slug: string,
   field: 'paragraphs' | 'expandedParagraphs' | 'included' | 'excluded' | 'pack' | 'notes',
@@ -638,16 +678,16 @@ function asRecord(value: unknown): RawEntry | undefined {
     : undefined;
 }
 
-/** English entry, but a photo saved only on the Spanish entry still counts: Strapi does not copy shared media across locales until each one is saved. */
+/** The most recently published entry (see `baseOf`), but a photo saved only on the other entry still counts: Strapi does not copy shared media across locales until each one is saved. */
 function withMediaFromAnyLocale(byLocale: Partial<Record<string, RawEntry>>): RawEntry | undefined {
-  const base = byLocale['en'] ?? byLocale['es'];
+  const base = baseOf(byLocale);
   if (!base) {
     return undefined;
   }
   const filled = { ...base };
   for (const key of ['image', 'gallery']) {
     if (!(asList(filled[key])?.length || asRecord(filled[key]))) {
-      filled[key] = byLocale['es']?.[key] ?? filled[key];
+      filled[key] = byLocale['es']?.[key] ?? byLocale['en']?.[key] ?? filled[key];
     }
   }
   return filled;

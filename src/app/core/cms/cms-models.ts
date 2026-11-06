@@ -11,10 +11,10 @@ export type SiteSettings = {
   placeholderImage: string;
   email: string;
   phone: string;
+  /** Optional second number to call; empty when unused. */
+  phone2: string;
   /** Digits only, e.g. `519XXXXXXXXX`. */
   whatsapp: string;
-  /** Optional second WhatsApp line, digits only; empty when unused. */
-  whatsapp2: string;
   instagram: string;
   facebook: string;
   tiktok: string;
