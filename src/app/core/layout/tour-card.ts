@@ -1,6 +1,7 @@
 import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { CurrencyService } from '../currency/currency';
 import { CatalogTour } from '../catalog/tours';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
@@ -42,7 +43,8 @@ import { TranslatePipe } from '../i18n/translate-pipe';
             {{ 'gallery.from' | translate: i18n.locale() }}
           </p>
           <p class="font-heading text-2xl tracking-wide">
-            {{ 'gallery.currency' | translate: i18n.locale() }} {{ tour().priceFrom }}
+            {{ price().code === 'PEN' ? 'S/PEN' : ('gallery.currency' | translate: i18n.locale()) }}
+            {{ price().amount }}
           </p>
         </div>
       </div>
@@ -54,4 +56,11 @@ export class TourCard {
   readonly sizes = input('(min-width: 768px) 33vw, 100vw');
   readonly priority = input(false);
   protected readonly i18n = inject(I18nService);
+  private readonly currency = inject(CurrencyService).code;
+  protected readonly price = computed(() => {
+    const pen = this.tour().pricePen;
+    return this.currency() === 'PEN' && pen
+      ? { code: 'PEN', amount: pen }
+      : { code: 'USD', amount: this.tour().priceFrom };
+  });
 }

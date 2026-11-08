@@ -89,6 +89,7 @@ describe('SiteHeader', () => {
     expect(topLevelLabels).toEqual([
       'Plan your trip',
       'Contact',
+      'Blog',
       'About',
       'Products',
       'Tours',

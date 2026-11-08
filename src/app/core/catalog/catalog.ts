@@ -11,7 +11,12 @@ import {
 import { withBookingDefaults, withFormDefaults, withIntroDefaults } from '../cms/booking-defaults';
 import { CmsApi } from '../cms/cms-api';
 import type { BlogPost, CmsPage, CmsSnapshot, MediaSlot, Product } from '../cms/cms-models';
-import { contactFromSite, legalFromSite, withSiteDefaults } from '../cms/site-defaults';
+import {
+  SHOW_PLACEHOLDERS,
+  contactFromSite,
+  legalFromSite,
+  withSiteDefaults,
+} from '../cms/site-defaults';
 import { type AppLocale } from '../i18n/catalogs';
 import { I18nService } from '../i18n/i18n';
 import {
@@ -52,8 +57,9 @@ export class CatalogService {
   );
   readonly featuredTours = computed(() => this.tours().filter((tour) => tour.featured));
   readonly site = computed(() => withSiteDefaults(this.snapshot()?.site));
-  readonly contact = computed(() => contactFromSite(this.site()));
-  readonly legal = computed(() => legalFromSite(this.site()));
+  private readonly showPlaceholders = inject(SHOW_PLACEHOLDERS);
+  readonly contact = computed(() => contactFromSite(this.site(), this.showPlaceholders));
+  readonly legal = computed(() => legalFromSite(this.site(), this.showPlaceholders));
   readonly socials = computed(() => buildFooterSocials(this.site()));
   readonly navLinks = computed(() =>
     buildPrimaryNavLinks(this.destinations(), this.snapshot()?.navigation?.headerLinks),

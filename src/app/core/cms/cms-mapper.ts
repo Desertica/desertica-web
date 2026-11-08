@@ -117,6 +117,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       descriptionKey: tourKey(slug, 'description'),
       durationHours: num(base['durationHours']) ?? 0,
       priceFrom: num(base['priceFrom']) ?? 0,
+      ...(num(base['pricePen']) ? { pricePen: num(base['pricePen']) } : {}),
       image,
       ...imageFocus(base['imageFocus']),
       featured: base['featured'] === true,

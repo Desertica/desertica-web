@@ -12,21 +12,7 @@ export type NumberSpec = { min: number; max: number; required?: boolean; integer
 export type FlagSpec = { required?: boolean };
 export type Cleaned = Record<string, string | number | boolean>;
 
-/** Fields accepted from the browser. Everything else is dropped before reaching Strapi. */
-export const RESERVATION_FIELDS: Record<string, FieldSpec> = {
-  tourSlug: { max: 120, required: true, pattern: /^[a-z0-9-]+$/ },
-  tourTitle: { max: 200 },
-  date: { max: 10, required: true, pattern: /^\d{4}-\d{2}-\d{2}$/ },
-  language: { max: 2, required: true, enum: ['es', 'en'] },
-  format: { max: 10, enum: ['shared', 'private'] },
-  payment: { max: 10, enum: ['full', 'deposit'] },
-  locale: { max: 2, enum: ['es', 'en'] },
-  name: { max: CONTACT_LIMITS.name },
-  email: { max: CONTACT_LIMITS.email, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
-  phone: { max: 32 },
-  notes: { max: CONTACT_LIMITS.message },
-};
-
+/** Fields accepted from the browser. Everything else is dropped before reaching the API. */
 export const CONTACT_FIELDS: Record<string, FieldSpec> = {
   name: { max: CONTACT_LIMITS.name, required: true },
   email: { max: CONTACT_LIMITS.email, required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
@@ -39,15 +25,18 @@ export const CONTACT_FIELDS: Record<string, FieldSpec> = {
 };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Letters (any alphabet), spaces, apostrophes, dots and hyphens; the form applies the same rule. */
+const NAME = /^[\p{L}\p{M}][\p{L}\p{M}'’.\- ]*$/u;
 
 /** Libro de Reclamaciones: the fields of `CreateComplaint` in the API contract. */
 export const COMPLAINT_FIELDS: Record<string, FieldSpec> = {
-  kind: { max: 10, required: true, enum: ['RECLAMO', 'QUEJA'] },
-  goodType: { max: 10, required: true, enum: ['PRODUCT', 'SERVICE'] },
-  consumerName: { max: COMPLAINT_LIMITS.name, required: true },
+  kind: { max: 10, required: true, enum: ['RECLAMO', 'QUEJA', 'BOTH'] },
+  goodType: { max: 10, required: true, enum: ['PRODUCT', 'SERVICE', 'BOTH'] },
+  consumerName: { max: COMPLAINT_LIMITS.name, required: true, pattern: NAME },
   idDocType: { max: 10, required: true, enum: ID_DOC_TYPES },
   idDocNumber: { max: 12, required: true },
   address: { max: COMPLAINT_LIMITS.address, required: true },
+  guardianName: { max: COMPLAINT_LIMITS.guardian, pattern: NAME },
   email: { max: COMPLAINT_LIMITS.email, required: true, pattern: EMAIL },
   phone: { max: COMPLAINT_LIMITS.phone },
   bookingRef: { max: COMPLAINT_LIMITS.bookingRef, pattern: /^[A-Za-z0-9_-]+$/ },
@@ -74,6 +63,11 @@ export function complaintIsConsistent(data: Cleaned): boolean {
     return false;
   }
 
+  // The hoja asks for the parent, mother or guardian when the consumer is a minor.
+  if (data['isMinor'] === true && !data['guardianName']) {
+    return false;
+  }
+
   // An amount needs its currency, otherwise the claim cannot be read.
   if (data['amountCents'] !== undefined && data['currency'] === undefined) {
     return false;
@@ -81,12 +75,6 @@ export function complaintIsConsistent(data: Cleaned): boolean {
 
   return isValidIdDocument(type as IdDocType, number);
 }
-
-export const RESERVATION_NUMBERS = {
-  adults: { min: 1, max: 50, required: true },
-  children: { min: 0, max: 50 },
-  amount: { min: 0, max: 100_000 },
-};
 
 export type Sanitized = { data: Cleaned } | { invalid: string };
 

@@ -12,6 +12,7 @@ import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
+import { CurrencySwitcher } from './currency-switcher';
 import { LocaleSwitcher } from './locale-switcher';
 import { CatalogService } from '../catalog/catalog';
 import { isNavGroup, navItemTrack } from './primary-nav';
@@ -27,13 +28,16 @@ import { isNavGroup, navItemTrack } from './primary-nav';
     HlmNavigationMenuImports,
     HlmSheetImports,
     LocaleSwitcher,
+    CurrencySwitcher,
     TranslatePipe,
     PlanTripHover,
     BrandMark,
   ],
   providers: [provideIcons({ lucideChevronDown, lucideMenu, lucideMoon, lucideSun })],
   template: `
-    <header class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md">
+    <header
+      class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md"
+    >
       <div
         class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-10"
       >
@@ -284,6 +288,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                   }
                 }
                 <div class="mt-4">
+                  <app-currency-switcher />
                   <app-locale-switcher />
                 </div>
               </nav>
@@ -291,6 +296,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
           </hlm-sheet>
 
           <span class="hidden lg:contents">
+            <app-currency-switcher />
             <app-locale-switcher />
           </span>
 

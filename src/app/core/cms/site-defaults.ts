@@ -1,3 +1,4 @@
+import { InjectionToken, isDevMode } from '@angular/core';
 import { isPlaceholder } from '../seo/seo-urls';
 import type { SiteSettings } from './cms-models';
 
@@ -16,9 +17,15 @@ export const DEFAULT_SITE: SiteSettings = {
   linkedin: 'https://www.linkedin.com/company/desertica',
   google: 'https://maps.google.com/?q=Desertica',
   tripadvisor: 'https://www.tripadvisor.com/desertica',
-  legalName: 'XXXXXXXXXXXX S.A.C.',
+  legalName: 'XXXXXXXXXXXX',
   ruc: 'XXXXXXXXXXX',
 };
+
+/** Dev builds show the XXXX contact data so the layout is visible; production hides it. */
+export const SHOW_PLACEHOLDERS = new InjectionToken<boolean>('SHOW_PLACEHOLDERS', {
+  providedIn: 'root',
+  factory: () => isDevMode(),
+});
 
 /** Contact channels the visitor can use; a value still holding the placeholder is `null` so the page leaves it out. */
 export type SiteContact = {
@@ -29,8 +36,9 @@ export type SiteContact = {
   whatsapp: string | null;
 };
 
-export function contactFromSite(site: SiteSettings): SiteContact {
-  const real = (value: string) => (isPlaceholder(value) ? null : value);
+/** `showPlaceholders` keeps the XXXX data visible so dev builds show the layout. */
+export function contactFromSite(site: SiteSettings, showPlaceholders = false): SiteContact {
+  const real = (value: string) => (!showPlaceholders && isPlaceholder(value) ? null : value);
   const email = real(site.email);
   const phone = real(site.phone);
   const whatsapp = real(site.whatsapp);
@@ -44,11 +52,14 @@ export function contactFromSite(site: SiteSettings): SiteContact {
 }
 
 /** Company name and RUC for the legal line; a placeholder name falls back to the brand and a placeholder RUC is dropped. */
-export function legalFromSite(site: SiteSettings): { year: number; name: string; ruc: string | null } {
+export function legalFromSite(
+  site: SiteSettings,
+  showPlaceholders = false,
+): { year: number; name: string; ruc: string | null } {
   return {
     year: site.legalYear,
-    name: isPlaceholder(site.legalName) ? site.brandName : site.legalName,
-    ruc: isPlaceholder(site.ruc) ? null : site.ruc,
+    name: !showPlaceholders && isPlaceholder(site.legalName) ? site.brandName : site.legalName,
+    ruc: !showPlaceholders && isPlaceholder(site.ruc) ? null : site.ruc,
   };
 }
 

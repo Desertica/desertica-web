@@ -53,6 +53,7 @@ describe('primary nav', () => {
       '/tours',
       '/products',
       '/about',
+      '/blog',
       '/contact',
     ]);
     expect(primaryNavLinks.some((item) => item.path === '/packages')).toBe(false);
@@ -65,15 +66,17 @@ describe('primary nav', () => {
       '/tours',
       '/products',
       '/about',
+      '/blog',
       '/contact',
     ]);
     expect(mobilePrimaryNavLinks.map((item) => item.path)).toEqual([
       '/contact',
+      '/blog',
       '/about',
       '/products',
       '/tours',
     ]);
-    expect(isNavGroup(mobilePrimaryNavLinks[3]!)).toBe(true);
+    expect(isNavGroup(mobilePrimaryNavLinks[4]!)).toBe(true);
   });
 });
 

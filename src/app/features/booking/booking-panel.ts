@@ -17,7 +17,6 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmSkeleton } from '@spartan-ng/helm/skeleton';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
-import { asCurrency } from '../../core/analytics/analytics';
 import {
   type AvailableDeparture,
   BookingApi,
@@ -30,10 +29,10 @@ import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../cor
 import { CatalogService } from '../../core/catalog/catalog';
 import type { TourPage } from '../../core/catalog/tour-pages';
 import type { CatalogTour } from '../../core/catalog/tours';
+import { CurrencySwitcher } from '../../core/layout/currency-switcher';
+import { CurrencyService } from '../../core/currency/currency';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
-
-const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
 
 /**
  * Online booking on the tour page (shown instead of the WhatsApp form while the booking engine is
@@ -45,6 +44,7 @@ const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TranslatePipe,
+    CurrencySwitcher,
     HlmButton,
     HlmCalendar,
     HlmCardImports,
@@ -68,17 +68,7 @@ const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
           <span hlmFieldLabel id="booking-currency-label">{{
             'booking.currency' | translate: i18n.locale()
           }}</span>
-          <hlm-toggle-group
-            type="single"
-            variant="outline"
-            [value]="currency()"
-            (valueChange)="onCurrency($event)"
-            aria-labelledby="booking-currency-label"
-          >
-            @for (code of currencies; track code) {
-              <button hlmToggleGroupItem type="button" [value]="code">{{ code }}</button>
-            }
-          </hlm-toggle-group>
+          <app-currency-switcher />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -186,24 +176,69 @@ const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
             <div class="flex items-center justify-between gap-3">
               <span>{{ 'tour.adultsAge' | translate: i18n.locale() }}</span>
               <div class="flex items-center gap-2">
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="adults() <= rules.adultsMin" (click)="bump('adults', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
+                <button
+                  type="button"
+                  hlmBtn
+                  size="icon-sm"
+                  variant="outline"
+                  [disabled]="adults() <= rules.adultsMin"
+                  (click)="bump('adults', -1)"
+                  [attr.aria-label]="'booking.fewer' | translate: i18n.locale()"
+                >
+                  −
+                </button>
                 <span class="w-6 text-center tabular-nums" id="booking-adults">{{ adults() }}</span>
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('adults', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
+                <button
+                  type="button"
+                  hlmBtn
+                  size="icon-sm"
+                  variant="outline"
+                  [disabled]="!canAdd()"
+                  (click)="bump('adults', 1)"
+                  [attr.aria-label]="'booking.more' | translate: i18n.locale()"
+                >
+                  +
+                </button>
               </div>
             </div>
             <div class="flex items-center justify-between gap-3">
               <span>{{ 'tour.childrenAge' | translate: i18n.locale() }}</span>
               <div class="flex items-center gap-2">
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="children() <= rules.childrenMin" (click)="bump('children', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
-                <span class="w-6 text-center tabular-nums" id="booking-children">{{ children() }}</span>
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('children', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
+                <button
+                  type="button"
+                  hlmBtn
+                  size="icon-sm"
+                  variant="outline"
+                  [disabled]="children() <= rules.childrenMin"
+                  (click)="bump('children', -1)"
+                  [attr.aria-label]="'booking.fewer' | translate: i18n.locale()"
+                >
+                  −
+                </button>
+                <span class="w-6 text-center tabular-nums" id="booking-children">{{
+                  children()
+                }}</span>
+                <button
+                  type="button"
+                  hlmBtn
+                  size="icon-sm"
+                  variant="outline"
+                  [disabled]="!canAdd()"
+                  (click)="bump('children', 1)"
+                  [attr.aria-label]="'booking.more' | translate: i18n.locale()"
+                >
+                  +
+                </button>
               </div>
             </div>
           </div>
         }
 
         @if (quote(); as current) {
-          <dl class="border-border flex flex-col gap-2 rounded-3xl border p-4 text-sm" id="booking-quote">
+          <dl
+            class="border-border flex flex-col gap-2 rounded-3xl border p-4 text-sm"
+            id="booking-quote"
+          >
             @for (line of current.lines; track line.label) {
               <div class="flex justify-between gap-3">
                 <dt>{{ line.quantity }} × {{ line.label }}</dt>
@@ -212,13 +247,17 @@ const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
             }
             <div class="flex justify-between gap-3 font-medium">
               <dt>{{ 'booking.total' | translate: i18n.locale() }}</dt>
-              <dd class="tabular-nums" id="booking-total">{{ money(current.totalCents, current.currency) }}</dd>
+              <dd class="tabular-nums" id="booking-total">
+                {{ money(current.totalCents, current.currency) }}
+              </dd>
             </div>
             <div class="text-muted-foreground flex justify-between gap-3">
               <dt>{{ 'booking.deposit' | translate: i18n.locale() }}</dt>
               <dd class="tabular-nums">{{ money(current.depositCents, current.currency) }}</dd>
             </div>
-            <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
+            <p class="text-muted-foreground text-xs">
+              {{ 'booking.taxIncluded' | translate: i18n.locale() }}
+            </p>
           </dl>
         } @else if (quoting()) {
           <hlm-skeleton class="h-24 w-full" />
@@ -244,7 +283,9 @@ const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
         >
           {{ (holding() ? 'booking.holding' : 'booking.continue') | translate: i18n.locale() }}
         </button>
-        <p class="text-muted-foreground text-xs">{{ 'booking.holdNote' | translate: i18n.locale() }}</p>
+        <p class="text-muted-foreground text-xs">
+          {{ 'booking.holdNote' | translate: i18n.locale() }}
+        </p>
       </div>
     </section>
   `,
@@ -263,10 +304,10 @@ export class BookingPanel {
 
   protected readonly i18n = inject(I18nService);
   protected readonly rules = this.catalog.booking();
-  protected readonly currencies = CURRENCIES;
   protected readonly today = new Date();
 
-  protected readonly currency = signal<Currency>(asCurrency(this.rules.currencyCode));
+  private readonly currencyService = inject(CurrencyService);
+  protected readonly currency = this.currencyService.code;
   protected readonly format = signal<TourFormat>('SHARED');
   protected readonly language = signal<string>('es');
   protected readonly adults = signal(this.rules.adultsDefault);
@@ -283,7 +324,9 @@ export class BookingPanel {
   protected readonly holding = signal(false);
   protected readonly reserveError = signal<string | null>(null);
 
-  protected readonly languages = computed(() => (this.page().languages.length ? this.page().languages : ['es', 'en']));
+  protected readonly languages = computed(() =>
+    this.page().languages.length ? this.page().languages : ['es', 'en'],
+  );
   protected readonly showFormat = computed(() => this.page().format === 'both');
   private readonly byDay = computed(() => {
     const days = new Map<string, AvailableDeparture[]>();
@@ -303,7 +346,11 @@ export class BookingPanel {
     () => this.departures().find((item) => item.departureId === this.departureId()) ?? null,
   );
   protected readonly lastDay = computed(() => {
-    const last = new Date(this.today.getFullYear(), this.today.getMonth() + this.rules.availabilityMonths, 0);
+    const last = new Date(
+      this.today.getFullYear(),
+      this.today.getMonth() + this.rules.availabilityMonths,
+      0,
+    );
     return last;
   });
   protected readonly canAdd = computed(() => {
@@ -345,12 +392,6 @@ export class BookingPanel {
 
   protected reload(): void {
     void this.loadAvailability(this.tour().id, this.currency(), this.format(), this.language());
-  }
-
-  protected onCurrency(value: unknown): void {
-    if (value === 'USD' || value === 'PEN') {
-      this.currency.set(value);
-    }
   }
 
   protected onLanguage(value: unknown): void {
@@ -399,7 +440,8 @@ export class BookingPanel {
   protected priceLabel(departure: AvailableDeparture): string {
     const price = departure.price;
     const suffix = price.unit === 'PER_GROUP' ? 'booking.perGroup' : 'booking.perPerson';
-    const amount = price.unit === 'PER_GROUP' ? (price.groupCents ?? price.adultCents) : price.adultCents;
+    const amount =
+      price.unit === 'PER_GROUP' ? (price.groupCents ?? price.adultCents) : price.adultCents;
     return `${this.money(amount, price.currency)} ${this.i18n.t(suffix)}`;
   }
 
@@ -507,7 +549,12 @@ export class BookingPanel {
     }
 
     this.quoting.set(true);
-    const result = await this.api.quote({ departureId: departure.departureId, adults, children, currency });
+    const result = await this.api.quote({
+      departureId: departure.departureId,
+      adults,
+      children,
+      currency,
+    });
     if (run !== this.quoteRun) {
       return;
     }

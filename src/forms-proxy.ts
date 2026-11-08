@@ -8,43 +8,29 @@ import {
   type FieldSpec,
   type FlagSpec,
   type NumberSpec,
-  RESERVATION_FIELDS,
-  RESERVATION_NUMBERS,
   complaintIsConsistent,
   sanitize,
 } from './forms-validation';
 import { clientKey, createRateLimiter } from './rate-limit';
 
 export type FormsProxyOptions = {
-  strapiUrl: string | null;
-  token?: string | null;
-  /** Shared with Strapi so its rate limiter sees the visitor IP instead of this server's. */
-  secret?: string | null;
-  /** Origin of desertica-api. Complaints need it; contact messages use it only with `bookingEngine`. */
+  /** Origin of desertica-api: contact messages, complaints and the provider data all go there. */
   apiUrl?: string | null;
-  /** `BOOKING_ENGINE_ENABLED`: contact messages go to the API instead of Strapi. */
-  bookingEngine?: boolean;
-  /** Cloudflare Turnstile secret. When set, forms sent to Strapi must carry a valid token. */
-  turnstileSecret?: string | null;
   timeoutMs?: number;
   /** Submissions allowed per IP and form within `windowMs`. */
   limit?: number;
   windowMs?: number;
 };
 
-type Target = 'strapi' | 'api';
-
 type FormDefinition = {
-  /** Where the submission goes for the current configuration; `null` when nowhere. */
-  target: Target | null;
+  /** `false` when no API is configured: the form is answered with 503. */
+  enabled: boolean;
   path: string;
   fields: Record<string, FieldSpec>;
   numbers?: Record<string, NumberSpec>;
   flags?: Record<string, FlagSpec>;
   check?: (data: Cleaned) => boolean;
 };
-
-const SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 export function formsProxy(options: FormsProxyOptions): express.Router {
   const router = express.Router();
@@ -53,30 +39,11 @@ export function formsProxy(options: FormsProxyOptions): express.Router {
 
   router.use(express.json({ limit: '16kb' }));
 
-  const verifyTurnstile = async (token: unknown, ip: string): Promise<'ok' | 'invalid' | 'down'> => {
-    if (typeof token !== 'string' || !token) {
-      return 'invalid';
-    }
-
-    try {
-      const response = await fetch(SITEVERIFY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ secret: options.turnstileSecret ?? '', response: token, remoteip: ip }),
-        signal: AbortSignal.timeout(timeout),
-      });
-      const body = (await response.json()) as { success?: boolean };
-      return body.success === true ? 'ok' : 'invalid';
-    } catch {
-      return 'down';
-    }
-  };
-
   const forward =
     (form: string, definition: FormDefinition) =>
     async (req: express.Request, res: express.Response): Promise<void> => {
-      if (!definition.target) {
-        res.status(503).json({ error: form === 'complaint' ? 'api_disabled' : 'cms_disabled' });
+      if (!definition.enabled) {
+        res.status(503).json({ error: 'api_disabled' });
         return;
       }
 
@@ -98,72 +65,76 @@ export function formsProxy(options: FormsProxyOptions): express.Router {
         return;
       }
 
-      // The API verifies the (single-use) token itself; for Strapi the proxy has to.
-      if (definition.target === 'strapi') {
-        // shortcut: the legacy reservation form has no Turnstile widget, so only forms that carry a token field are checked; the booking engine replaces it.
-        if (options.turnstileSecret && 'turnstileToken' in definition.fields) {
-          const outcome = await verifyTurnstile(data['turnstileToken'], ip);
-          if (outcome !== 'ok') {
-            res.status(outcome === 'down' ? 502 : 400).json({ error: outcome === 'down' ? 'captcha_unreachable' : 'captcha' });
-            return;
-          }
-        }
-
-        delete data['turnstileToken'];
-      }
-
-      const base = definition.target === 'api' ? `${options.apiUrl}/api/public` : `${options.strapiUrl}/api`;
+      // The API verifies the (single-use) Turnstile token itself.
       try {
-        const response = await fetch(`${base}/${definition.path}`, {
+        const response = await fetch(`${options.apiUrl}/api/public/${definition.path}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(definition.target === 'strapi' && options.token
-              ? { Authorization: `Bearer ${options.token}` }
-              : {}),
-            ...(definition.target === 'strapi' && options.secret
-              ? { 'X-Forms-Secret': options.secret, 'X-Client-IP': ip }
-              : {}),
-            ...(definition.target === 'api' ? { 'X-Forwarded-For': ip } : {}),
-          },
-          body: JSON.stringify(definition.target === 'api' ? data : { data }),
+          headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': ip },
+          body: JSON.stringify(data),
           signal: AbortSignal.timeout(timeout),
         });
 
         if (response.ok) {
           const payload = await readJson(response);
-          res.status(201).json({ ok: true, ...(definition.target === 'api' ? payload : {}) });
+          res.status(201).json({ ok: true, ...payload });
         } else if (response.status === 400 || response.status === 422) {
           res.status(400).json({ error: 'invalid' });
         } else if (response.status === 429) {
           res.status(429).json({ error: 'rate_limited' });
         } else {
-          res.status(502).json({ error: definition.target === 'api' ? 'api_error' : 'cms_error' });
+          res.status(502).json({ error: 'api_error' });
         }
       } catch {
-        res
-          .status(502)
-          .json({ error: definition.target === 'api' ? 'api_unreachable' : 'cms_unreachable' });
+        res.status(502).json({ error: 'api_unreachable' });
       }
     };
 
-  const strapi: Target | null = options.strapiUrl ? 'strapi' : null;
-  const api: Target | null = options.apiUrl ? 'api' : null;
-  const contactTarget: Target | null = options.bookingEngine && api ? 'api' : strapi;
+  // The provider data on the hoja (razón social, RUC, domicilio fiscal) lives in the API; kept 5 minutes.
+  const companyAllowed = createRateLimiter(60, options.windowMs ?? 10 * 60 * 1000);
+  let company: { at: number; body: Record<string, unknown> } | null = null;
+  router.get('/company', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    if (!options.apiUrl) {
+      res.status(404).json({ error: 'api_disabled' });
+      return;
+    }
 
-  router.post(
-    '/reservation',
-    forward('reservation', {
-      target: strapi,
-      path: 'reservations',
-      fields: RESERVATION_FIELDS,
-      numbers: RESERVATION_NUMBERS,
-    }),
-  );
+    if (!companyAllowed(`company|${clientKey(req.ip ?? 'unknown')}`)) {
+      res.status(429).json({ error: 'rate_limited' });
+      return;
+    }
+
+    if (company && Date.now() - company.at < 5 * 60 * 1000) {
+      res.json(company.body);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${options.apiUrl}/api/public/company`, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(timeout),
+      });
+      const body = await readJson(response);
+      if (!response.ok) {
+        res.status(response.status === 404 ? 404 : 502).json({ error: response.status === 404 ? 'not_found' : 'api_error' });
+        return;
+      }
+
+      const text = (key: string) => (typeof body[key] === 'string' ? body[key] : undefined);
+      const picked = { legalName: text('legalName'), ruc: text('ruc'), fiscalAddress: text('fiscalAddress') };
+      company = { at: Date.now(), body: picked };
+      res.json(picked);
+    } catch {
+      res.status(502).json({ error: 'api_unreachable' });
+    }
+  });
+
+  const enabled = Boolean(options.apiUrl);
+
   router.post(
     '/contact',
     forward('contact', {
-      target: contactTarget,
+      enabled,
       path: 'contact-messages',
       fields: CONTACT_FIELDS,
     }),
@@ -171,7 +142,7 @@ export function formsProxy(options: FormsProxyOptions): express.Router {
   router.post(
     '/complaint',
     forward('complaint', {
-      target: api,
+      enabled,
       path: 'complaints',
       fields: COMPLAINT_FIELDS,
       numbers: COMPLAINT_NUMBERS,

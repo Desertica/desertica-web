@@ -74,6 +74,7 @@ export function buildPrimaryNavLinks(
     toursGroup('nav.tours', TOURS_PATH),
     { labelKey: 'nav.products', path: '/products' },
     { labelKey: 'nav.about', path: '/about' },
+    { labelKey: 'nav.blog', path: '/blog' },
     { labelKey: 'nav.contact', path: '/contact' },
   ];
 }

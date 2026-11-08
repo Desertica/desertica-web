@@ -1,5 +1,20 @@
+import {
+  simpleAmericanExpress,
+  simpleApplePay,
+  simpleDinersClub,
+  simpleGooglePay,
+  simpleMastercard,
+  simpleVisa,
+} from './footer-payment-icons';
 import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+} from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -20,6 +35,17 @@ import { BrandMark } from './brand-mark';
 const BOUNCE_DOWN = 'M0,0C0,0,464,156,1139,156S2278,0,2278,0';
 const BOUNCE_CENTER = 'M0,0C0,0,464,0,1139,0s1139,0,1139,0';
 const MIN_BOUNCE_VELOCITY = 200;
+
+const PAYMENT_METHODS: readonly { name: string; svg?: string; src?: string }[] = [
+  { name: 'Visa', svg: simpleVisa },
+  { name: 'Mastercard', svg: simpleMastercard },
+  { name: 'American Express', svg: simpleAmericanExpress },
+  { name: 'Diners Club', svg: simpleDinersClub },
+  { name: 'Apple Pay', svg: simpleApplePay },
+  { name: 'Google Pay', svg: simpleGooglePay },
+  { name: 'Yape', src: '/payments/yape.png' },
+  { name: 'Plin', src: '/payments/plin.png' },
+];
 
 @Component({
   selector: 'app-site-footer',
@@ -56,6 +82,7 @@ export class SiteFooter {
   protected readonly legal = this.catalog.legal;
   protected readonly legalLinks = this.catalog.footerLegalLinks;
   protected readonly stamps = this.catalog.footerStamps;
+  protected readonly paymentMethods = PAYMENT_METHODS;
   protected readonly email = new FormControl('', {
     nonNullable: true,
     validators: [Validators.required, Validators.email],

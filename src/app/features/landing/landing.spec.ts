@@ -53,7 +53,7 @@ describe('Landing', () => {
       'photo-1509316785289-025f5b846b35',
     );
     expect(compiled.querySelector('.wordmark-stage')?.className).toContain('hero-rest');
-    expect(hero?.querySelector('a[href="/tours"]')).not.toBeNull();
+    expect(hero?.querySelectorAll('a[hlmBtn], a[data-slot="button"]').length).toBe(1);
     expect(compiled.querySelector('a[href="/tours#huacachina"]')).not.toBeNull();
     expect(compiled.querySelector('a[href="/tours#paracas"]')).not.toBeNull();
     expect(compiled.querySelector('a[href="/tours#nazca"]')).not.toBeNull();
