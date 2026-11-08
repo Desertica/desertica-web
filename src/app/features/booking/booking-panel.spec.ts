@@ -125,6 +125,10 @@ describe('BookingPanel', () => {
     expect(cart.items()[0]).toMatchObject({ tourSlug: 'dune-buggy', departureId: DEPARTURE_ID, currency: 'USD', adults: 1 });
     expect(mock.calls.some((call) => call.path === '/public/holds')).toBe(false);
     expect(fixture.nativeElement.querySelector('#booking-added')).not.toBeNull();
+
+    internals.bump('adults', 1);
+    await settle(fixture);
+    expect(fixture.nativeElement.querySelector('#booking-added')).toBeNull();
   });
 
   it('holds the seats and moves on to the checkout', async () => {

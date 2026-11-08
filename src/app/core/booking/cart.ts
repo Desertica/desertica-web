@@ -5,6 +5,22 @@ import type { BookingSelection } from './booking-flow';
 
 const KEY = 'desertica-cart';
 
+/** A stored item with the shape the cart needs and a departure that has not left; anything else is dropped. */
+function isUsable(value: unknown): value is BookingSelection {
+  const item = value as Partial<BookingSelection> | null;
+  return (
+    !!item &&
+    typeof item.departureId === 'string' &&
+    typeof item.tourSlug === 'string' &&
+    typeof item.startsAt === 'string' &&
+    Date.parse(item.startsAt) > Date.now() &&
+    (item.currency === 'USD' || item.currency === 'PEN') &&
+    Number.isInteger(item.adults) &&
+    Number.isInteger(item.children) &&
+    typeof item.quote?.totalCents === 'number'
+  );
+}
+
 /**
  * Tours the visitor picked and has not reserved yet. A selection is stored without seat hold: the seats are
  * held only when one of them goes to checkout, so a cart left open never blocks other visitors.
@@ -14,6 +30,8 @@ const KEY = 'desertica-cart';
 export class CartService {
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   readonly items = signal<readonly BookingSelection[]>([]);
+  /** `false` until the saved cart has been read after hydration, so the page does not flash an empty cart. */
+  readonly ready = signal(false);
 
   /** People in the cart, shown on the header badge. */
   readonly count = computed(() => this.items().reduce((sum, item) => sum + item.adults + item.children, 0));
@@ -33,6 +51,8 @@ export class CartService {
       if (saved.length) {
         this.items.set(saved);
       }
+
+      this.ready.set(true);
     });
   }
 
@@ -65,7 +85,7 @@ export class CartService {
   private read(): BookingSelection[] {
     try {
       const parsed: unknown = JSON.parse(sessionStorage.getItem(KEY) ?? '[]');
-      return Array.isArray(parsed) ? (parsed as BookingSelection[]) : [];
+      return Array.isArray(parsed) ? parsed.filter(isUsable) : [];
     } catch {
       return [];
     }

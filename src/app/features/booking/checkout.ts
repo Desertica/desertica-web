@@ -31,6 +31,7 @@ import { tourItem } from '../../core/analytics/items';
 import { AttributionService } from '../../core/analytics/attribution';
 import { ConsentService } from '../../core/analytics/consent';
 import { BookingApi, type CreatePublicBooking, type LegalDocument } from '../../core/api/booking-api';
+import { CartService } from '../../core/booking/cart';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { clock, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
@@ -343,6 +344,7 @@ export class Checkout {
 
   protected readonly i18n = inject(I18nService);
   protected readonly flow = inject(BookingFlow);
+  private readonly cart = inject(CartService);
   protected readonly legalKinds = LEGAL_KINDS;
   protected readonly legalPath = LEGAL_PATH;
   protected readonly legal = signal<Partial<Record<LegalKind, LegalDocument>>>({});
@@ -520,6 +522,7 @@ export class Checkout {
 
     const { booking, accessToken } = result.data;
     this.flow.remember(booking.reference, { accessToken });
+    this.cart.remove(selection.departureId);
     const tour = this.catalog.tourById(selection.tourSlug);
     this.analytics.track('begin_checkout', {
       currency: selection.currency,

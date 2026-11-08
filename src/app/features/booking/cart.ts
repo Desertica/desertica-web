@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
-import { BookingFlow, type BookingSelection } from '../../core/booking/booking-flow';
+import { BookingApi } from '../../core/api/booking-api';
+import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
 import { CartService } from '../../core/booking/cart';
 import { formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
@@ -22,7 +23,9 @@ import { usePageMeta } from '../../core/seo/page-meta';
     <section class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
       <h1 class="font-heading text-3xl">{{ 'cart.title' | translate: i18n.locale() }}</h1>
 
-      @if (cart.items().length === 0) {
+      @if (!cart.ready()) {
+        <!-- the saved cart is read after hydration; nothing is shown until then -->
+      } @else if (cart.items().length === 0) {
         <p id="cart-empty">{{ 'cart.empty' | translate: i18n.locale() }}</p>
         <a hlmBtn routerLink="/tours" class="w-fit">{{ 'cart.browse' | translate: i18n.locale() }}</a>
       } @else {
@@ -85,6 +88,7 @@ export class Cart {
   protected readonly cart = inject(CartService);
   private readonly catalog = inject(CatalogService);
   private readonly flow = inject(BookingFlow);
+  private readonly api = inject(BookingApi);
   private readonly router = inject(Router);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -114,7 +118,10 @@ export class Cart {
     return formatMoney(cents, currency, this.i18n.locale());
   }
 
-  /** Holds the seats of this item and moves it to checkout; it leaves the cart because the hold now belongs to the checkout. */
+  /**
+   * Quotes the item again (the stored price can be old), holds its seats and moves it to checkout. If the price changed, the
+   * cart shows the new one and the visitor decides again. The item stays in the cart until the booking is created.
+   */
   protected async reserve(item: BookingSelection): Promise<void> {
     if (this.busy()) {
       return;
@@ -122,14 +129,33 @@ export class Cart {
 
     this.busy.set(true);
     this.error.set(null);
-    const result = await this.flow.reserve(item);
-    this.busy.set(false);
-    if (!result.ok) {
-      this.error.set(result.status === 409 ? 'booking.errorSeats' : result.status === 429 ? 'booking.errorBusy' : 'booking.errorGeneric');
+    const fresh = await this.api.quote({
+      departureId: item.departureId,
+      adults: item.adults,
+      children: item.children,
+      currency: item.currency,
+    });
+    if (!fresh.ok) {
+      this.busy.set(false);
+      this.error.set(fresh.status === 404 || fresh.status === 409 ? 'cart.unavailable' : holdErrorKey(fresh.status));
       return;
     }
 
-    this.cart.remove(item.departureId);
+    const current = { ...item, quote: fresh.data };
+    if (fresh.data.totalCents !== item.quote.totalCents) {
+      this.cart.add(current);
+      this.busy.set(false);
+      this.error.set('cart.priceChanged');
+      return;
+    }
+
+    const result = await this.flow.reserve(current);
+    this.busy.set(false);
+    if (!result.ok) {
+      this.error.set(holdErrorKey(result.status));
+      return;
+    }
+
     await this.router.navigateByUrl('/checkout');
   }
 }

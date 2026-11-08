@@ -387,13 +387,16 @@
     "adults": "adultos",
     "children": "niños",
     "open": "Abrir carrito",
+    "priceChanged": "El precio cambió. Revisa el nuevo total y vuelve a reservar.",
+    "unavailable": "Esta salida ya no está disponible. Quítala y elige otra fecha.",
+    "openWithCount": "Abrir carrito, {count} personas",
     "added": "Agregado al carrito.",
     "view": "Ver carrito",
     "add": "Agregar al carrito"
   },
   "booking": {
     "title": "Reserva en línea",
-    "lead": "Elige fecha y tu grupo. La moneda se cambia arriba, en el encabezado. Guardamos tus cupos mientras completas la reserva.",
+    "lead": "Elige fecha y tu grupo. La moneda se cambia con el selector del sitio (en el encabezado o en el menú). Guardamos tus cupos mientras completas la reserva.",
     "currency": "Moneda",
     "loading": "Cargando disponibilidad…",
     "loadError": "No pudimos cargar la disponibilidad. Inténtalo de nuevo.",

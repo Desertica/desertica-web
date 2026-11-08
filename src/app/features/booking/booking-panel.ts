@@ -26,7 +26,7 @@ import {
 } from '../../core/api/booking-api';
 import { CurrencyService } from '../../core/currency/currency';
 import { CartService } from '../../core/booking/cart';
-import { BookingFlow, type BookingSelection } from '../../core/booking/booking-flow';
+import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
 import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import type { TourPage } from '../../core/catalog/tour-pages';
@@ -268,7 +268,9 @@ export class BookingPanel {
 
   // The header switcher and this toggle are the same choice.
   private readonly cart = inject(CartService);
-  protected readonly added = signal(false);
+  /** Which selection was added; the confirmation disappears as soon as the group, day or departure changes. */
+  private readonly addedKey = signal<string | null>(null);
+  protected readonly added = computed(() => this.addedKey() !== null && this.addedKey() === this.selectionKey());
   private readonly currencyChoice = inject(CurrencyService);
   protected readonly currency = this.currencyChoice.currency;
   protected readonly format = signal<TourFormat>('SHARED');
@@ -427,11 +429,16 @@ export class BookingPanel {
     };
   }
 
+  private selectionKey(): string | null {
+    const s = this.selection();
+    return s ? `${s.departureId}|${s.adults}|${s.children}|${s.currency}` : null;
+  }
+
   protected addToCart(): void {
     const selection = this.selection();
     if (selection) {
       this.cart.add(selection);
-      this.added.set(true);
+      this.addedKey.set(this.selectionKey());
     }
   }
 
@@ -447,13 +454,7 @@ export class BookingPanel {
     this.holding.set(false);
 
     if (!result.ok) {
-      this.reserveError.set(
-        result.status === 409
-          ? 'booking.errorSeats'
-          : result.status === 429
-            ? 'booking.errorBusy'
-            : 'booking.errorGeneric',
-      );
+      this.reserveError.set(holdErrorKey(result.status));
       if (result.status === 409) {
         this.reload();
       }

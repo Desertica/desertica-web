@@ -387,13 +387,16 @@
     "adults": "adults",
     "children": "children",
     "open": "Open cart",
+    "priceChanged": "The price changed. Check the new total and reserve again.",
+    "unavailable": "This departure is no longer available. Remove it and pick another date.",
+    "openWithCount": "Open cart, {count} people",
     "added": "Added to your cart.",
     "view": "View cart",
     "add": "Add to cart"
   },
   "booking": {
     "title": "Book online",
-    "lead": "Pick a date and your group. Change the currency at the top, in the header. We hold your seats while you check out.",
+    "lead": "Pick a date and your group. Change the currency with the site selector (in the header or in the menu). We hold your seats while you check out.",
     "currency": "Currency",
     "loading": "Loading availability…",
     "loadError": "We could not load availability. Please try again.",
