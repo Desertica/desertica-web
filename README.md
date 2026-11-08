@@ -127,7 +127,6 @@ All content lives in Strapi 5, in its own repository: [Desertica/desertica-cms](
 | `Pages`           | Terms, privacy, complaints, conduct, MINCETUR and destination hub copy         |
 | `Blog`, `Shop`    | `/blog` and `/products`                                                        |
 | `Site`            | Contact data, socials, legal entity, **theme** (light/dark palettes, radius, fonts, header height, intro), **booking rules** (deposit, party limits, assurances), **form limits**, **navigation** (header, footer, CTA) |
-| `Inbox`           | Reservations and contact messages sent from the site                           |
 
 ```bash
 git clone https://github.com/Desertica/desertica-cms.git ../desertica-cms

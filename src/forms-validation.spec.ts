@@ -4,8 +4,6 @@ import {
   COMPLAINT_NUMBERS,
   CONTACT_FIELDS,
   complaintIsConsistent,
-  RESERVATION_FIELDS,
-  RESERVATION_NUMBERS,
   sanitize as sanitizeResult,
 } from './forms-validation';
 
@@ -43,43 +41,6 @@ describe('forms validation', () => {
     expect(sanitizeResult({ ...contact, message: 'x'.repeat(501) }, CONTACT_FIELDS, {})).toEqual({ invalid: 'message' });
     expect(sanitizeResult({ ...contact, name: '' }, CONTACT_FIELDS, {})).toEqual({ invalid: 'name' });
     expect(sanitizeResult(null, CONTACT_FIELDS, {})).toEqual({ invalid: 'body' });
-    expect(sanitizeResult({ tourSlug: 'a', date: '2026-12-01', language: 'en', adults: 99 }, RESERVATION_FIELDS, RESERVATION_NUMBERS)).toEqual({
-      invalid: 'adults',
-    });
-  });
-
-  it('validates reservations including numeric ranges', () => {
-    const reservation = {
-      tourSlug: 'dune-buggy',
-      date: '2026-12-01',
-      language: 'en',
-      adults: 2,
-      children: '1',
-      amount: 79,
-    };
-    expect(sanitize(reservation, RESERVATION_FIELDS, RESERVATION_NUMBERS)).toEqual({
-      tourSlug: 'dune-buggy',
-      date: '2026-12-01',
-      language: 'en',
-      adults: 2,
-      children: 1,
-      amount: 79,
-    });
-    expect(
-      sanitize({ ...reservation, adults: 0 }, RESERVATION_FIELDS, RESERVATION_NUMBERS),
-    ).toBeNull();
-    expect(
-      sanitize({ ...reservation, adults: 51 }, RESERVATION_FIELDS, RESERVATION_NUMBERS),
-    ).toBeNull();
-    expect(
-      sanitize({ ...reservation, tourSlug: '../x' }, RESERVATION_FIELDS, RESERVATION_NUMBERS),
-    ).toBeNull();
-    expect(
-      sanitize({ ...reservation, date: '1/12/2026' }, RESERVATION_FIELDS, RESERVATION_NUMBERS),
-    ).toBeNull();
-    expect(
-      sanitize({ ...reservation, adults: undefined }, RESERVATION_FIELDS, RESERVATION_NUMBERS),
-    ).toBeNull();
   });
 
   describe('complaints', () => {
@@ -107,6 +68,7 @@ describe('forms validation', () => {
         amountCents: 5000,
         currency: 'USD',
         isMinor: true,
+        guardianName: ' Maria Perez ',
         turnstileToken: 'tt',
       });
 
@@ -115,10 +77,12 @@ describe('forms validation', () => {
         amountCents: 5000,
         currency: 'USD',
         isMinor: true,
+        guardianName: 'Maria Perez',
         bookingRef: 'DES-2026-0001',
         turnstileToken: 'tt',
       });
       expect(data && complaintIsConsistent(data)).toBe(true);
+      expect(complaintIsConsistent(clean({ ...complaint, isMinor: true })!)).toBe(false);
     });
 
     it('requires the legal fields and rejects malformed enums, numbers and flags', () => {
@@ -129,6 +93,13 @@ describe('forms validation', () => {
       expect(clean({ ...complaint, amountCents: -1, currency: 'USD' })).toBeNull();
       expect(clean({ ...complaint, amountCents: 10.5, currency: 'USD' })).toBeNull();
       expect(clean({ ...complaint, isMinor: 'true' })).toBeNull();
+    });
+
+    it('accepts both kinds and both goods, and rejects a name with digits or symbols', () => {
+      expect(clean({ ...complaint, kind: 'BOTH', goodType: 'BOTH' })).toMatchObject({ kind: 'BOTH', goodType: 'BOTH' });
+      expect(clean({ ...complaint, consumerName: 'Ana 123' })).toBeNull();
+      expect(clean({ ...complaint, consumerName: 'Ana <b>' })).toBeNull();
+      expect(clean({ ...complaint, consumerName: "María-José D'Angelo" })).not.toBeNull();
     });
 
     it('checks the document number against its type and pairs an amount with a currency', () => {

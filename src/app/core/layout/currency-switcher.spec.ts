@@ -20,7 +20,7 @@ describe('CurrencySwitcher', () => {
     const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
 
     expect(button.textContent).toContain('USD');
-    expect(button.querySelector('ng-icon')).not.toBeNull();
+    expect(button.textContent).toContain('$');
     expect(button.getAttribute('aria-label')).toBeTruthy();
 
     TestBed.inject(CurrencyService).set('PEN');

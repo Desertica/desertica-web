@@ -1,17 +1,33 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { IntroService } from '../animation/intro';
 import { ConsentService } from '../analytics/consent';
 import type { DataLayerWindow } from '../analytics/data-layer';
 import { CookieBanner } from './cookie-banner';
 
 describe('CookieBanner', () => {
+  const introStatus = signal<'pending' | 'playing' | 'done'>('done');
+
   beforeEach(async () => {
+    introStatus.set('done');
     delete (window as DataLayerWindow).dataLayer;
     await TestBed.configureTestingModule({
       imports: [CookieBanner],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: IntroService, useValue: { status: introStatus } }],
     }).compileComponents();
     TestBed.inject(ConsentService).init();
+  });
+
+  it('stays hidden until the intro animation is done', () => {
+    introStatus.set('playing');
+    const fixture = TestBed.createComponent(CookieBanner);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('section')).toBeNull();
+
+    introStatus.set('done');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('section')).not.toBeNull();
   });
 
   const text = (root: HTMLElement) => root.textContent?.replace(/\s+/g, ' ') ?? '';
@@ -73,6 +89,8 @@ describe('CookieBanner', () => {
     consent.openPreferences();
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('section')).not.toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('[role="switch"][aria-checked="true"]').length).toBe(3);
+    expect(
+      fixture.nativeElement.querySelectorAll('[role="switch"][aria-checked="true"]').length,
+    ).toBe(3);
   });
 });

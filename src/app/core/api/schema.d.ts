@@ -83,7 +83,10 @@ export interface paths {
         put?: never;
         /**
          * Bloquear cupo temporalmente
-         * @description Reserva los asientos durante unos minutos mientras el cliente completa el pago.
+         * @description Reserva los asientos durante unos minutos mientras el cliente completa el pago. Responde 429 si la IP
+         *     ya pidió demasiados bloqueos o si la salida ya tiene el máximo de bloqueos vigentes
+         *     (`maxActiveHoldsPerDeparture`, 10 por defecto): en ese caso `details.reason` es `TOO_MANY_HOLDS` y
+         *     `details.retryAfterSeconds` dice cuándo se libera el primero.
          */
         post: operations["createHold"];
         delete?: never;
@@ -248,6 +251,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/documents/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Descargar el PDF de un comprobante con un enlace firmado
+         * @description El enlace (`pdfUrl` de `PublicBooking.documents`) lleva `exp` y `sig` (HMAC) y vale una hora; cada lectura
+         *     de la reserva genera uno nuevo. Un enlace inválido o vencido, o un comprobante que no es boleta ni factura
+         *     vigente, responde 404.
+         */
+        get: operations["downloadPublicDocumentPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/waivers/{token}": {
         parameters: {
             query?: never;
@@ -333,6 +358,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/company": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Datos del proveedor para la hoja de reclamación
+         * @description Razón social, RUC y domicilio fiscal de la empresa activa. No expone nada fiscal ni interno.
+         */
+        get: operations["getPublicCompany"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/legal-documents/current": {
         parameters: {
             query?: never;
@@ -361,7 +406,10 @@ export interface paths {
         put?: never;
         /**
          * Eventos de Stripe
-         * @description Valida `Stripe-Signature`, guarda el evento y responde 2xx aunque ya estuviera procesado.
+         * @description Valida `Stripe-Signature` sobre el cuerpo crudo (400 si falta o no coincide), guarda el evento en
+         *     `WebhookEvent` (idempotente por `eventId`) y responde 200 aunque ya estuviera procesado. Eventos usados:
+         *     `payment_intent.succeeded|payment_failed|canceled|requires_action`, `refund.created|updated|failed` y
+         *     `charge.dispute.created|updated|closed|funds_withdrawn|funds_reinstated`. 503 si el webhook no está configurado.
          */
         post: operations["receiveStripeWebhook"];
         delete?: never;
@@ -379,7 +427,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Eventos de Culqi */
+        /**
+         * Eventos de Culqi
+         * @description Valida la firma HMAC-SHA256 del cuerpo en `x-culqi-signature` (400 si falta o no coincide; 503 si no hay
+         *     secreto configurado). El API no confía en el contenido del evento: vuelve a consultar el cargo a Culqi.
+         *     El esquema de firma está pendiente de verificar contra la documentación oficial de Culqi.
+         */
         post: operations["receiveCulqiWebhook"];
         delete?: never;
         options?: never;
@@ -582,9 +635,16 @@ export interface paths {
         put?: never;
         /**
          * Cancelar una salida por decisión de la empresa
-         * @description Aplica a todas las reservas confirmadas de la salida. Con `resolution = REFUND` reembolsa el 100 %
-         *     y emite notas de crédito; con `RESCHEDULE` mueve las reservas a `targetDepartureId`. Notifica
-         *     a los clientes.
+         * @description Cierra la salida y libera sus bloqueos de cupo. Según `resolution`:
+         *     - `REFUND`: cancela las reservas vigentes (pendientes de pago y confirmadas) y registra el reembolso
+         *       del 100 % de lo cobrado como filas `Refund` en `PENDING`; la ejecución del reembolso y las notas de
+         *       crédito son de las operaciones de pagos y comprobantes.
+         *     - `RESCHEDULE`: mueve las reservas vigentes a `targetDepartureId` (mismo tour, abierta, con cupo para
+         *       todas) conservando su precio; no cobra ni reembolsa diferencias.
+         *     - `CLIENT_CHOICE`: deja las reservas como están y avisa a los clientes para que elijan; el staff las
+         *       resuelve después con `cancelBooking` o `rescheduleBooking`.
+         *     Notifica a los clientes. Se procesa de forma síncrona; la respuesta es 202 porque los correos salen
+         *     aparte. Una salida ya cancelada o completada responde 409.
          */
         post: operations["cancelDeparture"];
         delete?: never;
@@ -872,7 +932,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Emitir el comprobante de una reserva */
+        /**
+         * Emitir el comprobante de una reserva
+         * @description Asigna serie y correlativo, calcula base e IGV y deja el envío a `desertica-billing` en una cola con
+         *     reintentos (la misma `externalId` en cada uno). Responde 202 con el comprobante en `PENDING`: su estado
+         *     final llega después. 409 si no hay empresa o serie configuradas, si el pago ya tiene comprobante o si no
+         *     queda nada por documentar.
+         */
         post: operations["issueDocument"];
         delete?: never;
         options?: never;
@@ -926,10 +992,32 @@ export interface paths {
         /**
          * Reembolsar un pago
          * @description Ejecuta la devolución en la pasarela (o la registra si el pago fue manual), actualiza la reserva y
-         *     emite la nota de crédito si había comprobante. Los montos superiores al tope del operador requieren
-         *     `payments:refund-any`.
+         *     emite la nota de crédito si había comprobante. Si lo ya devuelto de la reserva (más lo pendiente) más este
+         *     monto supera `operatorRefundLimitCents`, hace falta `payments:refund-any` (403 si no se tiene).
          */
         post: operations["createRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/refunds/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar un reembolso manual pendiente
+         * @description Para pagos manuales (efectivo, transferencia, Yape) la cancelación deja el reembolso en `PENDING`: el
+         *     staff devuelve el dinero por su cuenta y lo confirma aquí. Actualiza `refundedCents` del pago y de la
+         *     reserva. Los reembolsos de pasarela los ejecuta el API solo y no se confirman a mano.
+         */
+        post: operations["completeRefund"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1160,7 +1248,12 @@ export interface paths {
         put?: never;
         /**
          * Atender un pedido de eliminación de datos (ARCO)
-         * @description Anonimiza lo que no deba conservarse por obligación legal (comprobantes).
+         * @description Anonimiza al cliente y los datos personales de sus reservas (pasajeros, notas, descargos, avisos
+         *     enviados, tokens de acceso y respuestas idempotentes guardadas). Se conserva lo que la ley obliga a
+         *     guardar: los comprobantes electrónicos y sus datos de receptor, y los reclamos del Libro de
+         *     Reclamaciones. La auditoría es inmutable y solo guarda conteos. Es idempotente: repetirlo sobre un
+         *     cliente ya anonimizado responde 204. Responde 409 si el cliente tiene reservas vigentes de salidas
+         *     futuras, reembolsos pendientes o disputas abiertas.
          */
         post: operations["eraseCustomer"];
         delete?: never;
@@ -1249,13 +1342,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Listar las versiones publicadas de los documentos legales
+         * @description Las más recientes primero. El texto no se devuelve (ver `LegalDocument`).
+         */
+        get: operations["listLegalDocuments"];
         put?: never;
         /**
          * Publicar una nueva versión de un documento legal
-         * @description Trae la página `cmsSlug` del CMS en el idioma `locale` y guarda un snapshot inmutable de su texto
-         *     (un trigger de la base impide modificarlo o borrarlo). La versión es la siguiente de `(kind, locale)`.
-         *     Responde 422 si el CMS no tiene esa página y 503 si el CMS no responde.
+         * @description Guarda un snapshot inmutable del texto del CMS en el idioma `locale` (un trigger de la base impide
+         *     modificarlo o borrarlo).
+         *     - Documentos globales (`TERMS`, `PRIVACY`, `CANCELLATION`, `COOKIES`, `CONDUCT`): la página
+         *       `cmsSlug`; la versión es la siguiente de `(kind, locale)`.
+         *     - `WAIVER`: el campo `waiverBody` del tour `tourRefId` en ese idioma (no lleva `cmsSlug`); la versión
+         *       es la siguiente de `(tour, locale)` y la respuesta trae el slug del tour en `cmsSlug`. Los
+         *       descargos de las reservas nuevas apuntan a la última versión publicada (la del idioma de la reserva
+         *       o, si no hay, la de `en`); sin ninguna, el tour no se puede reservar (409).
+         *     Responde 422 si el CMS no tiene esa página, ese tour o su `waiverBody`, y 503 si el CMS no responde.
          */
         post: operations["publishLegalDocument"];
         delete?: never;
@@ -1327,7 +1430,10 @@ export interface paths {
         get: operations["getCompany"];
         /**
          * Guardar los datos fiscales de la empresa
-         * @description El certificado digital y las credenciales SOL no pasan por este API; viven en `desertica-billing`.
+         * @description Crea la empresa emisora la primera vez y la actualiza después (hay una sola). `igvRate` y
+         *     `environment` solo cambian si se envían; `tradeName` y `ubigeo` se reemplazan. Con `environment =
+         *     PRODUCTION` el RUC debe pasar el dígito verificador. El certificado digital y las credenciales SOL
+         *     no pasan por este API; viven en `desertica-billing`.
          */
         put: operations["saveCompany"];
         post?: never;
@@ -1347,7 +1453,10 @@ export interface paths {
         /** Listar series de comprobantes */
         get: operations["listSeries"];
         put?: never;
-        /** Crear una serie */
+        /**
+         * Crear una serie
+         * @description Requiere que la empresa esté configurada (409 si no) y que el prefijo no exista (409).
+         */
         post: operations["createSeries"];
         delete?: never;
         options?: never;
@@ -1386,12 +1495,68 @@ export interface paths {
         /** Listar correos e IP bloqueados */
         get: operations["listBlockedIdentities"];
         put?: never;
-        /** Bloquear un correo o una IP */
+        /**
+         * Bloquear un correo o una IP
+         * @description El correo se normaliza a minúsculas y la IP a su forma canónica. Un bloqueo impide crear bloqueos de
+         *     cupo y reservas desde el sitio (IP y correo) y enviar reclamos (IP y correo); responde 403 sin decir
+         *     el motivo. No afecta a las reservas manuales del staff.
+         */
         post: operations["createBlockedIdentity"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/blocked-identities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Quitar un bloqueo */
+        delete: operations["deleteBlockedIdentity"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contact-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar los mensajes del formulario de contacto */
+        get: operations["listContactMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/contact-messages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Marcar un mensaje como atendido o pendiente */
+        patch: operations["updateContactMessage"];
         trace?: never;
     };
     "/audit-logs": {
@@ -1418,7 +1583,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Resumen del panel (ventas, ocupación y pendientes) */
+        /**
+         * Resumen del panel (ventas, ocupación y pendientes)
+         * @description `from` y `to` son fechas de Lima, ambas incluidas (máximo 366 días; `to` no anterior a `from`).
+         *     - `sales`: por moneda, lo cobrado (pagos exitosos, parcial o totalmente reembolsados y en disputa,
+         *       por fecha de pago), lo reembolsado (reembolsos exitosos por fecha de actualización) y las
+         *       reservas distintas con cobro en el rango.
+         *     - `occupancy`: asientos vendidos y capacidad de las salidas del rango que no están canceladas.
+         *     - `pending`: estado actual, sin depender del rango. `complaintsDueSoon` cuenta los reclamos sin
+         *       responder que vencen en los próximos 3 días o ya vencieron; `waiversPending`, descargos sin firmar
+         *       de reservas vigentes de salidas futuras.
+         */
         get: operations["getDashboardSummary"];
         put?: never;
         post?: never;
@@ -1435,7 +1610,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Reporte de ventas */
+        /**
+         * Reporte de ventas
+         * @description Mismas medidas que `sales` del panel, agrupadas por `groupBy`: `day` (fecha de Lima), `tour` (slug
+         *     del tour) o `provider` (`STRIPE`, `CULQI` o `MANUAL`). Con `format=csv` devuelve el mismo contenido
+         *     como `text/csv` (columnas `key,currency,grossCents,refundedCents,bookings`); las celdas que
+         *     empezarían con `=`, `+`, `-`, `@`, tabulación o retorno se prefijan con `'` para que una hoja de
+         *     cálculo no las evalúe como fórmula.
+         */
         get: operations["getSalesReport"];
         put?: never;
         post?: never;
@@ -1493,7 +1675,7 @@ export interface components {
         /** @enum {string} */
         ComplaintStatus: "OPEN" | "IN_PROGRESS" | "ANSWERED";
         /** @enum {string} */
-        LegalDocumentKind: "TERMS" | "PRIVACY" | "CANCELLATION" | "COOKIES" | "CONDUCT";
+        LegalDocumentKind: "TERMS" | "PRIVACY" | "CANCELLATION" | "COOKIES" | "CONDUCT" | "WAIVER";
         TourRef: {
             /** Format: uuid */
             id: string;
@@ -1875,10 +2057,19 @@ export interface components {
         };
         CulqiChargeRequest: {
             kind: components["schemas"]["PaymentKind"];
-            /** @description Token generado por Culqi.js en el navegador. */
+            /** @description Token generado por Culqi.js en el navegador. Nunca un número de tarjeta. */
             token: string;
             /** Format: email */
             email: string;
+            /**
+             * Format: uuid
+             * @description Pago `REQUIRES_ACTION` que se continúa tras la autenticación 3DS (con `authentication3DS`).
+             */
+            paymentId?: string;
+            /** @description Parámetros que devolvió la autenticación 3DS en el navegador (Culqi3DS). */
+            authentication3DS?: {
+                [key: string]: unknown;
+            };
         };
         StripeIntent: {
             /** Format: uuid */
@@ -1893,7 +2084,10 @@ export interface components {
             /** Format: uuid */
             paymentId: string;
             status: components["schemas"]["PaymentStatus"];
-            /** @description Presente cuando el banco exige autenticación 3DS. */
+            /**
+             * @description Presente cuando el banco exige autenticación 3DS. El navegador la ejecuta con Culqi3DS y reenvía el
+             *     mismo `token` con `paymentId` y `authentication3DS`. `parameters` trae `amountCents`, `currency` y `email`.
+             */
             action?: {
                 /** @enum {string} */
                 type?: "THREE_DS";
@@ -2034,7 +2228,13 @@ export interface components {
             bookingId: string;
             /** Format: uuid */
             passengerId?: string | null;
+            /** @description Versión del texto del descargo; es la de `legalDocumentId`. */
             version: number;
+            /**
+             * Format: uuid
+             * @description Snapshot inmutable del texto que se firma (nulo solo en descargos anteriores a su versionado).
+             */
+            legalDocumentId?: string | null;
             status: components["schemas"]["WaiverStatus"];
             signerName?: string | null;
             /** Format: date-time */
@@ -2044,6 +2244,14 @@ export interface components {
         WaiverForm: {
             status: components["schemas"]["WaiverStatus"];
             version: number;
+            /** @description Idioma del texto que se firma. */
+            locale?: string | null;
+            /** @description Título del snapshot. */
+            title?: string | null;
+            /** @description Texto del descargo (Markdown) tal como se guardó al publicarlo; es lo que el pasajero firma, no lo que diga hoy el CMS. */
+            body?: string | null;
+            /** @description SHA-256 (hex) de título y texto. */
+            contentHash?: string | null;
             tourSlug: string;
             /** Format: date-time */
             startsAt: string;
@@ -2066,15 +2274,33 @@ export interface components {
             kind: components["schemas"]["LegalDocumentKind"];
             locale: string;
             version: number;
+            /** @description Slug de la página en el CMS; con `WAIVER`, el del tour. */
             cmsSlug: string;
+            /**
+             * Format: uuid
+             * @description Solo con `WAIVER`.
+             */
+            tourRefId?: string | null;
             /** Format: date-time */
             publishedAt: string;
         };
+        PublicCompany: {
+            legalName: string;
+            tradeName?: string;
+            ruc: string;
+            fiscalAddress: string;
+        };
         CreateComplaint: {
-            /** @enum {string} */
-            kind: "RECLAMO" | "QUEJA";
-            /** @enum {string} */
-            goodType: "PRODUCT" | "SERVICE";
+            /**
+             * @description `BOTH` si marca reclamo y queja.
+             * @enum {string}
+             */
+            kind: "RECLAMO" | "QUEJA" | "BOTH";
+            /**
+             * @description `BOTH` si marca producto y servicio.
+             * @enum {string}
+             */
+            goodType: "PRODUCT" | "SERVICE" | "BOTH";
             consumerName: string;
             idDocType: components["schemas"]["IdDocType"];
             idDocNumber: string;
@@ -2083,6 +2309,8 @@ export interface components {
             email: string;
             phone?: string;
             isMinor?: boolean;
+            /** @description Padre, madre o apoderado; obligatorio si `isMinor`. */
+            guardianName?: string;
             bookingRef?: string;
             amountCents?: number;
             currency?: components["schemas"]["Currency"];
@@ -2161,6 +2389,19 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        ContactMessage: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            email: string;
+            whatsapp?: string | null;
+            country?: string | null;
+            message: string;
+            locale?: string | null;
+            handled: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
         AuditLog: {
             /** Format: uuid */
             id: string;
@@ -2208,6 +2449,11 @@ export interface components {
              */
             holdMinutes?: number;
             /**
+             * @description Bloqueos de cupo vigentes (sin reserva) que admite una salida a la vez; pasado el tope `createHold` responde 429.
+             * @default 10
+             */
+            maxActiveHoldsPerDeparture?: number;
+            /**
              * @description Tope de reembolso de un operador sin `payments:refund-any`.
              * @default 20000
              */
@@ -2217,12 +2463,27 @@ export interface components {
              * @default 15
              */
             complaintDueDays?: number;
+            /**
+             * @description Emitir el comprobante automáticamente al confirmarse un pago (y la nota de crédito al reembolsar).
+             * @default true
+             */
+            autoIssueDocuments?: boolean;
+            /**
+             * @description Tipo de cambio SUNAT USD→PEN vigente para comprobantes en USD (si falta se usa EXCHANGE_RATE_FALLBACK).
+             * @example 3.7500
+             */
+            exchangeRateUsdPen?: string;
+            /** @description Tipos de cambio por fecha, p. ej. {"2026-10-04":"3.7500"}; tiene prioridad sobre `exchangeRateUsdPen`. */
+            exchangeRates?: {
+                [key: string]: string;
+            };
         } & {
             [key: string]: unknown;
         };
         SettingsInput: {
             depositPercent?: number;
             holdMinutes?: number;
+            maxActiveHoldsPerDeparture?: number;
             operatorRefundLimitCents?: number;
             complaintDueDays?: number;
         } & {
@@ -2571,6 +2832,7 @@ export interface operations {
             };
             409: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            502: components["responses"]["Error"];
         };
     };
     createBookingCulqiCharge: {
@@ -2601,6 +2863,7 @@ export interface operations {
             };
             409: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            502: components["responses"]["Error"];
         };
     };
     getPaymentLinkInfo: {
@@ -2649,7 +2912,10 @@ export interface operations {
                     "application/json": components["schemas"]["StripeIntent"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             410: components["responses"]["Error"];
+            502: components["responses"]["Error"];
         };
     };
     createLinkCulqiCharge: {
@@ -2670,6 +2936,14 @@ export interface operations {
                     token: string;
                     /** Format: email */
                     email: string;
+                    /**
+                     * Format: uuid
+                     * @description Pago `REQUIRES_ACTION` que se continúa tras 3DS.
+                     */
+                    paymentId?: string;
+                    authentication3DS?: {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -2683,7 +2957,36 @@ export interface operations {
                     "application/json": components["schemas"]["CulqiChargeResult"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             410: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+        };
+    };
+    downloadPublicDocumentPdf: {
+        parameters: {
+            query: {
+                exp: number;
+                sig: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     getWaiverForm: {
@@ -2835,6 +3138,27 @@ export interface operations {
             };
         };
     };
+    getPublicCompany: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Datos del proveedor */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicCompany"];
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
     getCurrentLegalDocuments: {
         parameters: {
             query: {
@@ -2882,6 +3206,15 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+            /** @description Evento fuera de orden (un reembolso o una disputa llegó antes de que el cobro se acreditara) o de un pago que aún no existe aquí. No se guarda como procesado; la pasarela lo reenvía y entonces se aplica. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     receiveCulqiWebhook: {
@@ -2907,6 +3240,15 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+            /** @description Evento fuera de orden; ver `receiveStripeWebhook`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     loginWithGoogle: {
@@ -3253,7 +3595,10 @@ export interface operations {
                     reason: string;
                     /** @enum {string} */
                     resolution: "REFUND" | "RESCHEDULE" | "CLIENT_CHOICE";
-                    /** Format: uuid */
+                    /**
+                     * Format: uuid
+                     * @description Obligatorio con `RESCHEDULE`; no se admite con las demás resoluciones.
+                     */
                     targetDepartureId?: string;
                 };
             };
@@ -3270,6 +3615,9 @@ export interface operations {
                     };
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
         };
     };
     listPriceRules: {
@@ -3652,6 +4000,7 @@ export interface operations {
                 };
             };
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     cancelBooking: {
@@ -3867,6 +4216,7 @@ export interface operations {
                     "application/json": components["schemas"]["Document"];
                 };
             };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -3953,6 +4303,31 @@ export interface operations {
                 };
             };
             403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    completeRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reembolso confirmado */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Refund"];
+                };
+            };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -4029,6 +4404,7 @@ export interface operations {
                     "application/json": components["schemas"]["Dispute"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     updateDispute: {
@@ -4058,6 +4434,8 @@ export interface operations {
                     "application/json": components["schemas"]["Dispute"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     downloadDisputeEvidence: {
@@ -4080,6 +4458,7 @@ export interface operations {
                     "application/zip": string;
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     listDocuments: {
@@ -4155,6 +4534,8 @@ export interface operations {
                     "application/json": components["schemas"]["Document"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     voidDocument: {
@@ -4183,6 +4564,8 @@ export interface operations {
                     "application/json": components["schemas"]["Document"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     createCreditNote: {
@@ -4212,6 +4595,8 @@ export interface operations {
                     "application/json": components["schemas"]["Document"];
                 };
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     downloadDocumentFile: {
@@ -4335,6 +4720,8 @@ export interface operations {
                 };
                 content?: never;
             };
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     listComplaints: {
@@ -4442,6 +4829,35 @@ export interface operations {
             };
         };
     };
+    listLegalDocuments: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                pageSize?: components["parameters"]["PageSize"];
+                kind?: components["schemas"]["LegalDocumentKind"];
+                locale?: string;
+                tourRefId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versiones */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LegalDocument"][];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+        };
+    };
     publishLegalDocument: {
         parameters: {
             query?: never;
@@ -4454,7 +4870,13 @@ export interface operations {
                 "application/json": {
                     kind: components["schemas"]["LegalDocumentKind"];
                     locale: string;
-                    cmsSlug: string;
+                    /** @description Obligatorio salvo con `WAIVER`. */
+                    cmsSlug?: string;
+                    /**
+                     * Format: uuid
+                     * @description Obligatorio con `WAIVER` y no admitido con los demás.
+                     */
+                    tourRefId?: string;
                 };
             };
         };
@@ -4468,6 +4890,8 @@ export interface operations {
                     "application/json": components["schemas"]["LegalDocument"];
                 };
             };
+            422: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     listUsers: {
@@ -4595,6 +5019,7 @@ export interface operations {
                     "application/json": components["schemas"]["Company"];
                 };
             };
+            404: components["responses"]["Error"];
         };
     };
     saveCompany: {
@@ -4619,6 +5044,7 @@ export interface operations {
                     "application/json": components["schemas"]["Company"];
                 };
             };
+            422: components["responses"]["Error"];
         };
     };
     listSeries: {
@@ -4670,6 +5096,8 @@ export interface operations {
                     "application/json": components["schemas"]["Series"];
                 };
             };
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
         };
     };
     getSettings: {
@@ -4766,6 +5194,85 @@ export interface operations {
                     "application/json": components["schemas"]["BlockedIdentity"];
                 };
             };
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    deleteBlockedIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bloqueo quitado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    listContactMessages: {
+        parameters: {
+            query?: {
+                page?: components["parameters"]["Page"];
+                pageSize?: components["parameters"]["PageSize"];
+                handled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Mensajes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContactMessage"][];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+        };
+    };
+    updateContactMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    handled: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Mensaje */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactMessage"];
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     listAuditLogs: {
@@ -4817,6 +5324,7 @@ export interface operations {
                     "application/json": components["schemas"]["DashboardSummary"];
                 };
             };
+            422: components["responses"]["Error"];
         };
     };
     getSalesReport: {
@@ -4851,6 +5359,7 @@ export interface operations {
                     "text/csv": string;
                 };
             };
+            422: components["responses"]["Error"];
         };
     };
 }

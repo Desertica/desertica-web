@@ -1,3 +1,5 @@
+import { TestBed } from '@angular/core/testing';
+import { SHOW_PLACEHOLDERS } from './app/core/cms/site-defaults';
 import { settleMotion } from './app/testing/settle-motion';
 
 /** jsdom has no ResizeObserver; form fields call it while rendering and would throw. */
@@ -13,6 +15,9 @@ globalThis.ResizeObserver ??= ResizeObserverStub;
  * (locale cookie, stored theme, intro flag) must not leak into the next.
  */
 beforeEach(() => {
+  // Specs assert the production behaviour: placeholder contact data stays hidden.
+  TestBed.configureTestingModule({ providers: [{ provide: SHOW_PLACEHOLDERS, useValue: false }] });
+
   try {
     localStorage.clear();
     sessionStorage.clear();

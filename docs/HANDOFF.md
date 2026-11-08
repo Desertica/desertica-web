@@ -9,7 +9,7 @@ State as of the `feat/strapi-global-content` work on top of `develop`.
 
 ## What is driven by Strapi
 
-Destinations and tours (base page per tour), UI copy by page/section, media slots, pages, blog, products, site settings, theme (palettes, radius, fonts, header heights, intro), booking rules and assurances, form limits, navigation, SEO, and the inbox for reservations and contact messages. The app keeps the previous values as defaults when a field is empty or the CMS is unreachable.
+Destinations and tours (base page per tour), UI copy by page/section, media slots, pages, blog, products, site settings, theme (palettes, radius, fonts, header heights, intro), booking rules and assurances, form limits, navigation and SEO. The app keeps the previous values as defaults when a field is empty or the CMS is unreachable.
 
 Intentionally not in the CMS: the animated wordmark and brand SVGs, the Peru map SVG, country/phone data, and the list of locales (`en`/`es`).
 
@@ -47,7 +47,7 @@ The first visit to `/admin` asks for an admin user. Contact data in `Site — Se
 
 - Deploy both apps (see `docs/DEPLOY.md` here and in the CMS repo). No webhook or rebuild is needed after publishing: pages render per request.
 - Fill real content: media, contact data, legal pages, tours beyond `dune-buggy`.
-- `/experiences` and `/reservations` are permanent redirects (301) to `/tours`. A reservation from a tour page opens WhatsApp (when the number is real) and also stores the request in Strapi.
+- `/experiences` and `/reservations` are permanent redirects (301) to `/tours`. A reservation from a tour page opens WhatsApp (when the number is real); nothing is stored in Strapi.
 - Move the CSP from report-only to enforce (steps in `docs/DEPLOY.md`).
 - Pending from the audit, not done: `TRUST_PROXY` mandatory in production (today only a warning at start), the booking `amount` is computed in the browser, and the anti-spam is weak without Turnstile.
 - The initial bundle is about 949 kB, under the 1 MB warning budget. Some tests fail only on Node 26 (use Node 22).

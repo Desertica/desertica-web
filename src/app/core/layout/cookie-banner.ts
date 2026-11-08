@@ -9,11 +9,12 @@ import {
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmSwitchImports } from '@spartan-ng/helm/switch';
+import { IntroService } from '../animation/intro';
 import { ConsentService } from '../analytics/consent';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 
-/** Cookie banner with the three categories. Rendered only in the browser, after consent loads. */
+/** Cookie banner with the three categories. Rendered only in the browser, after consent loads and the intro animation ends. */
 @Component({
   selector: 'app-cookie-banner',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,7 +23,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
     class: 'fixed inset-x-0 bottom-0 z-[60] flex justify-center p-3 sm:justify-start sm:p-6',
   },
   template: `
-    @if (consent.bannerOpen()) {
+    @if (consent.bannerOpen() && intro.status() === 'done') {
       <section
         class="bg-card text-card-foreground border-border w-full max-w-xl rounded-3xl border p-5 shadow-xl"
         role="region"
@@ -108,6 +109,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 })
 export class CookieBanner {
   protected readonly consent = inject(ConsentService);
+  protected readonly intro = inject(IntroService);
   protected readonly i18n = inject(I18nService);
   protected readonly customizing = signal(false);
   protected readonly analytics = signal(false);
