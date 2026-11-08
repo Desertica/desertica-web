@@ -37,7 +37,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
   template: `
     <header class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md">
       <div
-        class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-10"
+        class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-6 xl:px-10"
       >
         <a
           routerLink="/"
@@ -47,7 +47,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
           Desértica
         </a>
 
-        <div class="flex min-w-0 items-center gap-1.5 sm:gap-4">
+        <div class="flex min-w-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
           <nav
             hlmNavigationMenu
             class="hidden lg:flex"
