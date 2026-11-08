@@ -5,7 +5,7 @@ import type { BookingSelection } from './booking-flow';
 const item = (departureId: string, totalCents: number, adults = 2, currency: 'USD' | 'PEN' = 'USD'): BookingSelection => ({
   tourSlug: 'dune-buggy',
   departureId,
-  startsAt: '2026-12-20T14:00:00.000Z',
+  startsAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
   meetingPoint: null,
   currency,
   format: 'SHARED',
@@ -50,5 +50,18 @@ describe('CartService', () => {
     expect(JSON.parse(sessionStorage.getItem('desertica-cart') ?? '[]')).toHaveLength(1);
     cart.clear();
     expect(cart.items()).toEqual([]);
+  });
+
+  it('drops stored items that are malformed or whose departure has left, and reports it is ready', () => {
+    const good = item('a', 100);
+    const past = { ...item('b', 100), startsAt: '2020-01-01T00:00:00.000Z' };
+    sessionStorage.setItem('desertica-cart', JSON.stringify([good, past, { departureId: 'c' }, null, 'x']));
+
+    const cart = TestBed.inject(CartService);
+    expect(cart.ready()).toBe(false);
+    TestBed.tick();
+
+    expect(cart.ready()).toBe(true);
+    expect(cart.items().map((i) => i.departureId)).toEqual(['a']);
   });
 });

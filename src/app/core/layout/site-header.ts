@@ -49,7 +49,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
           Desértica
         </a>
 
-        <div class="flex min-w-0 items-center gap-1.5 sm:gap-1 xl:gap-4">
+        <div class="flex min-w-0 items-center gap-1.5 sm:gap-2 lg:gap-1 xl:gap-4">
           <nav
             hlmNavigationMenu
             class="hidden lg:flex"
@@ -307,7 +307,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
               size="icon"
               routerLink="/cart"
               class="relative shrink-0"
-              [attr.aria-label]="'cart.open' | translate: i18n.locale()"
+              [attr.aria-label]="cartLabel()"
             >
               <ng-icon name="lucideShoppingCart" aria-hidden="true" />
               @if (cart.count() > 0) {
@@ -346,6 +346,11 @@ export class SiteHeader {
   protected readonly menuScroll: ScrollStrategy = this.scrollStrategies.noop();
   protected readonly theme = inject(ThemeService);
   protected readonly cart = inject(CartService);
+  protected readonly cartLabel = computed(() =>
+    this.cart.count() > 0
+      ? this.i18n.t('cart.openWithCount').replace('{count}', String(this.cart.count()))
+      : this.i18n.t('cart.open'),
+  );
   /** The cart only exists while the booking engine is on. */
   protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
   protected readonly i18n = inject(I18nService);
