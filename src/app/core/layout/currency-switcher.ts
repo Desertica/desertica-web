@@ -35,7 +35,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
       </div>
     </ng-template>
     <ng-template #symbol let-code>
-      <span class="inline-flex min-w-4 items-center justify-center font-semibold" aria-hidden="true">{{ code === 'USD' ? '$' : 'S/' }}</span>
+      <span class="inline-flex items-center justify-center font-semibold" aria-hidden="true">{{ code === 'USD' ? '$' : 'S/' }}</span>
     </ng-template>
   `,
 })
