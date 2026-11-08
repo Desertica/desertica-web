@@ -94,4 +94,21 @@ describe('CmsApi cache', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(await priceOf()).not.toBe(before);
   });
+
+  it('asks for drafts on content only and never touches the shared cache', async () => {
+    const { api, http } = setup(ok);
+    expect(await api.loadDraft(options)).not.toBeNull();
+    const urls = () => (http.get.mock.calls as unknown as Array<[string, { params: { toString(): string } }]>).map(([u, i]) => [u, i.params.toString()]);
+    const drafted = urls().filter(([, q]) => q.includes('status=draft')).map(([u]) => u.split('/').pop());
+    expect(new Set(drafted)).toEqual(new Set(['destinations', 'tours', 'pages', 'blog-posts', 'products']));
+
+    // The draft run left nothing behind: a published load still goes to Strapi and carries no draft status.
+    http.get.mockClear();
+    await api.load(options);
+    expect(http.get).toHaveBeenCalled();
+    expect(urls().some(([, q]) => q.includes('status=draft'))).toBe(false);
+    http.get.mockClear();
+    await api.load(options);
+    expect(http.get).not.toHaveBeenCalled();
+  });
 });

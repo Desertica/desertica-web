@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCar, lucideLanguages, lucideUsers, lucideWind } from '@ng-icons/lucide';
+import { FEATURE_ICONS } from '../../../core/icons/feature-icons';
 import { TourFeature } from '../../../core/catalog/tour-pages';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
@@ -9,7 +9,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
   selector: 'app-tour-features',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgIcon, TranslatePipe],
-  providers: [provideIcons({ lucideCar, lucideLanguages, lucideUsers, lucideWind })],
+  providers: [provideIcons(FEATURE_ICONS)],
   host: {
     class: 'block w-full',
   },

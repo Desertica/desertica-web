@@ -30,18 +30,16 @@ import { usePageMeta } from '../../core/seo/page-meta';
           </p>
         }
         <h1 class="font-heading mt-2 text-4xl">{{ data.title }}</h1>
-        @if (data.cover) {
-          <div class="relative mt-8 aspect-[16/10] w-full overflow-hidden">
-            <img
-              [ngSrc]="data.cover"
-              fill
-              priority
-              sizes="(min-width: 768px) 48rem, 100vw"
-              [alt]="data.title"
-              class="rounded-none object-cover"
-            />
-          </div>
-        }
+        <div class="relative mt-8 aspect-[16/10] w-full overflow-hidden">
+          <img
+            [ngSrc]="data.cover || placeholder()"
+            fill
+            priority
+            sizes="(min-width: 768px) 48rem, 100vw"
+            [alt]="data.title"
+            class="rounded-none object-cover"
+          />
+        </div>
         <app-content-body class="mt-8" [markdown]="data.content" />
       </article>
     } @else {
@@ -52,6 +50,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
 export class BlogPostPage {
   private readonly catalog = inject(CatalogService);
   protected readonly i18n = inject(I18nService);
+  protected readonly placeholder = this.catalog.placeholder;
 
   readonly slug = input.required<string>();
 

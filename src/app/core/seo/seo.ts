@@ -13,6 +13,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { CatalogService } from '../catalog/catalog';
+import { socialUrl } from '../cms/site-defaults';
 import { PUBLIC_CONFIG } from '../config/public-config';
 import { LOCALES } from '../i18n/catalogs';
 import { I18nService } from '../i18n/i18n';
@@ -99,7 +100,7 @@ export class SeoService {
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({
       name: 'robots',
-      content: seo.noindex ? 'noindex, nofollow' : 'index, follow',
+      content: seo.noindex || this.catalog.preview() ? 'noindex, nofollow' : 'index, follow',
     });
 
     this.meta.updateTag({ property: 'og:type', content: seo.type ?? 'website' });
@@ -149,14 +150,9 @@ export class SeoService {
         legalName: isPlaceholder(site.legalName) ? undefined : site.legalName,
         email: contact.email ?? undefined,
         phone: contact.phone ?? undefined,
-        sameAs: [
-          site.instagram,
-          site.facebook,
-          site.tiktok,
-          site.youtube,
-          site.linkedin,
-          site.tripadvisor,
-        ].filter((link) => !!link),
+        sameAs: (['instagram', 'facebook', 'tiktok', 'youtube', 'linkedin', 'tripadvisor'] as const)
+          .map((id) => socialUrl(site, id))
+          .filter((link) => !!link),
       }),
     ];
 

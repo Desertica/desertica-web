@@ -7,8 +7,12 @@ export type SiteSettings = {
   legalYear: number;
   /** Image used for `og:image`; empty when none is set. */
   shareImage: string;
+  /** Fill-in image for missing or broken images; empty uses the web's own wireframe. */
+  placeholderImage: string;
   email: string;
   phone: string;
+  /** Optional second number to call; empty when unused. */
+  phone2: string;
   /** Digits only, e.g. `519XXXXXXXXX`. */
   whatsapp: string;
   instagram: string;
@@ -18,6 +22,14 @@ export type SiteSettings = {
   linkedin: string;
   google: string;
   tripadvisor: string;
+  /** Per-network switches: a network shows only when its switch is on and its URL is not empty. */
+  showInstagram: boolean;
+  showFacebook: boolean;
+  showTiktok: boolean;
+  showYoutube: boolean;
+  showLinkedin: boolean;
+  showGoogle: boolean;
+  showTripadvisor: boolean;
   legalName: string;
   ruc: string;
 };

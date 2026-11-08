@@ -7,9 +7,11 @@ export const DEFAULT_SITE: SiteSettings = {
   brandName: 'Desértica',
   legalYear: 2026,
   shareImage: '',
+  placeholderImage: '',
   email: 'xxxxxx@desertica.pe',
   phone: '+51 9XX XXX XXX',
   whatsapp: '519XXXXXXXX',
+  phone2: '',
   instagram: 'https://www.instagram.com/desertica',
   facebook: 'https://www.facebook.com/desertica',
   tiktok: 'https://www.tiktok.com/@desertica',
@@ -17,6 +19,13 @@ export const DEFAULT_SITE: SiteSettings = {
   linkedin: 'https://www.linkedin.com/company/desertica',
   google: 'https://maps.google.com/?q=Desertica',
   tripadvisor: 'https://www.tripadvisor.com/desertica',
+  showInstagram: false,
+  showFacebook: false,
+  showTiktok: false,
+  showYoutube: false,
+  showLinkedin: false,
+  showGoogle: false,
+  showTripadvisor: false,
   legalName: 'XXXXXXXXXXXX',
   ruc: 'XXXXXXXXXXX',
 };
@@ -33,7 +42,11 @@ export type SiteContact = {
   phone: string | null;
   mailto: string | null;
   tel: string | null;
+  phone2: string | null;
+  tel2: string | null;
   whatsapp: string | null;
+  /** The WhatsApp link(s) shown as icons in the footer (one number; a second number to call is `phone2`). */
+  whatsappLines: { href: string }[];
 };
 
 /** `showPlaceholders` keeps the XXXX data visible so dev builds show the layout. */
@@ -41,13 +54,17 @@ export function contactFromSite(site: SiteSettings, showPlaceholders = false): S
   const real = (value: string) => (!showPlaceholders && isPlaceholder(value) ? null : value);
   const email = real(site.email);
   const phone = real(site.phone);
+  const phone2 = real(site.phone2);
   const whatsapp = real(site.whatsapp);
   return {
     email,
     phone,
     mailto: email && `mailto:${email}`,
     tel: phone && `tel:${phone.replace(/[^\d+]/g, '')}`,
+    phone2,
+    tel2: phone2 && `tel:${phone2.replace(/[^\d+]/g, '')}`,
     whatsapp: whatsapp && `https://wa.me/${whatsapp}`,
+    whatsappLines: whatsapp ? [{ href: `https://wa.me/${whatsapp}` }] : [],
   };
 }
 
@@ -63,15 +80,25 @@ export function legalFromSite(
   };
 }
 
+export type SocialId = 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'linkedin' | 'google' | 'tripadvisor';
+
+/** The network URL, or '' unless its CMS switch is on and the URL is not empty. Every social use (footer, JSON-LD) goes through here. */
+export function socialUrl(site: SiteSettings, id: SocialId): string {
+  const flag = `show${id[0]!.toUpperCase()}${id.slice(1)}` as keyof SiteSettings;
+  return site[flag] ? site[id].trim() : '';
+}
+
 /** Fills empty CMS fields with the defaults so the footer never renders blanks. */
 export function withSiteDefaults(site: Partial<SiteSettings> | null | undefined): SiteSettings {
   const merged: SiteSettings = { ...DEFAULT_SITE };
   for (const key of Object.keys(DEFAULT_SITE) as (keyof SiteSettings)[]) {
     const value = site?.[key];
     if (typeof value === 'string' && value.trim()) {
-      (merged as Record<string, string | number>)[key] = value;
+      (merged as Record<string, string | number | boolean>)[key] = value;
     } else if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-      (merged as Record<string, string | number>)[key] = value;
+      (merged as Record<string, string | number | boolean>)[key] = value;
+    } else if (typeof value === 'boolean') {
+      (merged as Record<string, string | number | boolean>)[key] = value;
     }
   }
 

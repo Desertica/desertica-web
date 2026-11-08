@@ -7,17 +7,15 @@
     <div class="mt-10 grid gap-x-3 gap-y-10 md:grid-cols-2 lg:grid-cols-3">
       @for (product of products(); track product.slug) {
         <a class="group block" [routerLink]="['/products', product.slug]">
-          @if (product.image) {
-            <div class="relative aspect-square w-full overflow-hidden">
-              <img
-                [ngSrc]="product.image"
-                fill
-                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                alt=""
-                class="rounded-none object-cover"
-              />
-            </div>
-          }
+          <div class="relative aspect-square w-full overflow-hidden">
+            <img
+              [ngSrc]="product.image || placeholder()"
+              fill
+              sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+              alt=""
+              class="rounded-none object-cover"
+            />
+          </div>
           <h2 class="font-heading mt-4 text-xl group-hover:underline">{{ product.title }}</h2>
           @if (product.description) {
             <p class="text-muted-foreground mt-1">{{ product.description }}</p>

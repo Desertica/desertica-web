@@ -9,6 +9,9 @@ export function stubWhatsapp(testBed: typeof TestBedType): void {
     phone: null,
     mailto: null,
     tel: null,
+    phone2: null,
+    tel2: null,
     whatsapp: 'https://wa.me/51987654321',
+    whatsappLines: [],
   });
 }

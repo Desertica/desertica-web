@@ -1,5 +1,6 @@
 {
   "skip": "Skip to content",
+  "preview": { "banner": "Preview (draft)" },
   "nav": {
     "primary": "Primary",
     "footer": "Footer",
@@ -45,6 +46,7 @@
     "closeMenu": "Close menu",
     "chooseCurrency": "Currency",
     "chooseLanguage": "Language",
+    "chooseCurrency": "Currency",
     "whatsapp": "WhatsApp",
     "intro": "Loading Desértica",
     "newTab": "(opens in a new tab)"
@@ -63,6 +65,10 @@
   "lang": {
     "en": "English",
     "es": "Español"
+  },
+  "currencies": {
+    "USD": "US dollars (USD)",
+    "PEN": "Peruvian soles (PEN)"
   },
   "pages": {
     "landingLead": "Landing (SSG). Experiences and reservations come next.",
@@ -140,6 +146,7 @@
     "complaintsAlt": "Complaints book",
     "ruc": "RUC",
     "social": {
+      "whatsapp": "WhatsApp",
       "instagram": "Instagram",
       "facebook": "Facebook",
       "tiktok": "TikTok",
@@ -234,6 +241,10 @@
     "galleryLabel": "Tour photos",
     "timelineLabel": "The day",
     "photoAlt": "{tour}, photo {n}",
+    "galleryOpen": "Enlarge photo {n}",
+    "galleryClose": "Close",
+    "galleryPrev": "Previous photo",
+    "galleryNext": "Next photo",
     "downloadItinerary": "Download itinerary",
     "assure": {
       "payLater": "Book now, pay later:",
@@ -335,7 +346,8 @@
   "gallery": {
     "from": "FROM",
     "hours": "HOURS",
-    "currency": "$USD"
+    "currency": "$USD",
+    "currencyPen": "S/PEN"
   },
   "meta": {
     "title": "Desértica | Tours and experiences in Ica",

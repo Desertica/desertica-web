@@ -1,6 +1,8 @@
 import { tourDestinations } from '../catalog/tours';
+import { DEFAULT_SITE } from '../cms/site-defaults';
 import {
   buildFooterDestinations,
+  buildFooterSocials,
   footerDestinations,
   footerSocials,
   footerStamps,
@@ -38,8 +40,15 @@ describe('footer nav', () => {
     expect(simpleWhatsapp).toContain('viewBox="0 0 24 24"');
   });
 
+  it('shows a social only when its switch is on and its URL is not empty', () => {
+    expect(footerSocials).toEqual([]);
+    const site = { ...DEFAULT_SITE, showInstagram: true, showFacebook: true, facebook: '', showTiktok: false };
+    expect(buildFooterSocials(site).map((item) => item.href)).toEqual([DEFAULT_SITE.instagram]);
+  });
+
   it('uses official brand marks for socials', () => {
-    expect(footerSocials.map((item) => item.svg)).toEqual(
+    const allOn = { ...DEFAULT_SITE, showInstagram: true, showFacebook: true, showTiktok: true, showYoutube: true, showLinkedin: true, showGoogle: true, showTripadvisor: true };
+    expect(buildFooterSocials(allOn).map((item) => item.svg)).toEqual(
       expect.arrayContaining([
         expect.stringContaining('<title>Instagram</title>'),
         expect.stringContaining('<title>Facebook</title>'),

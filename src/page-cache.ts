@@ -7,12 +7,12 @@ export type CachedPage = { type: string; body: Buffer };
 const PRIVATE_PAGE = /^\/(pay|waiver|booking|checkout|payment)(\/|$)/;
 
 /**
- * A page can be shared when the host and path decide its content: public GET, no token, no booking flow. The query is
+ * A page can be shared when the host and path decide its content: public GET, no token or preview, no booking flow. The query is
  * left out of the key (tracking parameters would otherwise empty the cache), and the host is in it because the
  * canonical URL and the WhatsApp link are built from it when `SITE_URL` is missing.
  */
 export function pageCacheKey(req: Pick<Request, 'method' | 'path' | 'hostname' | 'query'>): string | null {
-  if (req.method !== 'GET' || 'token' in req.query || PRIVATE_PAGE.test(stripLocale(req.path))) {
+  if (req.method !== 'GET' || 'token' in req.query || 'preview' in req.query || PRIVATE_PAGE.test(stripLocale(req.path))) {
     return null;
   }
 

@@ -14,7 +14,7 @@ export type CatalogTour = {
   descriptionKey: string;
   durationHours: number;
   priceFrom: number;
-  /** Price in soles from the CMS; the card falls back to USD while it is empty. */
+  /** Same price in soles; set only when the CMS has it, and shown next to the dollar one. */
   pricePen?: number;
   image: string;
   /** Set by the CMS when the card should not crop around the centre. */
@@ -246,7 +246,11 @@ export const catalogTours: readonly CatalogTour[] = tourDestinations.flatMap(
 
 export const featuredTours: readonly CatalogTour[] = catalogTours.filter((tour) => tour.featured);
 
-export const FOOTER_DESTINATION_IDS: readonly DestinationId[] = ['nazca', 'huacachina', 'paracas'];
+export const FOOTER_DESTINATION_IDS: readonly DestinationId[] = [
+  'nazca',
+  'huacachina',
+  'paracas',
+];
 
 export function destinationById(id: DestinationId): CatalogDestination {
   const destination = tourDestinations.find((item) => item.id === id);

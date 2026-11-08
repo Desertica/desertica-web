@@ -19,6 +19,7 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   order,
   durationHours: 4,
   priceFrom: 79,
+  pricePen: 300,
   featured,
   format: 'both',
   languages: ['es', 'en'],
@@ -41,7 +42,10 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   meetingPointUrl: 'https://maps.example/meet',
   waiverBody: locale === 'en' ? 'I accept the risks' : null,
   faqs: [
-    { question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?', answer: locale === 'en' ? 'Yes' : 'Sí' },
+    {
+      question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?',
+      answer: locale === 'en' ? 'Yes' : 'Sí',
+    },
     { question: locale === 'en' ? 'No answer yet' : '', answer: '' },
   ],
   paragraphs: [{ text: locale === 'en' ? 'First' : 'Primero' }],
@@ -191,7 +195,8 @@ describe('mapCms', () => {
       descriptionKey: 'cms.tours.a-tour.description',
       durationHours: 4,
       priceFrom: 79,
-      image: 'https://img/tour.jpg',
+      pricePen: 300,
+      image: 'https://cms.test/uploads/g.jpg',
       featured: true,
     });
     expect(snapshot.messages.es?.['cms.tours.a-tour.title']).toBe('Titulo a-tour');
@@ -202,7 +207,10 @@ describe('mapCms', () => {
     const focusOf = (value: unknown) => {
       const tours = raw.tours as unknown as Record<string, RawEntry[]>;
       const mapped = mapCms(
-        { ...raw, tours: { ...tours, en: tours['en'].map((tour) => ({ ...tour, imageFocus: value })) } } as unknown as CmsRaw,
+        {
+          ...raw,
+          tours: { ...tours, en: tours['en'].map((tour) => ({ ...tour, imageFocus: value })) },
+        } as unknown as CmsRaw,
         options,
       );
       return mapped.destinations[0]?.tours.find((tour) => tour.id === 'a-tour')?.imageFocus;
@@ -211,6 +219,75 @@ describe('mapCms', () => {
     expect(focusOf('top')).toBe('top');
     expect(focusOf('center')).toBeUndefined();
     expect(focusOf('diagonal')).toBeUndefined();
+  });
+
+  describe('values shared by both languages', () => {
+    const priceOf = (en: RawEntry, es: RawEntry) => {
+      const tours = raw.tours as unknown as Record<string, RawEntry[]>;
+      const mapped = mapCms(
+        { ...raw, tours: { en: tours['en'].map((t) => ({ ...t, ...en })), es: tours['es'].map((t) => ({ ...t, ...es })) } } as unknown as CmsRaw,
+        options,
+      );
+      return mapped.destinations[0]?.tours.find((tour) => tour.id === 'a-tour');
+    };
+
+    it('takes them from the most recently published language, not always English', () => {
+      const tour = priceOf(
+        { priceFrom: 79, pricePen: undefined, publishedAt: '2026-11-01T10:00:00.000Z' },
+        { priceFrom: 99, pricePen: 350, publishedAt: '2026-11-05T10:00:00.000Z' },
+      );
+      expect(tour?.priceFrom).toBe(99);
+      expect(tour?.pricePen).toBe(350);
+    });
+
+    it('keeps English first without dates or when English is the newest', () => {
+      expect(priceOf({ priceFrom: 79 }, { priceFrom: 99 })?.priceFrom).toBe(79);
+      expect(
+        priceOf(
+          { priceFrom: 79, publishedAt: '2026-11-05T10:00:00.000Z' },
+          { priceFrom: 99, publishedAt: '2026-11-01T10:00:00.000Z' },
+        )?.priceFrom,
+      ).toBe(79);
+    });
+  });
+
+  describe('tour description (body)', () => {
+    const pageWith = (en: unknown, es: unknown) => {
+      const tours = raw.tours as unknown as Record<string, RawEntry[]>;
+      const withBody = (entries: RawEntry[], body: unknown) =>
+        entries.map((entry) => ({ ...entry, body }));
+      const mapped = mapCms(
+        { ...raw, tours: { en: withBody(tours['en'], en), es: withBody(tours['es'], es) } } as unknown as CmsRaw,
+        options,
+      );
+      return { page: mapped.tourPages['a-tour'], messages: mapped.messages };
+    };
+
+    it('shows the first paragraph as the lead, the rest below, and repeats all in the accordion', () => {
+      const { page, messages } = pageWith('One\n\nTwo\n\n\nThree', 'Uno\n\nDos\n\nTres');
+      expect(page?.leadKey).toBe('cms.tours.a-tour.body.0');
+      expect(page?.descriptionKeys).toEqual(['cms.tours.a-tour.body.1', 'cms.tours.a-tour.body.2']);
+      expect(page?.expandedDescriptionKeys).toEqual([
+        'cms.tours.a-tour.body.0',
+        'cms.tours.a-tour.body.1',
+        'cms.tours.a-tour.body.2',
+      ]);
+      expect(messages.en?.['cms.tours.a-tour.body.2']).toBe('Three');
+      expect(messages.es?.['cms.tours.a-tour.body.1']).toBe('Dos');
+    });
+
+    it('works with a single language', () => {
+      const { page, messages } = pageWith(null, 'Solo español');
+      expect(page?.leadKey).toBe('cms.tours.a-tour.body.0');
+      expect(messages.es?.['cms.tours.a-tour.body.0']).toBe('Solo español');
+      expect(messages.en?.['cms.tours.a-tour.body.0']).toBeUndefined();
+    });
+
+    it('keeps the older fields when the tour has no body', () => {
+      const { page } = pageWith('   ', null);
+      expect(page?.leadKey).toBe('cms.tours.a-tour.lead');
+      expect(page?.descriptionKeys).toEqual(['cms.tours.a-tour.paragraphs.0']);
+    });
   });
 
   it('maps tour pages to the key-based model', () => {
@@ -245,7 +322,7 @@ describe('mapCms', () => {
         expandedBodyKey: 'cms.tours.a-tour.itinerary.0.expanded',
       },
       {
-        image: 'https://img/tour.jpg',
+        image: 'https://cms.test/uploads/g.jpg',
         titleKey: 'cms.tours.a-tour.itinerary.1.title',
         bodyKey: 'cms.tours.a-tour.itinerary.1.body',
         expandedBodyKey: undefined,
@@ -298,9 +375,75 @@ describe('mediaUrl', () => {
   });
 });
 
+describe('mapCms placeholder', () => {
+  const bare = (extra: RawEntry = {}) => ({
+    tours: both((l) => [
+      {
+        ...tour(l, 'x', 0),
+        image: null,
+        imageUrl: null,
+        gallery: [],
+        galleryUrls: [],
+        itinerary: [],
+        ...extra,
+      },
+    ]),
+    destinations: both((l) => [{ ...destination(l), image: null, imageUrl: null }]),
+  });
+  const none = { mediaBase: 'https://cms.test', fallbackImage: () => '' };
+
+  it('uses the own wireframe when nothing is set', () => {
+    const snapshot = mapCms(bare(), none);
+    expect(snapshot.destinations[0].image).toBe('/placeholder.svg');
+    expect(snapshot.destinations[0].tours[0].image).toBe('/placeholder.svg');
+    expect(snapshot.tourPages['x'].gallery).toEqual([
+      '/placeholder.svg',
+      '/placeholder.svg',
+      '/placeholder.svg',
+    ]);
+  });
+
+  it('takes a gallery uploaded only on the Spanish entry', () => {
+    const raw = bare();
+    raw.tours = {
+      en: [{ ...tour('en', 'x', 0), image: null, imageUrl: null, gallery: [], galleryUrls: [], itinerary: [] }],
+      es: [{ ...tour('es', 'x', 0), image: null, imageUrl: null, gallery: [{ url: '/uploads/es.jpg' }], galleryUrls: [], itinerary: [] }],
+    };
+    const snapshot = mapCms(raw, none);
+    expect(snapshot.tourPages['x'].gallery).toEqual(['https://cms.test/uploads/es.jpg']);
+    expect(snapshot.destinations[0].tours[0].image).toBe('https://cms.test/uploads/es.jpg');
+  });
+
+  it('uses the CMS placeholderImage and still prefers uploads, then the old url', () => {
+    const site = { placeholderImage: { url: '/uploads/ph.png' } };
+    const snapshot = mapCms({ ...bare(), site }, none);
+    expect(snapshot.destinations[0].image).toBe('https://cms.test/uploads/ph.png');
+    expect(snapshot.site?.placeholderImage).toBe('https://cms.test/uploads/ph.png');
+
+    const legacy = mapCms(
+      { ...bare(), destinations: both((l) => [{ ...destination(l), image: null }]), site },
+      none,
+    );
+    expect(legacy.destinations[0].image).toBe('https://img/dest.jpg');
+  });
+
+  it('maps unknown feature icons to lucideStar', () => {
+    const snapshot = mapCms(
+      bare({ practices: [{ icon: 'lucideShield', title: 'a', body: 'b' }] }),
+      none,
+    );
+    expect(snapshot.tourPages['x'].practices[0].icon).toBe('lucideStar');
+  });
+});
+
 describe('mapSite', () => {
   it('strips non-digits from the WhatsApp number', () => {
     expect(mapSite({ whatsapp: '+51 (999) 000-111' }).whatsapp).toBe('51999000111');
+  });
+
+  it('reads the social switches, off unless explicitly true', () => {
+    const site = mapSite({ instagram: 'https://i.example/x', showInstagram: true, showFacebook: 'true' });
+    expect([site.showInstagram, site.showFacebook, site.showTiktok]).toEqual([true, false, false]);
   });
 });
 
@@ -386,7 +529,10 @@ describe('mapCms global settings', () => {
     expect(snapshot.messages.es?.['cms.tours.a-tour.waiverBody']).toBeUndefined();
     // Only questions with both texts count, and each locale keeps its own copy.
     expect(page?.faqs).toEqual([
-      { questionKey: 'cms.tours.a-tour.faqs.0.question', answerKey: 'cms.tours.a-tour.faqs.0.answer' },
+      {
+        questionKey: 'cms.tours.a-tour.faqs.0.question',
+        answerKey: 'cms.tours.a-tour.faqs.0.answer',
+      },
     ]);
     expect(snapshot.messages.es?.['cms.tours.a-tour.faqs.0.question']).toBe('¿Es seguro?');
   });
@@ -396,7 +542,13 @@ describe('mapCms global settings', () => {
       {
         ...raw,
         tours: both((l) => [
-          { ...tour(l, 'c-tour', 0), latitude: 120, longitude: 'abc', meetingPointUrl: 'javascript:alert(1)', faqs: [] },
+          {
+            ...tour(l, 'c-tour', 0),
+            latitude: 120,
+            longitude: 'abc',
+            meetingPointUrl: 'javascript:alert(1)',
+            faqs: [],
+          },
         ]),
       },
       options,

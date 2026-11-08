@@ -125,6 +125,11 @@
             contact().phone
           }}</a>
         }
+        @if (contact().tel2) {
+          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel2">{{
+            contact().phone2
+          }}</a>
+        }
       </div>
 
       <div class="order-3 flex flex-col gap-3 lg:items-end">

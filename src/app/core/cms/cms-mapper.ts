@@ -8,6 +8,8 @@ import type {
   TourVideo,
 } from '../catalog/tour-pages';
 import { IMAGE_FOCUS, type CatalogDestination, type CatalogTour } from '../catalog/tours';
+import { PLACEHOLDER_IMAGE } from '../images/placeholder-image';
+import { featureIcon } from '../icons/feature-icons';
 import { LOCALES, type AppLocale } from '../i18n/catalogs';
 import {
   PALETTE_TOKENS,
@@ -65,6 +67,8 @@ export const mediaAltKey = (slot: string): string => `cms.media.${slot}.alt`;
 export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   const messages: Record<AppLocale, Record<string, string>> = { en: {}, es: {} };
   const media = (value: unknown) => mediaUrl(value, options.mediaBase);
+  const placeholder =
+    (raw.site && mediaUrl(raw.site['placeholderImage'], options.mediaBase)) || PLACEHOLDER_IMAGE;
 
   for (const locale of LOCALES) {
     for (const entry of raw.translations?.[locale] ?? []) {
@@ -81,13 +85,19 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   const toursByDestination = new Map<string, CatalogTour[]>();
 
   for (const [slug, byLocale] of tourEntries) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = withMediaFromAnyLocale(byLocale);
     if (!base) {
       continue;
     }
 
+    // `imageUrl`/`galleryUrls` are the old external fields: still the only image the seed has, so they rank after the upload.
+    const gallery = mediaList(base['gallery'], options.mediaBase, stringList(base['galleryUrls']));
+    // No main image uploaded: the first uploaded gallery photo stands in for it (cards, hero, share).
     const image =
-      media(base['image']) ?? text(base['imageUrl']) ?? options.fallbackImage('tour', slug);
+      media(base['image']) ??
+      mediaList(base['gallery'], options.mediaBase, [])[0] ??
+      text(base['imageUrl']) ??
+      (options.fallbackImage('tour', slug) || placeholder);
     const destinationSlug = text(asRecord(base['destination'])?.['slug']);
     if (!destinationSlug) {
       continue;
@@ -127,13 +137,17 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       { ...tour, ...{ order: num(base['order']) ?? 0 } } as CatalogTour,
     ]);
 
-    const gallery = mediaList(base['gallery'], options.mediaBase, stringList(base['galleryUrls']));
     const tourAssurances = features(`cms.tours.${slug}`, 'assurances', byLocale, messages);
+    // `body` is the whole description; the page shows it as lead + paragraphs and the accordion repeats it.
+    // Tours without one keep the older lead / paragraphs / expandedParagraphs fields.
+    const body = bodyKeys(slug, byLocale, messages);
     tourPages[slug] = {
       gallery: gallery.length ? gallery : [image, image, image],
-      leadKey: tourKey(slug, 'lead'),
-      descriptionKeys: items(slug, 'paragraphs', byLocale, messages),
-      expandedDescriptionKeys: items(slug, 'expandedParagraphs', byLocale, messages),
+      leadKey: body[0] ?? tourKey(slug, 'lead'),
+      descriptionKeys: body.length ? body.slice(1) : items(slug, 'paragraphs', byLocale, messages),
+      expandedDescriptionKeys: body.length
+        ? body
+        : items(slug, 'expandedParagraphs', byLocale, messages),
       meetingKey: tourKey(slug, 'meeting'),
       languages: languages(base['languages']),
       format: format(base['format']),
@@ -164,7 +178,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const destinations: CatalogDestination[] = [];
   for (const [slug, byLocale] of groupBySlug(raw.destinations)) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = withMediaFromAnyLocale(byLocale);
     if (!base) {
       continue;
     }
@@ -190,7 +204,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       image:
         media(base['image']) ??
         text(base['imageUrl']) ??
-        options.fallbackImage('destination', slug),
+        (options.fallbackImage('destination', slug) || placeholder),
       tours,
       footerOrder: num(base['footerOrder']),
       showInFooter: base['showInFooter'] !== false,
@@ -201,7 +215,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const mediaSlots: Record<string, MediaSlot> = {};
   for (const [slot, byLocale] of groupBy(raw.mediaSlots, 'key')) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = baseOf(byLocale);
     if (!base) {
       continue;
     }
@@ -219,7 +233,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const pages: Record<string, CmsPage> = {};
   for (const [slug, byLocale] of groupBySlug(raw.pages)) {
-    const base = byLocale.en ?? byLocale.es;
+    const base = baseOf(byLocale);
     pages[slug] = {
       slug,
       heroImage: media(base?.['heroImage']) ?? text(base?.['heroImageUrl']),
@@ -234,7 +248,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
   }
 
   const posts: BlogPost[] = [...groupBySlug(raw.posts)].map(([slug, byLocale]) => {
-    const base = byLocale.en ?? byLocale.es ?? {};
+    const base = baseOf(byLocale) ?? {};
     return {
       slug,
       publishedDate: text(base['publishedDate']) ?? '',
@@ -253,7 +267,7 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
 
   const products: Product[] = [...groupBySlug(raw.products)]
     .map(([slug, byLocale]) => {
-      const base = byLocale.en ?? byLocale.es ?? {};
+      const base = baseOf(byLocale) ?? {};
       return {
         slug,
         order: num(base['order']) ?? 0,
@@ -292,8 +306,10 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     brandName: field('brandName'),
     legalYear: num(entry['legalYear']) ?? 0,
     shareImage: mediaUrl(entry['shareImage'], mediaBase) ?? text(entry['shareImageUrl']) ?? '',
+    placeholderImage: mediaUrl(entry['placeholderImage'], mediaBase) ?? '',
     email: field('email'),
     phone: field('phone'),
+    phone2: field('phone2'),
     whatsapp: field('whatsapp').replace(/\D/g, ''),
     instagram: field('instagram'),
     facebook: field('facebook'),
@@ -302,6 +318,13 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     linkedin: field('linkedin'),
     google: field('google'),
     tripadvisor: field('tripadvisor'),
+    showInstagram: entry['showInstagram'] === true,
+    showFacebook: entry['showFacebook'] === true,
+    showTiktok: entry['showTiktok'] === true,
+    showYoutube: entry['showYoutube'] === true,
+    showLinkedin: entry['showLinkedin'] === true,
+    showGoogle: entry['showGoogle'] === true,
+    showTripadvisor: entry['showTripadvisor'] === true,
     legalName: field('legalName'),
     ruc: field('ruc'),
   };
@@ -429,6 +452,18 @@ function hasText(byLocale: Grouped, field: string): boolean {
 
 type Grouped = Partial<Record<AppLocale, RawEntry>>;
 
+/**
+ * The entry that carries the values shared by every language (price, order, photo...). Strapi writes a change of such a
+ * field to the drafts of all languages but only to the published row of the language that was published, so the other
+ * language keeps the old value until it is published too: the most recently published row has the current one.
+ * Without dates (or on a tie) English comes first, as before.
+ */
+function baseOf(byLocale: Grouped): RawEntry | undefined {
+  const stamp = (entry: RawEntry | undefined) => Date.parse(String(entry?.['publishedAt'] ?? '')) || 0;
+  const { en, es } = byLocale;
+  return es && stamp(es) > stamp(en) ? es : (en ?? es);
+}
+
 function groupBySlug(source: RawByLocale | undefined): Map<string, Grouped> {
   return groupBy(source, 'slug');
 }
@@ -479,7 +514,7 @@ function features(
     }
 
     return {
-      icon: text(item['icon']) ?? '',
+      icon: featureIcon(text(item['icon'])),
       titleKey: `${prefix}.title`,
       bodyKey: `${prefix}.body`,
     };
@@ -529,6 +564,29 @@ function videos(value: unknown, mediaBase: string | null): TourVideo[] {
         mp4: mediaUrl(item['mp4'], mediaBase) ?? text(item['mp4Url']),
       }),
     ];
+  });
+}
+
+/** One i18n key per paragraph of `body` (blank line = new paragraph); a language without it simply has no text. */
+function bodyKeys(
+  slug: string,
+  byLocale: Grouped,
+  messages: Record<AppLocale, Record<string, string>>,
+): string[] {
+  const parts = Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      (text(byLocale[locale]?.['body']) ?? '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean),
+    ]),
+  ) as Record<AppLocale, string[]>;
+  const count = Math.max(...LOCALES.map((locale) => parts[locale].length));
+  return Array.from({ length: count }, (_, index) => {
+    const key = `cms.tours.${slug}.body.${index}`;
+    for (const locale of LOCALES) {
+      assign(messages[locale], key, parts[locale][index]);
+    }
+
+    return key;
   });
 }
 
@@ -618,6 +676,21 @@ function asRecord(value: unknown): RawEntry | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? (value as RawEntry)
     : undefined;
+}
+
+/** The most recently published entry (see `baseOf`), but a photo saved only on the other entry still counts: Strapi does not copy shared media across locales until each one is saved. */
+function withMediaFromAnyLocale(byLocale: Partial<Record<string, RawEntry>>): RawEntry | undefined {
+  const base = baseOf(byLocale);
+  if (!base) {
+    return undefined;
+  }
+  const filled = { ...base };
+  for (const key of ['image', 'gallery']) {
+    if (!(asList(filled[key])?.length || asRecord(filled[key]))) {
+      filled[key] = byLocale['es']?.[key] ?? byLocale['en']?.[key] ?? filled[key];
+    }
+  }
+  return filled;
 }
 
 function asList(value: unknown): RawEntry[] | undefined {

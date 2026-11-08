@@ -11,6 +11,7 @@ import { HlmBadge } from '@spartan-ng/helm/badge';
 import { TourPage } from '../../../core/catalog/tour-pages';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { CatalogTour, TOURS_PATH } from '../../../core/catalog/tours';
+import { CurrencyService, priceIn } from '../../../core/currency/currency';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 
@@ -63,8 +64,8 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
       </span>
       <span hlmBadge variant="secondary">
         {{ 'gallery.from' | translate: i18n.locale() }}
-        {{ 'gallery.currency' | translate: i18n.locale() }}
-        {{ tour().priceFrom }}
+        {{ (price().currency === 'PEN' ? 'gallery.currencyPen' : 'gallery.currency') | translate: i18n.locale() }}
+        {{ price().amount }}
       </span>
     </div>
   `,
@@ -73,6 +74,8 @@ export class TourHeading {
   readonly tour = input.required<CatalogTour>();
   readonly page = input.required<TourPage>();
   protected readonly i18n = inject(I18nService);
+  private readonly currency = inject(CurrencyService);
+  protected readonly price = computed(() => priceIn(this.tour(), this.currency.currency()));
   protected readonly toursPath = TOURS_PATH;
   private readonly catalog = inject(CatalogService);
   protected readonly destination = computed(() => {
