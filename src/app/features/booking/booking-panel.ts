@@ -10,7 +10,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCalendar } from '@spartan-ng/helm/calendar';
 import { HlmCardImports } from '@spartan-ng/helm/card';
@@ -24,8 +24,9 @@ import {
   type Quote,
   type TourFormat,
 } from '../../core/api/booking-api';
-import { CURRENCIES, CurrencyService } from '../../core/currency/currency';
-import { BookingFlow } from '../../core/booking/booking-flow';
+import { CurrencyService } from '../../core/currency/currency';
+import { CartService } from '../../core/booking/cart';
+import { BookingFlow, type BookingSelection } from '../../core/booking/booking-flow';
 import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import type { TourPage } from '../../core/catalog/tour-pages';
@@ -43,6 +44,7 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
   selector: 'app-booking-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    RouterLink,
     TranslatePipe,
     HlmButton,
     HlmCalendar,
@@ -63,23 +65,6 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
         </p>
       </div>
       <div hlmCardContent class="flex flex-col gap-6">
-        <div hlmField>
-          <span hlmFieldLabel id="booking-currency-label">{{
-            'booking.currency' | translate: i18n.locale()
-          }}</span>
-          <hlm-toggle-group
-            type="single"
-            variant="outline"
-            [value]="currency()"
-            (valueChange)="onCurrency($event)"
-            aria-labelledby="booking-currency-label"
-          >
-            @for (code of currencies; track code) {
-              <button hlmToggleGroupItem type="button" [value]="code">{{ code }}</button>
-            }
-          </hlm-toggle-group>
-        </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div hlmField [class.col-span-2]="!showFormat()">
             <span hlmFieldLabel id="booking-language-label">{{
@@ -237,6 +222,23 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
           hlmBtn
           type="button"
           class="w-full"
+          id="booking-add"
+          [disabled]="!quote()"
+          (click)="addToCart()"
+        >
+          {{ 'cart.add' | translate: i18n.locale() }}
+        </button>
+        @if (added()) {
+          <p class="text-sm" role="status" id="booking-added">
+            {{ 'cart.added' | translate: i18n.locale() }}
+            <a routerLink="/cart" class="underline underline-offset-2">{{ 'cart.view' | translate: i18n.locale() }}</a>
+          </p>
+        }
+        <button
+          hlmBtn
+          type="button"
+          variant="outline"
+          class="w-full"
           id="booking-continue"
           [disabled]="!quote() || holding()"
           (click)="reserve()"
@@ -262,10 +264,11 @@ export class BookingPanel {
 
   protected readonly i18n = inject(I18nService);
   protected readonly rules = this.catalog.booking();
-  protected readonly currencies = CURRENCIES;
   protected readonly today = new Date();
 
   // The header switcher and this toggle are the same choice.
+  private readonly cart = inject(CartService);
+  protected readonly added = signal(false);
   private readonly currencyChoice = inject(CurrencyService);
   protected readonly currency = this.currencyChoice.currency;
   protected readonly format = signal<TourFormat>('SHARED');
@@ -348,12 +351,6 @@ export class BookingPanel {
     void this.loadAvailability(this.tour().id, this.currency(), this.format(), this.language());
   }
 
-  protected onCurrency(value: unknown): void {
-    if (value === 'USD' || value === 'PEN') {
-      this.currencyChoice.set(value);
-    }
-  }
-
   protected onLanguage(value: unknown): void {
     if (typeof value === 'string' && value) {
       this.language.set(value);
@@ -408,16 +405,15 @@ export class BookingPanel {
     return this.i18n.t('booking.seatsLeft').replace('{count}', String(departure.seatsLeft));
   }
 
-  protected async reserve(): Promise<void> {
+  /** What the visitor picked, or `null` while there is no departure or quote. */
+  private selection(): BookingSelection | null {
     const departure = this.departure();
     const quote = this.quote();
-    if (!departure || !quote || this.holding()) {
-      return;
+    if (!departure || !quote) {
+      return null;
     }
 
-    this.holding.set(true);
-    this.reserveError.set(null);
-    const result = await this.flow.reserve({
+    return {
       tourSlug: this.tour().id,
       departureId: departure.departureId,
       startsAt: departure.startsAt,
@@ -428,7 +424,26 @@ export class BookingPanel {
       adults: this.adults(),
       children: this.children(),
       quote,
-    });
+    };
+  }
+
+  protected addToCart(): void {
+    const selection = this.selection();
+    if (selection) {
+      this.cart.add(selection);
+      this.added.set(true);
+    }
+  }
+
+  protected async reserve(): Promise<void> {
+    const selection = this.selection();
+    if (!selection || this.holding()) {
+      return;
+    }
+
+    this.holding.set(true);
+    this.reserveError.set(null);
+    const result = await this.flow.reserve(selection);
     this.holding.set(false);
 
     if (!result.ok) {

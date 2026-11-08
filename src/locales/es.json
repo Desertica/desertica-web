@@ -377,9 +377,23 @@
     "save": "Guardar preferencias",
     "preferences": "Preferencias de cookies"
   },
+  "cart": {
+    "title": "Carrito",
+    "empty": "Tu carrito está vacío. Elige un tour y una fecha para empezar.",
+    "browse": "Ver tours",
+    "remove": "Quitar",
+    "reserveOne": "Reservar este tour",
+    "multiNote": "Por ahora el pago es de un tour a la vez: usa «Reservar este tour» en el que quieras pagar primero.",
+    "adults": "adultos",
+    "children": "niños",
+    "open": "Abrir carrito",
+    "added": "Agregado al carrito.",
+    "view": "Ver carrito",
+    "add": "Agregar al carrito"
+  },
   "booking": {
     "title": "Reserva en línea",
-    "lead": "Elige moneda, fecha y tu grupo. Guardamos tus cupos mientras completas la reserva.",
+    "lead": "Elige fecha y tu grupo. La moneda se cambia arriba, en el encabezado. Guardamos tus cupos mientras completas la reserva.",
     "currency": "Moneda",
     "loading": "Cargando disponibilidad…",
     "loadError": "No pudimos cargar la disponibilidad. Inténtalo de nuevo.",

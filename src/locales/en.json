@@ -377,9 +377,23 @@
     "save": "Save preferences",
     "preferences": "Cookie preferences"
   },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty. Pick a tour and a date to start.",
+    "browse": "Browse tours",
+    "remove": "Remove",
+    "reserveOne": "Reserve this tour",
+    "multiNote": "For now you pay for one tour at a time: use “Reserve this tour” on the one you want to pay first.",
+    "adults": "adults",
+    "children": "children",
+    "open": "Open cart",
+    "added": "Added to your cart.",
+    "view": "View cart",
+    "add": "Add to cart"
+  },
   "booking": {
     "title": "Book online",
-    "lead": "Pick a currency, a date and your group. We hold your seats while you check out.",
+    "lead": "Pick a date and your group. Change the currency at the top, in the header. We hold your seats while you check out.",
     "currency": "Currency",
     "loading": "Loading availability…",
     "loadError": "We could not load availability. Please try again.",
