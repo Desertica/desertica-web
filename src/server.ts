@@ -78,19 +78,12 @@ app.use(
 );
 
 /**
- * Contact and reservation forms are validated here and forwarded to Strapi, so the browser never
- * needs the CMS URL or CORS access.
+ * Contact and complaint forms are validated here and forwarded to desertica-api, so the browser never
+ * needs the API URL or CORS access.
  */
 app.use(
   '/api/forms',
-  formsProxy({
-    strapiUrl: cms.url,
-    token: process.env['STRAPI_FORMS_TOKEN'] ?? null,
-    secret: process.env['FORMS_PROXY_SECRET'] ?? null,
-    apiUrl,
-    bookingEngine: publicConfig.bookingEngineEnabled,
-    turnstileSecret: process.env['TURNSTILE_SECRET_KEY']?.trim() || null,
-  }),
+  formsProxy({ apiUrl }),
 );
 
 /** The booking engine's public calls reach desertica-api through here (off until the flag is on). */

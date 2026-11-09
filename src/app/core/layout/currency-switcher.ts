@@ -1,7 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideDollarSign } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 import type { Currency } from '../api/booking-api';
@@ -13,8 +11,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 @Component({
   selector: 'app-currency-switcher',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, HlmDropdownMenuImports, NgIcon, NgTemplateOutlet, TranslatePipe],
-  providers: [provideIcons({ lucideDollarSign })],
+  imports: [HlmButton, HlmDropdownMenuImports, NgTemplateOutlet, TranslatePipe],
   template: `
     <button
       hlmBtn
@@ -25,7 +22,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
       [attr.aria-label]="'a11y.chooseCurrency' | translate: i18n.locale()"
     >
       <ng-container [ngTemplateOutlet]="symbol" [ngTemplateOutletContext]="{ $implicit: currency.currency() }" />
-      {{ currency.currency() }}
+      <span class="hidden xl:inline">{{ currency.currency() }}</span>
     </button>
     <ng-template #currencyMenu>
       <div hlmDropdownMenu>
@@ -38,11 +35,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
       </div>
     </ng-template>
     <ng-template #symbol let-code>
-      @if (code === 'USD') {
-        <ng-icon name="lucideDollarSign" class="size-4" aria-hidden="true" />
-      } @else {
-        <span class="inline-flex size-4 items-center justify-center text-[0.8rem] leading-none font-semibold" aria-hidden="true">S/</span>
-      }
+      <span class="inline-flex items-center justify-center font-semibold" aria-hidden="true">{{ code === 'USD' ? '$' : 'S/' }}</span>
     </ng-template>
   `,
 })

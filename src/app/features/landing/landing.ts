@@ -71,6 +71,8 @@ export class Landing {
     let cancelled = false;
     this.destroyRef.onDestroy(() => {
       cancelled = true;
+      // Leaving mid-intro would keep header, WhatsApp and cookie banner hidden on the next page.
+      this.intro.complete();
     });
 
     effect(() => {

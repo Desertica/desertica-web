@@ -88,7 +88,7 @@
         <p class="text-foreground text-sm font-medium tracking-wide uppercase">
           {{ 'footer.newsletter' | translate: i18n.locale() }}
         </p>
-        <div class="flex items-center gap-3">
+        <div class="flex items-start gap-3">
           <div hlmField class="min-w-0 w-auto flex-1">
             <label class="sr-only" hlmFieldLabel for="footer-newsletter">{{
               'footer.newsletterPlaceholder' | translate: i18n.locale()
@@ -160,6 +160,16 @@
       </div>
     </div>
 
+    <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 lg:mt-10">
+      @for (method of paymentMethods; track method.name) {
+        @if (method.svg) {
+          <ng-icon [svg]="method.svg" size="2.25rem" class="text-muted-foreground" [attr.title]="method.name" />
+        } @else {
+          <img [src]="method.src" [alt]="method.name" class="size-8 object-contain grayscale brightness-90 opacity-90" width="32" height="32" loading="lazy" />
+        }
+      }
+    </div>
+
     <div
       class="text-muted-foreground mt-8 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between lg:mt-10"
     >
@@ -174,7 +184,9 @@
         </button>
       </nav>
       <p>
-        © {{ legal().year }} {{ legal().name }}@if (legal().ruc) { · {{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }} }
+        © {{ legal().year }} {{ legal().name }}@if (legal().ruc) {
+          <span class="block">{{ 'footer.ruc' | translate: i18n.locale() }} {{ legal().ruc }}</span>
+        }
       </p>
     </div>
   </div>

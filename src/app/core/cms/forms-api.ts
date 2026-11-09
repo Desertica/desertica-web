@@ -2,20 +2,6 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-export type ReservationPayload = {
-  tourSlug: string;
-  tourTitle: string;
-  /** `YYYY-MM-DD`. */
-  date: string;
-  language: 'es' | 'en';
-  format?: 'shared' | 'private';
-  adults: number;
-  children: number;
-  payment: 'full' | 'deposit';
-  amount: number;
-  locale: 'es' | 'en';
-};
-
 export type ContactPayload = {
   name: string;
   email: string;
@@ -29,8 +15,8 @@ export type ContactPayload = {
 
 /** Libro de Reclamaciones: the fields of `CreateComplaint` in the API contract. */
 export type ComplaintPayload = {
-  kind: 'RECLAMO' | 'QUEJA';
-  goodType: 'PRODUCT' | 'SERVICE';
+  kind: 'RECLAMO' | 'QUEJA' | 'BOTH';
+  goodType: 'PRODUCT' | 'SERVICE' | 'BOTH';
   consumerName: string;
   idDocType: 'DNI' | 'CE' | 'PASSPORT' | 'RUC';
   idDocNumber: string;
@@ -38,6 +24,7 @@ export type ComplaintPayload = {
   email: string;
   phone?: string;
   isMinor?: boolean;
+  guardianName?: string;
   bookingRef?: string;
   /** Minor units, with `currency`. */
   amountCents?: number;
@@ -48,21 +35,31 @@ export type ComplaintPayload = {
   turnstileToken?: string;
 };
 
+export type ProviderData = { legalName: string; ruc: string; fiscalAddress: string };
+
 export type ComplaintResult =
   | { ok: true; correlative: number; dueAt: string }
   | { ok: false; reason: 'invalid' | 'captcha' | 'rate_limited' | 'unavailable' | 'error' };
 
-/** Sends form submissions to the Express `/api/forms/*` proxy, which stores them in Strapi. */
+/** Sends form submissions to the Express `/api/forms/*` proxy, which forwards them to desertica-api. */
 @Injectable({ providedIn: 'root' })
 export class FormsApi {
   private readonly http = inject(HttpClient);
 
-  submitReservation(payload: ReservationPayload): Promise<boolean> {
-    return this.post('reservation', payload);
-  }
-
   submitContact(payload: ContactPayload): Promise<boolean> {
     return this.post('contact', payload);
+  }
+
+  /** Razón social, RUC and domicilio fiscal of the provider; `null` when the API has none or is off. */
+  async company(): Promise<ProviderData | null> {
+    try {
+      const data = await firstValueFrom(this.http.get<Partial<ProviderData>>('/api/forms/company'));
+      return data.legalName && data.ruc && data.fiscalAddress
+        ? { legalName: data.legalName, ruc: data.ruc, fiscalAddress: data.fiscalAddress }
+        : null;
+    } catch {
+      return null;
+    }
   }
 
   /** Files a complaint; the answer carries the correlative number and the legal reply deadline. */

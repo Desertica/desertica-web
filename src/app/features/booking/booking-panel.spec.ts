@@ -4,6 +4,7 @@ import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { CatalogService } from '../../core/catalog/catalog';
+import { CurrencyService } from '../../core/currency/currency';
 import { DEPARTURE_ID, QUOTE, departure, tomorrowDeparture } from '../../testing/booking-fixtures';
 import { stubMatchMedia } from '../../testing/match-media';
 import { mockApi } from '../../testing/mock-api';
@@ -42,7 +43,12 @@ describe('BookingPanel', () => {
       'POST /public/quotes': () => ({ body: QUOTE }),
       'POST /public/holds': () => ({
         status: 201,
-        body: { token: 'hold-1', departureId: DEPARTURE_ID, seats: 2, expiresAt: new Date(Date.now() + 600_000).toISOString() },
+        body: {
+          token: 'hold-1',
+          departureId: DEPARTURE_ID,
+          seats: 2,
+          expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        },
       }),
       ...overrides,
     });
@@ -60,7 +66,9 @@ describe('BookingPanel', () => {
   it('loads each month of availability in the chosen currency, format and language', async () => {
     await mount();
 
-    const calls = mock.calls.filter((call) => call.path === '/public/tours/dune-buggy/availability');
+    const calls = mock.calls.filter(
+      (call) => call.path === '/public/tours/dune-buggy/availability',
+    );
     expect(calls).toHaveLength(3);
     expect(calls.map((call) => call.query.get('currency'))).toEqual(['USD', 'USD', 'USD']);
     expect(calls[0]?.query.get('format')).toBe('SHARED');
@@ -69,8 +77,8 @@ describe('BookingPanel', () => {
   });
 
   it('reloads prices when the visitor switches to soles', async () => {
-    const { fixture, internals } = await mount();
-    internals.onCurrency('PEN');
+    const { fixture } = await mount();
+    TestBed.inject(CurrencyService).set('PEN');
     await settle(fixture);
 
     const currencies = mock.calls
@@ -86,7 +94,12 @@ describe('BookingPanel', () => {
     await settle(fixture);
 
     const quote = mock.calls.find((call) => call.path === '/public/quotes');
-    expect(quote?.body).toEqual({ departureId: DEPARTURE_ID, adults: 1, children: 0, currency: 'USD' });
+    expect(quote?.body).toEqual({
+      departureId: DEPARTURE_ID,
+      adults: 1,
+      children: 0,
+      currency: 'USD',
+    });
     const total = fixture.nativeElement.querySelector('#booking-total') as HTMLElement;
     expect(total.textContent).toContain('$158.00');
     expect(text(fixture.nativeElement)).toContain('09:00');
@@ -94,7 +107,9 @@ describe('BookingPanel', () => {
 
     internals.bump('adults', 1);
     await settle(fixture);
-    expect(mock.calls.filter((call) => call.path === '/public/quotes').at(-1)?.body).toMatchObject({ adults: 2 });
+    expect(mock.calls.filter((call) => call.path === '/public/quotes').at(-1)?.body).toMatchObject({
+      adults: 2,
+    });
   });
 
   it('holds the seats and moves on to the checkout', async () => {
@@ -105,7 +120,10 @@ describe('BookingPanel', () => {
     (fixture.nativeElement.querySelector('#booking-continue') as HTMLButtonElement).click();
     await settle(fixture);
 
-    expect(mock.calls.find((call) => call.path === '/public/holds')?.body).toEqual({ departureId: DEPARTURE_ID, seats: 1 });
+    expect(mock.calls.find((call) => call.path === '/public/holds')?.body).toEqual({
+      departureId: DEPARTURE_ID,
+      seats: 1,
+    });
     const flow = TestBed.inject(BookingFlow);
     expect(flow.hold()?.token).toBe('hold-1');
     expect(flow.selection()).toMatchObject({ tourSlug: 'dune-buggy', currency: 'USD', adults: 1 });
@@ -114,7 +132,10 @@ describe('BookingPanel', () => {
 
   it('explains a full departure and refreshes availability', async () => {
     const { fixture, internals } = await mount({
-      'POST /public/holds': () => ({ status: 409, body: { statusCode: 409, error: 'Conflict', message: 'No seats' } }),
+      'POST /public/holds': () => ({
+        status: 409,
+        body: { statusCode: 409, error: 'Conflict', message: 'No seats' },
+      }),
     });
     internals.onDate(day.date);
     await settle(fixture);
@@ -123,13 +144,19 @@ describe('BookingPanel', () => {
     (fixture.nativeElement.querySelector('#booking-continue') as HTMLButtonElement).click();
     await settle(fixture);
 
-    expect(text(fixture.nativeElement.querySelector('#booking-error'))).toContain('not enough seats');
-    expect(mock.calls.filter((call) => call.path.endsWith('/availability')).length).toBeGreaterThan(before);
+    expect(text(fixture.nativeElement.querySelector('#booking-error'))).toContain(
+      'not enough seats',
+    );
+    expect(mock.calls.filter((call) => call.path.endsWith('/availability')).length).toBeGreaterThan(
+      before,
+    );
     expect(TestBed.inject(BookingFlow).hold()).toBeNull();
   });
 
   it('says so when nothing is available and when the API is down', async () => {
-    const empty = await mount({ 'GET /public/tours/*/availability': () => ({ body: { data: [] } }) });
+    const empty = await mount({
+      'GET /public/tours/*/availability': () => ({ body: { data: [] } }),
+    });
     expect(text(empty.fixture.nativeElement)).toContain('No departures');
     mock.restore();
     TestBed.resetTestingModule();
@@ -137,7 +164,12 @@ describe('BookingPanel', () => {
     await TestBed.configureTestingModule({
       providers: [provideRouter([]), provideSpartanHlm(), provideNativeDateAdapter()],
     }).compileComponents();
-    const down = await mount({ 'GET /public/tours/*/availability': () => ({ status: 500, body: { statusCode: 500, error: 'x', message: 'x' } }) });
+    const down = await mount({
+      'GET /public/tours/*/availability': () => ({
+        status: 500,
+        body: { statusCode: 500, error: 'x', message: 'x' },
+      }),
+    });
     expect(text(down.fixture.nativeElement)).toContain('could not load availability');
   });
 });

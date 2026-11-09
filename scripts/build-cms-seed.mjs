@@ -304,6 +304,7 @@ const navLinkDefs = {
     ['nav.tours', '/tours', 'tours-menu'],
     ['nav.products', '/products'],
     ['nav.about', '/about'],
+    ['nav.blog', '/blog'],
     ['nav.contact', '/contact'],
   ],
   footerBrandLinks: [['nav.about', '/about'], ['nav.blog', '/blog'], ['nav.contact', '/contact']],

@@ -87,7 +87,6 @@ export class About {
 
           void this.smooth.whenReady().then(() => {
             const mm = gsap.matchMedia();
-            const heroCopy = query('[data-hero-copy]');
             const motiva = query('[data-motiva]');
             const motivaCols = root.querySelectorAll('[data-motiva-col]');
             const scene = query('[data-map-scene]');
@@ -178,17 +177,6 @@ export class About {
             };
 
             mm.add(motionMq, () => {
-              if (heroCopy) {
-                gsap.from(heroCopy, {
-                  opacity: 0,
-                  y: 12,
-                  duration: 0.8,
-                  ease: 'power2.out',
-                  onStart: () => gsap.set(heroCopy, { willChange: 'transform, opacity' }),
-                  onComplete: () => gsap.set(heroCopy, { willChange: 'auto', clearProps: 'transform' }),
-                });
-              }
-
               if (motiva && motivaCols.length) {
                 gsap.set(motivaCols, { opacity: 0, y: 18 });
                 gsap.to(motivaCols, {
@@ -422,7 +410,6 @@ export class About {
             });
 
             mm.add(reducedMq, () => {
-              clearMotion(heroCopy);
               motivaCols.forEach((col: Element) => clearMotion(col));
               gsap.set(peruPaths, { drawSVG: '0% 100%' });
               if (lake instanceof Element) {
