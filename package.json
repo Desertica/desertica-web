@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "serve:ssr:desertica-web": "node dist/desertica-web/server/server.mjs",
     "start:cms": "STRAPI_URL=http://localhost:1337 ng serve",
+    "start:stg": "STRAPI_URL=https://cms-stg.desertica.pe STRAPI_PUBLIC_URL=https://cms-stg.desertica.pe API_URL=https://api-stg.desertica.pe BOOKING_ENGINE_ENABLED=true TURNSTILE_SITE_KEY=1x00000000000000000000AA ng serve",
     "cms:dev": "npm --prefix ../desertica-cms run develop",
     "cms:seed": "node scripts/build-cms-seed.mjs --out ../desertica-cms/seed/catalog.json",
     "api:generate": "openapi-typescript ../desertica-api/openapi/openapi.yaml -o src/app/core/api/schema.d.ts --default-non-nullable=false"

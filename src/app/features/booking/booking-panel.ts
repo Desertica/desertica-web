@@ -12,10 +12,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideChevronDown } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCalendar } from '@spartan-ng/helm/calendar';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
+import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { HlmSkeleton } from '@spartan-ng/helm/skeleton';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import {
@@ -27,6 +30,7 @@ import {
 } from '../../core/api/booking-api';
 import { CurrencyService } from '../../core/currency/currency';
 import { CartService } from '../../core/booking/cart';
+import { formatPickerDate } from '../tours/detail/tour-whatsapp';
 import { Turnstile } from '../../core/forms/turnstile';
 import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
 import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
@@ -54,20 +58,91 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
     HlmFieldImports,
     HlmSkeleton,
     HlmToggleGroupImports,
+    HlmPopoverImports,
+    NgIcon,
     Turnstile,
   ],
+  providers: [provideIcons({ lucideChevronDown })],
   host: { class: 'block w-full' },
   template: `
     <section hlmCard>
       <div hlmCardHeader>
-        <h2 class="font-heading text-2xl tracking-wide">
-          {{ 'booking.title' | translate: i18n.locale() }}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-          {{ 'booking.lead' | translate: i18n.locale() }}
+        <p id="booking-from" class="font-heading text-2xl tracking-wide uppercase">
+          {{ 'gallery.from' | translate: i18n.locale() }} {{ fromLabel() }}
         </p>
       </div>
       <div hlmCardContent class="flex flex-col gap-6">
+        <div hlmField>
+          <span hlmFieldLabel id="booking-date-label">{{ 'tour.date' | translate: i18n.locale() }}</span>
+          @if (loading()) {
+            <hlm-skeleton class="h-9 w-full" />
+          } @else if (loadFailed()) {
+            <p class="text-destructive text-sm" role="alert">
+              {{ 'booking.loadError' | translate: i18n.locale() }}
+            </p>
+            <button hlmBtn type="button" variant="outline" (click)="reload()">
+              {{ 'booking.retry' | translate: i18n.locale() }}
+            </button>
+          } @else {
+            <hlm-popover align="start" sideOffset="5">
+              <button
+                type="button"
+                id="booking-date"
+                hlmPopoverTrigger
+                [class]="selectClass"
+                aria-labelledby="booking-date-label"
+              >
+                <span class="truncate" [class.text-muted-foreground]="!date()">{{ dateLabel() }}</span>
+                <ng-icon name="lucideChevronDown" class="text-muted-foreground ms-auto" />
+              </button>
+              <hlm-popover-content class="w-auto p-2" *hlmPopoverPortal="let ctx">
+                <hlm-calendar
+                  [date]="date()"
+                  (dateChange)="onDate($event); ctx.close()"
+                  [min]="today"
+                  [max]="lastDay()"
+                  [dateDisabled]="isUnavailable"
+                />
+              </hlm-popover-content>
+            </hlm-popover>
+            @if (!hasAvailability()) {
+              <p class="text-muted-foreground text-sm" role="status">
+                {{ 'booking.noAvailability' | translate: i18n.locale() }}
+              </p>
+            }
+          }
+        </div>
+
+        @if (dayDepartures().length > 1) {
+          <div hlmField>
+            <span hlmFieldLabel id="booking-time-label">{{
+              'booking.departures' | translate: i18n.locale()
+            }}</span>
+            <hlm-toggle-group
+              type="single"
+              variant="outline"
+              class="flex-wrap"
+              [value]="departureId() ?? ''"
+              (valueChange)="onDeparture($event)"
+              aria-labelledby="booking-time-label"
+            >
+              @for (departure of dayDepartures(); track departure.departureId) {
+                <button hlmToggleGroupItem type="button" [value]="departure.departureId">
+                  {{ time(departure) }}
+                </button>
+              }
+            </hlm-toggle-group>
+          </div>
+        }
+        @if (departure(); as chosen) {
+          <p class="text-muted-foreground -mt-3 text-sm">
+            {{ time(chosen) }} · {{ seatsLabel(chosen) }}
+            @if (chosen.meetingPoint) {
+              · {{ chosen.meetingPoint }}
+            }
+          </p>
+        }
+
         <div class="grid grid-cols-2 gap-3">
           <div hlmField [class.col-span-2]="!showFormat()">
             <span hlmFieldLabel id="booking-language-label">{{
@@ -111,102 +186,47 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
         </div>
 
         <div hlmField>
-          <span hlmFieldLabel>{{ 'tour.date' | translate: i18n.locale() }}</span>
-          @if (loading()) {
-            <hlm-skeleton class="h-64 w-full" />
-            <p class="text-muted-foreground text-sm" role="status">
-              {{ 'booking.loading' | translate: i18n.locale() }}
-            </p>
-          } @else if (loadFailed()) {
-            <p class="text-destructive text-sm" role="alert">
-              {{ 'booking.loadError' | translate: i18n.locale() }}
-            </p>
-            <button hlmBtn type="button" variant="outline" (click)="reload()">
-              {{ 'booking.retry' | translate: i18n.locale() }}
+          <span hlmFieldLabel id="booking-people-label">{{ 'tour.people' | translate: i18n.locale() }}</span>
+          <hlm-popover align="start" sideOffset="5">
+            <button type="button" id="booking-people" hlmPopoverTrigger [class]="selectClass" aria-labelledby="booking-people-label">
+              <span class="truncate">{{ peopleSummary() }}</span>
+              <ng-icon name="lucideChevronDown" class="text-muted-foreground ms-auto" />
             </button>
-          } @else {
-            <hlm-calendar
-              [date]="date()"
-              (dateChange)="onDate($event)"
-              [min]="today"
-              [max]="lastDay()"
-              [dateDisabled]="isUnavailable"
-            />
-            @if (!hasAvailability()) {
-              <p class="text-muted-foreground text-sm" role="status">
-                {{ 'booking.noAvailability' | translate: i18n.locale() }}
-              </p>
-            }
-          }
+            <hlm-popover-content class="w-80" *hlmPopoverPortal="let ctx">
+              <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between gap-3">
+                  <span>{{ 'tour.adultsAge' | translate: i18n.locale() }}</span>
+                  <div class="flex items-center gap-2">
+                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="adults() <= rules.adultsMin" (click)="bump('adults', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
+                    <span class="w-6 text-center tabular-nums" id="booking-adults">{{ adults() }}</span>
+                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('adults', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span>{{ 'tour.childrenAge' | translate: i18n.locale() }}</span>
+                  <div class="flex items-center gap-2">
+                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="children() <= rules.childrenMin" (click)="bump('children', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
+                    <span class="w-6 text-center tabular-nums" id="booking-children">{{ children() }}</span>
+                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('children', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
+                  </div>
+                </div>
+              </div>
+            </hlm-popover-content>
+          </hlm-popover>
         </div>
 
-        @if (dayDepartures().length) {
-          <div hlmField>
-            <span hlmFieldLabel id="booking-time-label">{{
-              'booking.departures' | translate: i18n.locale()
-            }}</span>
-            <hlm-toggle-group
-              type="single"
-              variant="outline"
-              class="flex-wrap"
-              [value]="departureId() ?? ''"
-              (valueChange)="onDeparture($event)"
-              aria-labelledby="booking-time-label"
-            >
-              @for (departure of dayDepartures(); track departure.departureId) {
-                <button hlmToggleGroupItem type="button" [value]="departure.departureId">
-                  {{ time(departure) }} · {{ priceLabel(departure) }}
-                </button>
-              }
-            </hlm-toggle-group>
-            @if (departure(); as chosen) {
-              <p class="text-muted-foreground text-sm">
-                {{ seatsLabel(chosen) }}
-                @if (chosen.meetingPoint) {
-                  · {{ chosen.meetingPoint }}
-                }
-              </p>
-            }
-          </div>
-
-          <div class="flex flex-col gap-4">
-            <div class="flex items-center justify-between gap-3">
-              <span>{{ 'tour.adultsAge' | translate: i18n.locale() }}</span>
-              <div class="flex items-center gap-2">
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="adults() <= rules.adultsMin" (click)="bump('adults', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
-                <span class="w-6 text-center tabular-nums" id="booking-adults">{{ adults() }}</span>
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('adults', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
-              </div>
-            </div>
-            <div class="flex items-center justify-between gap-3">
-              <span>{{ 'tour.childrenAge' | translate: i18n.locale() }}</span>
-              <div class="flex items-center gap-2">
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="children() <= rules.childrenMin" (click)="bump('children', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
-                <span class="w-6 text-center tabular-nums" id="booking-children">{{ children() }}</span>
-                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('children', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
-              </div>
-            </div>
-          </div>
-        }
-
         @if (quote(); as current) {
-          <dl class="border-border flex flex-col gap-2 rounded-3xl border p-4 text-sm" id="booking-quote">
-            @for (line of current.lines; track line.label) {
-              <div class="flex justify-between gap-3">
-                <dt>{{ line.quantity }} × {{ line.label }}</dt>
-                <dd class="tabular-nums">{{ money(line.totalCents, current.currency) }}</dd>
-              </div>
-            }
-            <div class="flex justify-between gap-3 font-medium">
-              <dt>{{ 'booking.total' | translate: i18n.locale() }}</dt>
-              <dd class="tabular-nums" id="booking-total">{{ money(current.totalCents, current.currency) }}</dd>
+          <div class="flex flex-col gap-3" id="booking-quote">
+            <div [class]="amountClass">
+              <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payFull' | translate: i18n.locale() }}</span>
+              <span id="booking-total">{{ short(current.totalCents, current.currency) }}</span>
             </div>
-            <div class="text-muted-foreground flex justify-between gap-3">
-              <dt>{{ 'booking.deposit' | translate: i18n.locale() }}</dt>
-              <dd class="tabular-nums">{{ money(current.depositCents, current.currency) }}</dd>
+            <div [class]="amountClass">
+              <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payLater' | translate: i18n.locale() }}</span>
+              <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}</span>
             </div>
             <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
-          </dl>
+          </div>
         } @else if (quoting()) {
           <hlm-skeleton class="h-24 w-full" />
         } @else if (quoteFailed()) {
@@ -221,9 +241,21 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
           </p>
         }
 
+        <app-turnstile (tokenChange)="captcha.set($event)" />
         <button
           hlmBtn
           type="button"
+          class="w-full"
+          id="booking-continue"
+          [disabled]="!quote() || holding() || (captchaRequired() && !captcha())"
+          (click)="reserve()"
+        >
+          {{ (holding() ? 'booking.holding' : 'tour.book') | translate: i18n.locale() }}
+        </button>
+        <button
+          hlmBtn
+          type="button"
+          variant="outline"
           class="w-full"
           id="booking-add"
           [disabled]="!quote()"
@@ -237,19 +269,6 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
             <a routerLink="/cart" class="underline underline-offset-2">{{ 'cart.view' | translate: i18n.locale() }}</a>
           </p>
         }
-        <app-turnstile (tokenChange)="captcha.set($event)" />
-        <button
-          hlmBtn
-          type="button"
-          variant="outline"
-          class="w-full"
-          id="booking-continue"
-          [disabled]="!quote() || holding() || (captchaRequired() && !captcha())"
-          (click)="reserve()"
-        >
-          {{ (holding() ? 'booking.holding' : 'booking.continue') | translate: i18n.locale() }}
-        </button>
-        <p class="text-muted-foreground text-xs">{{ 'booking.holdNote' | translate: i18n.locale() }}</p>
       </div>
     </section>
   `,
@@ -291,6 +310,15 @@ export class BookingPanel {
   protected readonly quoting = signal(false);
   protected readonly quoteFailed = signal(false);
   protected readonly holding = signal(false);
+  /** Same look as the WhatsApp booking form: soft field buttons and amount cards. */
+  protected readonly selectClass =
+    'bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-3xl border border-transparent px-3 text-sm font-normal outline-none focus-visible:ring-3';
+  protected readonly amountClass = 'bg-input/50 flex w-full flex-col gap-0.5 rounded-3xl px-4 py-3.5';
+  /** Lowest adult price among the loaded departures, as on the tour cards (\$USD 45). */
+  protected readonly fromLabel = computed(() => {
+    const prices = this.departures().map((d) => d.price.adultCents);
+    return prices.length ? this.short(Math.min(...prices), this.currency()) : '';
+  });
   private readonly turnstile = viewChild(Turnstile);
   /** The API holds seats only with a solved Turnstile challenge when the site key is configured. */
   protected readonly captchaRequired = computed(() => this.turnstile()?.enabled === true);
@@ -398,6 +426,24 @@ export class BookingPanel {
 
   protected time(departure: AvailableDeparture): string {
     return limaTime(departure.startsAt, this.i18n.locale());
+  }
+
+  /** `$USD 45` / `S/PEN 165`, the format of the tour cards and of the WhatsApp form. */
+  protected short(cents: number, currency: string): string {
+    const amount = cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
+    return `${currency === 'PEN' ? 'S/PEN' : '$USD'} ${amount}`;
+  }
+
+  protected dateLabel(): string {
+    const date = this.date();
+    return date ? formatPickerDate(date) : this.i18n.t('tour.date');
+  }
+
+  protected peopleSummary(): string {
+    const adults = this.adults();
+    const children = this.children();
+    const adultPart = `${adults} ${this.i18n.t(adults === 1 ? 'tour.adult' : 'tour.adults')}`;
+    return children === 0 ? adultPart : `${adultPart} · ${children} ${this.i18n.t(children === 1 ? 'tour.child' : 'tour.children')}`;
   }
 
   protected money(cents: number, currency: string): string {

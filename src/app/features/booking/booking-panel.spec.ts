@@ -100,7 +100,7 @@ describe('BookingPanel', () => {
       currency: 'USD',
     });
     const total = fixture.nativeElement.querySelector('#booking-total') as HTMLElement;
-    expect(total.textContent).toContain('$158.00');
+    expect(total.textContent).toContain('$USD 158');
     expect(text(fixture.nativeElement)).toContain('09:00');
     expect(text(fixture.nativeElement)).toContain('Plaza de Armas, Ica');
 
