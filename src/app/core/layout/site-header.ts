@@ -2,7 +2,7 @@ import { ScrollStrategy, ScrollStrategyOptions } from '@angular/cdk/overlay';
 import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronDown, lucideMenu, lucideMoon, lucideSun } from '@ng-icons/lucide';
+import { lucideChevronDown, lucideMenu, lucideMoon, lucideShoppingCart, lucideSun } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
@@ -10,6 +10,8 @@ import { PlanTripHover } from '../animation/plan-trip-hover';
 import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
+import { CartService } from '../booking/cart';
+import { PUBLIC_CONFIG } from '../config/public-config';
 import { ThemeService } from '../theme/theme';
 import { BrandMark } from './brand-mark';
 import { CurrencySwitcher } from './currency-switcher';
@@ -33,7 +35,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
     PlanTripHover,
     BrandMark,
   ],
-  providers: [provideIcons({ lucideChevronDown, lucideMenu, lucideMoon, lucideSun })],
+  providers: [provideIcons({ lucideChevronDown, lucideMenu, lucideMoon, lucideShoppingCart, lucideSun })],
   template: `
     <header class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md">
       <div
@@ -47,7 +49,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
           Desértica
         </a>
 
-        <div class="flex min-w-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
+        <div class="flex min-w-0 items-center gap-1.5 sm:gap-2 lg:gap-1 xl:gap-4">
           <nav
             hlmNavigationMenu
             class="hidden lg:flex"
@@ -298,6 +300,25 @@ import { isNavGroup, navItemTrack } from './primary-nav';
             <app-currency-switcher />
           </span>
 
+          @if (bookingEngine) {
+            <a
+              hlmBtn
+              variant="ghost"
+              size="icon"
+              routerLink="/cart"
+              class="relative shrink-0"
+              [attr.aria-label]="cartLabel()"
+            >
+              <ng-icon name="lucideShoppingCart" aria-hidden="true" />
+              @if (cart.count() > 0) {
+                <span
+                  class="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 grid min-w-4 place-items-center rounded-full px-1 text-[0.65rem] leading-4 font-medium"
+                  >{{ cart.count() }}</span
+                >
+              }
+            </a>
+          }
+
           <button
             hlmBtn
             type="button"
@@ -324,6 +345,14 @@ export class SiteHeader {
   private readonly scrollStrategies = inject(ScrollStrategyOptions);
   protected readonly menuScroll: ScrollStrategy = this.scrollStrategies.noop();
   protected readonly theme = inject(ThemeService);
+  protected readonly cart = inject(CartService);
+  protected readonly cartLabel = computed(() =>
+    this.cart.count() > 0
+      ? this.i18n.t('cart.openWithCount').replace('{count}', String(this.cart.count()))
+      : this.i18n.t('cart.open'),
+  );
+  /** The cart only exists while the booking engine is on. */
+  protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
   protected readonly i18n = inject(I18nService);
   private readonly catalog = inject(CatalogService);
   protected readonly navLinks = this.catalog.navLinks;
