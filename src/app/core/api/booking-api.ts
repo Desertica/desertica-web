@@ -115,7 +115,7 @@ export class BookingApi {
     return settle(this.api.POST('/public/quotes', { body }));
   }
 
-  createHold(body: { departureId: string; seats: number }): Promise<ApiResult<Hold>> {
+  createHold(body: { departureId: string; seats: number; turnstileToken?: string }): Promise<ApiResult<Hold>> {
     return settle(this.api.POST('/public/holds', { body }));
   }
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
@@ -7,6 +7,7 @@ import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/boo
 import { CartService } from '../../core/booking/cart';
 import { formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
+import { Turnstile } from '../../core/forms/turnstile';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { usePageMeta } from '../../core/seo/page-meta';
@@ -18,7 +19,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
 @Component({
   selector: 'app-cart',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe, HlmButton, HlmCardImports],
+  imports: [RouterLink, TranslatePipe, HlmButton, HlmCardImports, Turnstile],
   template: `
     <section class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
       <h1 class="font-heading text-3xl">{{ 'cart.title' | translate: i18n.locale() }}</h1>
@@ -48,7 +49,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
                       {{ 'cart.remove' | translate: i18n.locale() }}
                     </button>
                     @if (cart.items().length > 1) {
-                      <button hlmBtn type="button" size="sm" [disabled]="busy()" (click)="reserve(item)">
+                      <button hlmBtn type="button" size="sm" [disabled]="blocked()" (click)="reserve(item)">
                         {{ 'cart.reserveOne' | translate: i18n.locale() }}
                       </button>
                     }
@@ -68,8 +69,9 @@ import { usePageMeta } from '../../core/seo/page-meta';
               </p>
             }
             <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
+            <app-turnstile (tokenChange)="captcha.set($event)" />
             @if (cart.items().length === 1) {
-              <button hlmBtn type="button" class="w-full" [disabled]="busy()" (click)="reserve(cart.items()[0]!)">
+              <button hlmBtn type="button" class="w-full" [disabled]="blocked()" (click)="reserve(cart.items()[0]!)">
                 {{ (busy() ? 'booking.holding' : 'booking.continue') | translate: i18n.locale() }}
               </button>
             } @else {
@@ -91,6 +93,10 @@ export class Cart {
   private readonly api = inject(BookingApi);
   private readonly router = inject(Router);
   protected readonly busy = signal(false);
+  private readonly turnstile = viewChild(Turnstile);
+  protected readonly captcha = signal<string | null>(null);
+  /** Holding seats needs a solved Turnstile challenge when the site key is configured. */
+  protected readonly blocked = computed(() => this.busy() || (this.turnstile()?.enabled === true && !this.captcha()));
   protected readonly error = signal<string | null>(null);
 
   constructor() {
@@ -149,8 +155,10 @@ export class Cart {
       return;
     }
 
-    const result = await this.flow.reserve(current);
+    const result = await this.flow.reserve(current, this.captcha());
     this.busy.set(false);
+    // The token is single-use: the next attempt needs a new one.
+    this.turnstile()?.reset();
     if (!result.ok) {
       this.error.set(holdErrorKey(result.status));
       return;

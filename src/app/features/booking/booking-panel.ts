@@ -9,6 +9,7 @@ import {
   input,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -26,6 +27,7 @@ import {
 } from '../../core/api/booking-api';
 import { CurrencyService } from '../../core/currency/currency';
 import { CartService } from '../../core/booking/cart';
+import { Turnstile } from '../../core/forms/turnstile';
 import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
 import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
@@ -52,6 +54,7 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
     HlmFieldImports,
     HlmSkeleton,
     HlmToggleGroupImports,
+    Turnstile,
   ],
   host: { class: 'block w-full' },
   template: `
@@ -234,13 +237,14 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
             <a routerLink="/cart" class="underline underline-offset-2">{{ 'cart.view' | translate: i18n.locale() }}</a>
           </p>
         }
+        <app-turnstile (tokenChange)="captcha.set($event)" />
         <button
           hlmBtn
           type="button"
           variant="outline"
           class="w-full"
           id="booking-continue"
-          [disabled]="!quote() || holding()"
+          [disabled]="!quote() || holding() || (captchaRequired() && !captcha())"
           (click)="reserve()"
         >
           {{ (holding() ? 'booking.holding' : 'booking.continue') | translate: i18n.locale() }}
@@ -287,6 +291,10 @@ export class BookingPanel {
   protected readonly quoting = signal(false);
   protected readonly quoteFailed = signal(false);
   protected readonly holding = signal(false);
+  private readonly turnstile = viewChild(Turnstile);
+  /** The API holds seats only with a solved Turnstile challenge when the site key is configured. */
+  protected readonly captchaRequired = computed(() => this.turnstile()?.enabled === true);
+  protected readonly captcha = signal<string | null>(null);
   protected readonly reserveError = signal<string | null>(null);
 
   protected readonly languages = computed(() => (this.page().languages.length ? this.page().languages : ['es', 'en']));
@@ -450,8 +458,10 @@ export class BookingPanel {
 
     this.holding.set(true);
     this.reserveError.set(null);
-    const result = await this.flow.reserve(selection);
+    const result = await this.flow.reserve(selection, this.captcha());
     this.holding.set(false);
+    // The token is single-use: the next attempt needs a new one.
+    this.turnstile()?.reset();
 
     if (!result.ok) {
       this.reserveError.set(holdErrorKey(result.status));
