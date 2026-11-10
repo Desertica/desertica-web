@@ -17,7 +17,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
       hlmBtn
       type="button"
       variant="ghost"
-      class="shrink-0 gap-1.5 px-2.5 font-medium tracking-wide uppercase"
+      class="shrink-0 gap-1.5 px-2.5 font-medium tracking-wide uppercase lg:px-1.5 xl:px-2.5"
       [hlmDropdownMenuTrigger]="currencyMenu"
       [attr.aria-label]="'a11y.chooseCurrency' | translate: i18n.locale()"
     >

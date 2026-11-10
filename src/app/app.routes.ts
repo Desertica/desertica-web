@@ -66,6 +66,11 @@ export const routes: Routes = [
   { path: 'experiences', redirectTo: 'tours' },
   // Booking engine: these routes only exist while BOOKING_ENGINE_ENABLED is true.
   {
+    path: 'cart',
+    canMatch: [bookingEngineGuard],
+    loadComponent: () => import('./features/booking/cart').then((m) => m.Cart),
+  },
+  {
     path: 'checkout',
     canMatch: [bookingEngineGuard],
     loadComponent: () => import('./features/booking/checkout').then((m) => m.Checkout),

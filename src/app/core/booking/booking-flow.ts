@@ -23,6 +23,10 @@ export type BookingSelection = {
   quote: Quote;
 };
 
+/** Message key for a failed seat hold, shared by the tour page and the cart. */
+export const holdErrorKey = (status: number): string =>
+  status === 409 ? 'booking.errorSeats' : status === 429 ? 'booking.errorBusy' : 'booking.errorGeneric';
+
 /** Kept for the rest of the visit so a reload on the payment or booking page still works. */
 export type RememberedBooking = { accessToken: string };
 

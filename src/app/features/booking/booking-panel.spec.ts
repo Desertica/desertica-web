@@ -3,6 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { BookingFlow } from '../../core/booking/booking-flow';
+import { CartService } from '../../core/booking/cart';
 import { CatalogService } from '../../core/catalog/catalog';
 import { CurrencyService } from '../../core/currency/currency';
 import { DEPARTURE_ID, QUOTE, departure, tomorrowDeparture } from '../../testing/booking-fixtures';
@@ -13,7 +14,6 @@ import { BookingPanel } from './booking-panel';
 
 type PanelInternals = {
   onDate: (date: Date | undefined) => void;
-  onCurrency: (value: unknown) => void;
   adults: () => number;
   bump: (kind: 'adults' | 'children', delta: 1 | -1) => void;
 };
@@ -85,7 +85,6 @@ describe('BookingPanel', () => {
       .filter((call) => call.path.endsWith('/availability'))
       .map((call) => call.query.get('currency'));
     expect(currencies.slice(-3)).toEqual(['PEN', 'PEN', 'PEN']);
-    expect(text(fixture.nativeElement)).toContain('PEN');
   });
 
   it('quotes the group for the single departure of the picked day', async () => {
@@ -110,6 +109,26 @@ describe('BookingPanel', () => {
     expect(mock.calls.filter((call) => call.path === '/public/quotes').at(-1)?.body).toMatchObject({
       adults: 2,
     });
+  });
+
+  it('adds the picked departure to the cart without holding seats, and has no currency buttons of its own', async () => {
+    const { fixture, internals } = await mount();
+    internals.onDate(day.date);
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('#booking-currency-label')).toBeNull();
+    (fixture.nativeElement.querySelector('#booking-add') as HTMLButtonElement).click();
+    await settle(fixture);
+
+    const cart = TestBed.inject(CartService);
+    expect(cart.items()).toHaveLength(1);
+    expect(cart.items()[0]).toMatchObject({ tourSlug: 'dune-buggy', departureId: DEPARTURE_ID, currency: 'USD', adults: 1 });
+    expect(mock.calls.some((call) => call.path === '/public/holds')).toBe(false);
+    expect(fixture.nativeElement.querySelector('#booking-added')).not.toBeNull();
+
+    internals.bump('adults', 1);
+    await settle(fixture);
+    expect(fixture.nativeElement.querySelector('#booking-added')).toBeNull();
   });
 
   it('holds the seats and moves on to the checkout', async () => {
