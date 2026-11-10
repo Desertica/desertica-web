@@ -9,6 +9,7 @@ npm install                                # once (cloud sessions do this in a S
 npm start                                  # Angular on :4200, static catalog
 npm run cms:dev                            # Strapi from ../desertica-cms on :1337 (seeds an empty database)
 npm run start:cms                          # Angular reading Strapi (STRAPI_URL=http://localhost:1337)
+npm run start:stg                          # Angular on :4200 with the staging CMS and API: same content and booking engine as stg.desertica.pe
 npm test                                   # ng test (Vitest)
 npm run build                              # browser bundle + Node SSR server
 ```
