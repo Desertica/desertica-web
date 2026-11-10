@@ -46,7 +46,6 @@
     "closeMenu": "Close menu",
     "chooseCurrency": "Currency",
     "chooseLanguage": "Language",
-    "chooseCurrency": "Currency",
     "whatsapp": "WhatsApp",
     "intro": "Loading Desértica",
     "newTab": "(opens in a new tab)"
@@ -86,6 +85,7 @@
     "nazcaLead": "Nazca lines and desert flights.",
     "huacachinaLead": "Dunes, oasis, and nights by the lagoon.",
     "paracasLead": "Ballestas, cliffs, and Paracas sand.",
+    "legalVersion": "Version {version}, in force since {date}.",
     "termsLead": "Terms of the reservation.",
     "privacyLead": "How we handle personal data.",
     "complaintsLead": "Complaints book.",

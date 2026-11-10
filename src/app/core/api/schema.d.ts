@@ -358,7 +358,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/public/company": {
+    "/public/legal-documents/{kind}": {
         parameters: {
             query?: never;
             header?: never;
@@ -366,10 +366,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Datos del proveedor para la hoja de reclamación
-         * @description Razón social, RUC y domicilio fiscal de la empresa activa. No expone nada fiscal ni interno.
+         * Versión vigente de un documento legal, con su texto
+         * @description La última versión publicada de un documento global (no `WAIVER`) en `locale`. La web la usa para las
+         *     páginas legales (`/terms`, `/privacy`...), así que lo que se muestra es exactamente lo que se acepta.
+         *     404 si no hay ninguna versión publicada en ese idioma.
          */
-        get: operations["getPublicCompany"];
+        get: operations["getPublicLegalDocument"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1350,8 +1352,10 @@ export interface paths {
         put?: never;
         /**
          * Publicar una nueva versión de un documento legal
-         * @description Guarda un snapshot inmutable del texto del CMS en el idioma `locale` (un trigger de la base impide
-         *     modificarlo o borrarlo).
+         * @description Guarda un snapshot inmutable del texto en el idioma `locale` (un trigger de la base impide
+         *     modificarlo o borrarlo). El texto se escribe en el backoffice: con `text` (y `title`) se publica ese
+         *     texto tal cual y no se consulta el CMS. Sin `text` se toma del CMS como antes (en desuso: se retira
+         *     cuando la web y el backoffice dejen de usarlo).
          *     - Documentos globales (`TERMS`, `PRIVACY`, `CANCELLATION`, `COOKIES`, `CONDUCT`): la página
          *       `cmsSlug`; la versión es la siguiente de `(kind, locale)`.
          *     - `WAIVER`: el campo `waiverBody` del tour `tourRefId` en ese idioma (no lleva `cmsSlug`); la versión
@@ -1361,6 +1365,26 @@ export interface paths {
          *     Responde 422 si el CMS no tiene esa página, ese tour o su `waiverBody`, y 503 si el CMS no responde.
          */
         post: operations["publishLegalDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/legal-documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Una versión publicada con su texto
+         * @description Para el editor del backoffice, que parte del texto de la versión vigente al publicar una nueva.
+         */
+        get: operations["getLegalDocument"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2284,23 +2308,15 @@ export interface components {
             /** Format: date-time */
             publishedAt: string;
         };
-        PublicCompany: {
-            legalName: string;
-            tradeName?: string;
-            ruc: string;
-            fiscalAddress: string;
+        /** @description Una versión publicada con el texto que se publicó (Markdown). */
+        LegalDocumentWithText: components["schemas"]["LegalDocument"] & {
+            text: string;
         };
         CreateComplaint: {
-            /**
-             * @description `BOTH` si marca reclamo y queja.
-             * @enum {string}
-             */
-            kind: "RECLAMO" | "QUEJA" | "BOTH";
-            /**
-             * @description `BOTH` si marca producto y servicio.
-             * @enum {string}
-             */
-            goodType: "PRODUCT" | "SERVICE" | "BOTH";
+            /** @enum {string} */
+            kind: "RECLAMO" | "QUEJA";
+            /** @enum {string} */
+            goodType: "PRODUCT" | "SERVICE";
             consumerName: string;
             idDocType: components["schemas"]["IdDocType"];
             idDocNumber: string;
@@ -2309,8 +2325,6 @@ export interface components {
             email: string;
             phone?: string;
             isMinor?: boolean;
-            /** @description Padre, madre o apoderado; obligatorio si `isMinor`. */
-            guardianName?: string;
             bookingRef?: string;
             amountCents?: number;
             currency?: components["schemas"]["Currency"];
@@ -3138,25 +3152,30 @@ export interface operations {
             };
         };
     };
-    getPublicCompany: {
+    getPublicLegalDocument: {
         parameters: {
-            query?: never;
+            query: {
+                locale: string;
+            };
             header?: never;
-            path?: never;
+            path: {
+                kind: "TERMS" | "PRIVACY" | "CANCELLATION" | "COOKIES" | "CONDUCT";
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Datos del proveedor */
+            /** @description Versión vigente con su texto */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicCompany"];
+                    "application/json": components["schemas"]["LegalDocumentWithText"];
                 };
             };
             404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
         };
     };
     getCurrentLegalDocuments: {
@@ -3384,8 +3403,11 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        /** @description Tours nuevos; nacen inactivos */
                         created: number;
                         updated: number;
+                        /** @description Tours que ya no están publicados en el CMS */
+                        deactivated: number;
                     };
                 };
             };
@@ -4870,13 +4892,17 @@ export interface operations {
                 "application/json": {
                     kind: components["schemas"]["LegalDocumentKind"];
                     locale: string;
-                    /** @description Obligatorio salvo con `WAIVER`. */
+                    /** @description Sin `text`, obligatorio salvo con `WAIVER`. Con `text` es opcional: por defecto el slug de la página legal de ese tipo (`terms`, `privacy`, `cancellation`, `cookies`, `conduct`). */
                     cmsSlug?: string;
                     /**
                      * Format: uuid
                      * @description Obligatorio con `WAIVER` y no admitido con los demás.
                      */
                     tourRefId?: string;
+                    /** @description Obligatorio con `text`. */
+                    title?: string;
+                    /** @description Texto en Markdown que se publica. Sin él se toma del CMS. */
+                    text?: string;
                 };
             };
         };
@@ -4892,6 +4918,29 @@ export interface operations {
             };
             422: components["responses"]["Error"];
             503: components["responses"]["Error"];
+        };
+    };
+    getLegalDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versión con su texto */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalDocumentWithText"];
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     listUsers: {
