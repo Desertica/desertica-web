@@ -13,7 +13,7 @@ import { withBookingDefaults, withFormDefaults, withIntroDefaults } from '../cms
 import { CmsApi } from '../cms/cms-api';
 import type { BlogPost, CmsPage, CmsSnapshot, MediaSlot, Product } from '../cms/cms-models';
 import { PLACEHOLDER_IMAGE } from '../images/placeholder-image';
-import { contactFromSite, legalFromSite, withSiteDefaults } from '../cms/site-defaults';
+import { SHOW_PLACEHOLDERS, contactFromSite, legalFromSite, withSiteDefaults } from '../cms/site-defaults';
 import { type AppLocale } from '../i18n/catalogs';
 import { I18nService } from '../i18n/i18n';
 import {
@@ -44,6 +44,8 @@ export class CatalogService {
   private readonly transfer = inject(TransferState);
   private readonly themeStyles = inject(CmsThemeStyles);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  /** Dev builds keep the XXXX contact and legal data visible, so empty fields still show the layout. */
+  private readonly showPlaceholders = inject(SHOW_PLACEHOLDERS);
   private readonly requestContext = inject(REQUEST_CONTEXT, { optional: true }) as { preview?: boolean } | null;
   private readonly snapshot = signal<CmsSnapshot | null>(null);
   /** True when the page shows CMS drafts (verified on the server; the token itself never gets here). */
@@ -59,8 +61,8 @@ export class CatalogService {
   readonly featuredTours = computed(() => this.tours().filter((tour) => tour.featured));
   readonly site = computed(() => withSiteDefaults(this.snapshot()?.site));
   readonly placeholder = computed(() => this.site().placeholderImage || PLACEHOLDER_IMAGE);
-  readonly contact = computed(() => contactFromSite(this.site()));
-  readonly legal = computed(() => legalFromSite(this.site()));
+  readonly contact = computed(() => contactFromSite(this.site(), this.showPlaceholders));
+  readonly legal = computed(() => legalFromSite(this.site(), this.showPlaceholders));
   readonly socials = computed(() => buildFooterSocials(this.site()));
   readonly navLinks = computed(() =>
     buildPrimaryNavLinks(this.destinations(), this.snapshot()?.navigation?.headerLinks),
