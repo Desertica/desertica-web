@@ -50,6 +50,20 @@ describe('BookingFlow', () => {
     expect(flow.expired()).toBe(true);
   });
 
+  it('sends the Turnstile token with the hold when there is one', async () => {
+    mock = mockApi({
+      'POST /public/holds': () => ({
+        status: 201,
+        body: { token: 'hold-1', departureId: DEPARTURE_ID, seats: 2, expiresAt: expiresIn(90) },
+      }),
+    });
+    const flow = TestBed.inject(BookingFlow);
+
+    await flow.reserve(selection(), 'captcha-token');
+
+    expect(mock.calls[0]?.body).toEqual({ departureId: DEPARTURE_ID, seats: 2, turnstileToken: 'captcha-token' });
+  });
+
   it('releases the earlier hold when a new one is created and keeps nothing on failure', async () => {
     let count = 0;
     mock = mockApi({

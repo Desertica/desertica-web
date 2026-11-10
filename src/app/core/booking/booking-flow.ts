@@ -75,11 +75,13 @@ export class BookingFlow {
   }
 
   /** Holds the seats for `selection`, releasing any hold from an earlier choice first. */
-  async reserve(selection: BookingSelection): Promise<ApiResult<Hold>> {
+  /** `turnstileToken`: the solved challenge when Turnstile is configured; the API refuses the hold without it. */
+  async reserve(selection: BookingSelection, turnstileToken?: string | null): Promise<ApiResult<Hold>> {
     const previous = this.hold();
     const result = await this.api.createHold({
       departureId: selection.departureId,
       seats: selection.adults + selection.children,
+      ...(turnstileToken ? { turnstileToken } : {}),
     });
     if (!result.ok) {
       return result;
