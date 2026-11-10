@@ -55,6 +55,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/tour-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Precio "desde" de cada tour activo en una moneda
+         * @description El precio más bajo vigente hoy de cada tour activo, para las tarjetas y la ficha de la web (el CMS ya no
+         *     guarda precios). Por persona cuando el tour tiene reglas por persona; si solo tiene reglas por grupo, el
+         *     precio del grupo con `unit: PER_GROUP`. Un tour sin reglas vigentes en esa moneda no aparece.
+         */
+        get: operations["getTourPrices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/quotes": {
         parameters: {
             query?: never;
@@ -2644,6 +2666,37 @@ export interface operations {
                 };
             };
             404: components["responses"]["Error"];
+        };
+    };
+    getTourPrices: {
+        parameters: {
+            query: {
+                currency: components["schemas"]["Currency"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Precios desde */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            slug: string;
+                            /** @description Con IGV incluido. */
+                            fromCents: number;
+                            /** @enum {string} */
+                            unit: "PER_PERSON" | "PER_GROUP";
+                        }[];
+                    };
+                };
+            };
+            422: components["responses"]["Error"];
         };
     };
     createQuote: {
