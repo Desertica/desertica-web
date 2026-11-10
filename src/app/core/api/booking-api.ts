@@ -15,6 +15,7 @@ export type CreatePublicBooking = Schemas['CreatePublicBooking'];
 export type PublicBooking = Schemas['PublicBooking'];
 export type PublicBookingCreated = Schemas['PublicBookingCreated'];
 export type LegalDocument = Schemas['LegalDocument'];
+export type LegalDocumentWithText = Schemas['LegalDocumentWithText'];
 export type PaymentOption = PublicBooking['paymentOptions'][number];
 export type PaymentKind = Schemas['PaymentKind'];
 export type StripeIntent = Schemas['StripeIntent'];
@@ -30,8 +31,7 @@ export type SignWaiver = NonNullable<
  * from an e-mail (the link token itself is the credential).
  */
 export type PayTarget =
-  | { type: 'booking'; reference: string; accessToken: string }
-  | { type: 'link'; token: string };
+  { type: 'booking'; reference: string; accessToken: string } | { type: 'link'; token: string };
 
 /**
  * Culqi's 3DS step needs the device id and the browser's authentication parameters on a second
@@ -115,7 +115,11 @@ export class BookingApi {
     return settle(this.api.POST('/public/quotes', { body }));
   }
 
-  createHold(body: { departureId: string; seats: number; turnstileToken?: string }): Promise<ApiResult<Hold>> {
+  createHold(body: {
+    departureId: string;
+    seats: number;
+    turnstileToken?: string;
+  }): Promise<ApiResult<Hold>> {
     return settle(this.api.POST('/public/holds', { body }));
   }
 
@@ -145,6 +149,18 @@ export class BookingApi {
         params: { path: { reference } },
         // The booking token is a security scheme, so the contract does not type it as a parameter.
         headers: { 'X-Booking-Token': accessToken },
+      }),
+    );
+  }
+
+  /** The version in force of a global legal document with its text (the legal pages show it). */
+  legalDocument(
+    kind: 'TERMS' | 'PRIVACY' | 'CANCELLATION' | 'COOKIES' | 'CONDUCT',
+    locale: string,
+  ): Promise<ApiResult<LegalDocumentWithText>> {
+    return settle(
+      this.api.GET('/public/legal-documents/{kind}', {
+        params: { path: { kind }, query: { locale } },
       }),
     );
   }
@@ -207,9 +223,7 @@ export class BookingApi {
   }
 
   paymentLink(token: string): Promise<ApiResult<PaymentLinkInfo>> {
-    return settle(
-      this.api.GET('/public/payment-links/{token}', { params: { path: { token } } }),
-    );
+    return settle(this.api.GET('/public/payment-links/{token}', { params: { path: { token } } }));
   }
 
   waiver(token: string): Promise<ApiResult<WaiverForm>> {

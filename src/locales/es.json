@@ -46,7 +46,6 @@
     "closeMenu": "Cerrar menú",
     "chooseCurrency": "Moneda",
     "chooseLanguage": "Idioma",
-    "chooseCurrency": "Moneda",
     "whatsapp": "WhatsApp",
     "intro": "Cargando Desértica",
     "newTab": "(se abre en una pestaña nueva)"
@@ -86,6 +85,7 @@
     "nazcaLead": "Líneas de Nazca y vuelos sobre el desierto.",
     "huacachinaLead": "Dunas, oasis y noches junto a la laguna.",
     "paracasLead": "Ballestas, acantilados y arena de Paracas.",
+    "legalVersion": "Versión {version}, vigente desde el {date}.",
     "termsLead": "Términos de la reserva.",
     "privacyLead": "Tratamiento de datos personales.",
     "complaintsLead": "Libro de reclamaciones.",
