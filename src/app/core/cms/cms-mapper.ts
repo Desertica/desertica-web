@@ -1,8 +1,6 @@
 import type {
   TourFaq,
   TourFeature,
-  TourFormat,
-  TourLanguage,
   TourPage,
   TourStop,
   TourVideo,
@@ -57,7 +55,6 @@ export type MapOptions = {
 };
 
 const DEFAULT_LOCALE_ORDER: readonly AppLocale[] = ['en', 'es'];
-const FORMATS: readonly TourFormat[] = ['shared', 'private', 'both'];
 
 export const tourKey = (slug: string, field: string): string => `cms.tours.${slug}.${field}`;
 export const destinationKey = (slug: string, field: string): string =>
@@ -116,7 +113,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       assign(target, tourKey(slug, 'termsSummary'), text(entry['termsSummary']));
       assign(target, tourKey(slug, 'seoTitle'), text(entry['seoTitle']));
       assign(target, tourKey(slug, 'seoDescription'), text(entry['seoDescription']));
-      assign(target, tourKey(slug, 'meeting'), text(entry['meeting']));
       assign(target, tourKey(slug, 'waiverBody'), text(entry['waiverBody']));
     }
 
@@ -125,9 +121,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       destination: destinationSlug,
       titleKey: tourKey(slug, 'title'),
       descriptionKey: tourKey(slug, 'description'),
-      durationHours: num(base['durationHours']) ?? 0,
-      priceFrom: num(base['priceFrom']) ?? 0,
-      ...(num(base['pricePen']) ? { pricePen: num(base['pricePen']) } : {}),
       image,
       ...imageFocus(base['imageFocus']),
       featured: base['featured'] === true,
@@ -148,9 +141,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       expandedDescriptionKeys: body.length
         ? body
         : items(slug, 'expandedParagraphs', byLocale, messages),
-      meetingKey: tourKey(slug, 'meeting'),
-      languages: languages(base['languages']),
-      format: format(base['format']),
       practices: features(`cms.tours.${slug}`, 'practices', byLocale, messages),
       itinerary: stops(slug, byLocale, messages, options.mediaBase, image),
       videos: videos(base['videos'], options.mediaBase),
@@ -168,9 +158,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       seoDescriptionKey: hasText(byLocale, 'seoDescription')
         ? tourKey(slug, 'seoDescription')
         : undefined,
-      latitude: coordinate(base['latitude'], 90),
-      longitude: coordinate(base['longitude'], 180),
-      meetingPointUrl: webUrl(base['meetingPointUrl']),
       faqs: faqs(slug, byLocale, messages),
       waiverBodyKey: hasText(byLocale, 'waiverBody') ? tourKey(slug, 'waiverBody') : undefined,
     };
@@ -325,8 +312,6 @@ export function mapSite(entry: RawEntry, mediaBase: string | null = null): SiteS
     showLinkedin: entry['showLinkedin'] === true,
     showGoogle: entry['showGoogle'] === true,
     showTripadvisor: entry['showTripadvisor'] === true,
-    legalName: field('legalName'),
-    ruc: field('ruc'),
   };
 }
 
@@ -387,13 +372,8 @@ function mapBooking(
   }
 
   return {
-    depositRate: num(base['depositRate']) ?? 0,
-    adultsMin: num(base['adultsMin']) ?? 0,
     adultsDefault: num(base['adultsDefault']) ?? 0,
-    childrenMin: num(base['childrenMin']) ?? 0,
     childrenDefault: num(base['childrenDefault']) ?? 0,
-    peopleMax: num(base['peopleMax']) ?? 0,
-    availabilityMonths: num(base['availabilityMonths']) ?? 0,
     currencyCode: text(base['currencyCode']) ?? '',
     assurances: features('cms.booking', 'assurances', byLocale, messages),
   };
@@ -634,29 +614,6 @@ function faqs(
   return result.length ? result : undefined;
 }
 
-/** Strapi returns decimals as numbers (or strings on some versions); out-of-range values are dropped. */
-function coordinate(value: unknown, limit: number): number | undefined {
-  const parsed = typeof value === 'string' && value.trim() ? Number(value) : value;
-  return typeof parsed === 'number' && Number.isFinite(parsed) && Math.abs(parsed) <= limit
-    ? parsed
-    : undefined;
-}
-
-/** Only http(s) links reach the page: the field is free text edited in the CMS. */
-function webUrl(value: unknown): string | undefined {
-  const raw = text(value);
-  if (!raw) {
-    return undefined;
-  }
-
-  try {
-    const url = new URL(raw);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function assign(target: Record<string, string>, key: string, value: string | undefined): void {
   if (value) {
     target[key] = value;
@@ -703,17 +660,6 @@ function stringList(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
     : [];
-}
-
-function languages(value: unknown): readonly TourLanguage[] {
-  const list = stringList(value).filter(
-    (item): item is TourLanguage => item === 'es' || item === 'en',
-  );
-  return list.length ? list : ['es', 'en'];
-}
-
-function format(value: unknown): TourFormat {
-  return FORMATS.find((item) => item === value) ?? 'both';
 }
 
 /** Only a non-default focus is kept, so tours without one map exactly as before. */

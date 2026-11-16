@@ -12,6 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { PublicData } from '../api/public-data';
 import { CatalogService } from '../catalog/catalog';
 import { socialUrl } from '../cms/site-defaults';
 import { PUBLIC_CONFIG } from '../config/public-config';
@@ -21,7 +22,6 @@ import { type JsonLd, breadcrumbLd, organizationLd, serializeLd } from './json-l
 import {
   absoluteUrl,
   alternatesFor,
-  isPlaceholder,
   localizedUrl,
   openGraphLocale,
   pathOf,
@@ -55,6 +55,7 @@ export class SeoService {
   private readonly router = inject(Router);
   private readonly i18n = inject(I18nService);
   private readonly catalog = inject(CatalogService);
+  private readonly publicData = inject(PublicData);
   private readonly config = inject(PUBLIC_CONFIG);
   private readonly request = inject(REQUEST, { optional: true });
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -147,7 +148,7 @@ export class SeoService {
         name: site.brandName,
         url: origin,
         logo,
-        legalName: isPlaceholder(site.legalName) ? undefined : site.legalName,
+        legalName: this.publicData.company()?.legalName,
         email: contact.email ?? undefined,
         phone: contact.phone ?? undefined,
         sameAs: (['instagram', 'facebook', 'tiktok', 'youtube', 'linkedin', 'tripadvisor'] as const)

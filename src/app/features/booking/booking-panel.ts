@@ -34,8 +34,8 @@ import { formatPickerDate } from '../tours/detail/tour-whatsapp';
 import { Turnstile } from '../../core/forms/turnstile';
 import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
 import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
+import { PublicData } from '../../core/api/public-data';
 import { CatalogService } from '../../core/catalog/catalog';
-import type { TourPage } from '../../core/catalog/tour-pages';
 import type { CatalogTour } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -144,24 +144,26 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
         }
 
         <div class="grid grid-cols-2 gap-3">
-          <div hlmField [class.col-span-2]="!showFormat()">
-            <span hlmFieldLabel id="booking-language-label">{{
-              'tour.language' | translate: i18n.locale()
-            }}</span>
-            <hlm-toggle-group
-              type="single"
-              variant="outline"
-              [value]="language()"
-              (valueChange)="onLanguage($event)"
-              aria-labelledby="booking-language-label"
-            >
-              @for (code of languages(); track code) {
-                <button hlmToggleGroupItem type="button" [value]="code">
-                  {{ 'lang.' + code | translate: i18n.locale() }}
-                </button>
-              }
-            </hlm-toggle-group>
-          </div>
+          @if (languages().length) {
+            <div hlmField [class.col-span-2]="!showFormat()">
+              <span hlmFieldLabel id="booking-language-label">{{
+                'tour.language' | translate: i18n.locale()
+              }}</span>
+              <hlm-toggle-group
+                type="single"
+                variant="outline"
+                [value]="language()"
+                (valueChange)="onLanguage($event)"
+                aria-labelledby="booking-language-label"
+              >
+                @for (code of languages(); track code) {
+                  <button hlmToggleGroupItem type="button" [value]="code">
+                    {{ 'lang.' + code | translate: i18n.locale() }}
+                  </button>
+                }
+              </hlm-toggle-group>
+            </div>
+          }
           @if (showFormat()) {
             <div hlmField>
               <span hlmFieldLabel id="booking-format-label">{{
@@ -283,10 +285,12 @@ export class BookingPanel {
   private quoteRun = 0;
 
   readonly tour = input.required<CatalogTour>();
-  readonly page = input.required<TourPage>();
 
   protected readonly i18n = inject(I18nService);
-  protected readonly rules = this.catalog.booking();
+  /** Limits from the booking system (`/public/booking-rules`), starting party from the CMS. */
+  protected get rules() {
+    return this.catalog.booking();
+  }
   protected readonly today = new Date();
 
   // The header switcher and this toggle are the same choice.
@@ -325,8 +329,11 @@ export class BookingPanel {
   protected readonly captcha = signal<string | null>(null);
   protected readonly reserveError = signal<string | null>(null);
 
-  protected readonly languages = computed(() => (this.page().languages.length ? this.page().languages : ['es', 'en']));
-  protected readonly showFormat = computed(() => this.page().format === 'both');
+  private readonly publicData = inject(PublicData);
+  /** Languages and format of the tour in the booking system; a filter without options is not shown. */
+  private readonly apiTour = computed(() => this.publicData.tour(this.tour().id));
+  protected readonly languages = computed(() => this.apiTour()?.languages ?? []);
+  protected readonly showFormat = computed(() => this.apiTour()?.format === 'BOTH');
   private readonly byDay = computed(() => {
     const days = new Map<string, AvailableDeparture[]>();
     for (const departure of this.departures()) {
@@ -357,13 +364,13 @@ export class BookingPanel {
   protected readonly isUnavailable = (date: Date): boolean => !this.byDay().has(localDayKey(date));
 
   constructor() {
-    const page = this.page;
     effect(() => {
       const locale = this.i18n.locale();
-      const options = page().languages;
+      const options = this.languages();
+      const offer = this.apiTour()?.format;
       untracked(() => {
-        this.language.set(options.includes(locale) ? locale : (options[0] ?? 'es'));
-        this.format.set(page().format === 'private' ? 'PRIVATE' : 'SHARED');
+        this.language.set(options.includes(locale) ? locale : (options[0] ?? locale));
+        this.format.set(offer === 'PRIVATE' ? 'PRIVATE' : 'SHARED');
       });
     });
 

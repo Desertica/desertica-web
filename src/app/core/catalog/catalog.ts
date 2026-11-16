@@ -9,6 +9,7 @@ import {
   makeStateKey,
   signal,
 } from '@angular/core';
+import { PublicData } from '../api/public-data';
 import { withBookingDefaults, withFormDefaults, withIntroDefaults } from '../cms/booking-defaults';
 import { CmsApi } from '../cms/cms-api';
 import type { BlogPost, CmsPage, CmsSnapshot, MediaSlot, Product } from '../cms/cms-models';
@@ -40,6 +41,7 @@ const PREVIEW_KEY = makeStateKey<boolean>('cms-preview');
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
   private readonly api = inject(CmsApi);
+  private readonly publicData = inject(PublicData);
   private readonly i18n = inject(I18nService);
   private readonly transfer = inject(TransferState);
   private readonly themeStyles = inject(CmsThemeStyles);
@@ -62,7 +64,7 @@ export class CatalogService {
   readonly site = computed(() => withSiteDefaults(this.snapshot()?.site));
   readonly placeholder = computed(() => this.site().placeholderImage || PLACEHOLDER_IMAGE);
   readonly contact = computed(() => contactFromSite(this.site(), this.showPlaceholders));
-  readonly legal = computed(() => legalFromSite(this.site(), this.showPlaceholders));
+  readonly legal = computed(() => legalFromSite(this.site(), this.publicData.company()));
   readonly socials = computed(() => buildFooterSocials(this.site()));
   readonly navLinks = computed(() =>
     buildPrimaryNavLinks(this.destinations(), this.snapshot()?.navigation?.headerLinks),
@@ -78,7 +80,8 @@ export class CatalogService {
     const links = this.snapshot()?.navigation?.footerLegalLinks;
     return links?.length ? footerLinksFrom(links) : footerLegalLinks;
   });
-  readonly booking = computed(() => withBookingDefaults(this.snapshot()?.booking));
+  readonly booking = computed(() => withBookingDefaults(this.snapshot()?.booking, this.publicData.rules()),
+  );
   readonly forms = computed(() => withFormDefaults(this.snapshot()?.forms));
   readonly introStyle = computed(() => withIntroDefaults(this.snapshot()?.theme?.intro));
   readonly footerDestinations = computed(() => buildFooterDestinations(this.destinations()));

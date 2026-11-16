@@ -15,12 +15,9 @@ export function tourSnapshot(extra: RawEntry): CmsSnapshot {
         {
           slug: 'dune-buggy',
           order: 0,
-          durationHours: 3,
-          priceFrom: 79,
           destination: { slug: 'huacachina' },
           title: locale === 'en' ? 'Dune buggy' : 'Dune buggy ES',
           description: 'Ride',
-          meeting: locale === 'en' ? 'Plaza de Armas' : 'Plaza de Armas ES',
           ...extra,
         },
       ]),

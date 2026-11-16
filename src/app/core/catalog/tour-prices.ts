@@ -10,8 +10,7 @@ import {
 } from '@angular/core';
 import { API_URL, ApiClient } from '../api/api-client';
 import type { Currency } from '../api/booking-api';
-import { priceIn } from '../currency/currency';
-import type { CatalogTour } from './tours';
+import { PUBLIC_API_TIMEOUT_MS } from '../api/public-data';
 
 type FromPrices = Partial<Record<Currency, Record<string, number>>>;
 const KEY = makeStateKey<FromPrices>('tour-prices');
@@ -19,7 +18,7 @@ const KEY = makeStateKey<FromPrices>('tour-prices');
 /**
  * The "from" price of each tour comes from the booking system (`GET /public/tour-prices`), not from the CMS.
  * Loaded once per request on the server (the API URL never reaches the browser) and handed over in TransferState.
- * A tour without a price in the API keeps the CMS value, so nothing shows empty while prices are being loaded.
+ * A tour without a price in the API shows no price: the CMS no longer has one.
  */
 @Injectable({ providedIn: 'root' })
 export class TourPrices {
@@ -42,7 +41,10 @@ export class TourPrices {
       await Promise.all(
         (['USD', 'PEN'] as const).map(async (currency) => {
           const { data } = await api
-            .GET('/public/tour-prices', { params: { query: { currency } } })
+            .GET('/public/tour-prices', {
+              params: { query: { currency } },
+              signal: AbortSignal.timeout(PUBLIC_API_TIMEOUT_MS),
+            })
             .catch(() => ({ data: undefined }));
           if (data) {
             loaded[currency] = Object.fromEntries(data.data.map((p) => [p.slug, p.fromCents]));
@@ -54,11 +56,25 @@ export class TourPrices {
     });
   }
 
-  /** Price to show for `tour` in `currency`: the booking system's, else the CMS one (`priceIn`). */
-  priceFor(tour: CatalogTour, currency: Currency): { currency: Currency; amount: number } {
-    const cents = this.prices()[currency]?.[tour.id];
-    return cents === undefined
-      ? priceIn(tour, currency)
-      : { currency, amount: Math.round(cents) / 100 };
+  /**
+   * "From" price of the tour in `currency`. Without a soles price it answers the dollar one, so the card keeps
+   * a price; `null` when the booking system has none (or is unreachable) and the price is left out.
+   */
+  priceFor(slug: string, currency: Currency): { currency: Currency; amount: number } | null {
+    const prices = this.prices();
+    for (const code of [currency, 'USD'] as const) {
+      const cents = prices[code]?.[slug];
+      if (cents !== undefined) {
+        return { currency: code, amount: Math.round(cents) / 100 };
+      }
+    }
+
+    return null;
+  }
+
+  /** The "from" amount in exactly that currency (JSON-LD, analytics, messages); `undefined` when there is none. */
+  amount(slug: string, currency: Currency): number | undefined {
+    const cents = this.prices()[currency]?.[slug];
+    return cents === undefined ? undefined : Math.round(cents) / 100;
   }
 }

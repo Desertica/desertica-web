@@ -26,8 +26,6 @@ export const DEFAULT_SITE: SiteSettings = {
   showLinkedin: false,
   showGoogle: false,
   showTripadvisor: false,
-  legalName: 'XXXXXXXXXXXX',
-  ruc: 'XXXXXXXXXXX',
 };
 
 /** Dev builds show the XXXX contact data so the layout is visible; production hides it. */
@@ -68,15 +66,18 @@ export function contactFromSite(site: SiteSettings, showPlaceholders = false): S
   };
 }
 
-/** Company name and RUC for the legal line; a placeholder name falls back to the brand and a placeholder RUC is dropped. */
+/**
+ * The legal line. Razón social and RUC belong to the booking system (`/public/company`): without it the brand
+ * name stands in and there is no RUC, never a placeholder one.
+ */
 export function legalFromSite(
   site: SiteSettings,
-  showPlaceholders = false,
+  company: { legalName: string; ruc: string } | null,
 ): { year: number; name: string; ruc: string | null } {
   return {
     year: site.legalYear,
-    name: !showPlaceholders && isPlaceholder(site.legalName) ? site.brandName : site.legalName,
-    ruc: !showPlaceholders && isPlaceholder(site.ruc) ? null : site.ruc,
+    name: company?.legalName || site.brandName,
+    ruc: company?.ruc || null,
   };
 }
 

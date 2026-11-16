@@ -3,7 +3,7 @@ import { contactFromSite, DEFAULT_SITE, legalFromSite, socialUrl, withSiteDefaul
 describe('site defaults', () => {
   it('drops placeholder contact channels and legal data', () => {
     expect(contactFromSite(DEFAULT_SITE)).toEqual({ email: null, phone: null, mailto: null, tel: null, phone2: null, tel2: null, whatsapp: null, whatsappLines: [] });
-    expect(legalFromSite(DEFAULT_SITE)).toEqual({ year: 2026, name: 'Desértica', ruc: null });
+    expect(legalFromSite(DEFAULT_SITE, null)).toEqual({ year: 2026, name: 'Desértica', ruc: null });
   });
 
   it('builds links from real CMS values', () => {
@@ -12,8 +12,6 @@ describe('site defaults', () => {
       phone: '+51 987 654 321',
       whatsapp: '51987654321',
       phone2: '+51 912 345 678',
-      legalName: 'Desértica S.A.C.',
-      ruc: '20123456789',
     });
     expect(contactFromSite(site)).toEqual({
       email: 'hola@desertica.pe',
@@ -25,7 +23,12 @@ describe('site defaults', () => {
       whatsapp: 'https://wa.me/51987654321',
       whatsappLines: [{ href: 'https://wa.me/51987654321' }],
     });
-    expect(legalFromSite(site)).toEqual({ year: 2026, name: 'Desértica S.A.C.', ruc: '20123456789' });
+    // Razón social and RUC come from the booking system's company, never from the CMS.
+    expect(legalFromSite(site, { legalName: 'Desértica S.A.C.', ruc: '20123456789' })).toEqual({
+      year: 2026,
+      name: 'Desértica S.A.C.',
+      ruc: '20123456789',
+    });
   });
 
   it('keeps a social off until its switch is on, and keeps the switch from the CMS', () => {

@@ -41,7 +41,11 @@ export function buildTourWhatsappHref(
   template: string,
   fields: TourWhatsappFields,
 ): string {
+  // A line whose value is unknown (no price or format in the booking system) is left out, not sent empty.
   const text = template
+    .split('\n')
+    .filter((line) => Object.entries(fields).every(([key, value]) => value || !line.includes(`{${key}}`)))
+    .join('\n')
     .replace('{tour}', fields.tour)
     .replace('{date}', fields.date)
     .replace('{language}', fields.language)

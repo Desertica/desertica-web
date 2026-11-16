@@ -9,10 +9,11 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AnalyticsService } from '../../core/analytics/analytics';
+import { AnalyticsService, asCurrency } from '../../core/analytics/analytics';
 import { tourItem } from '../../core/analytics/items';
 import { SmoothScroll } from '../../core/animation/smooth-scroll';
 import { CatalogService } from '../../core/catalog/catalog';
+import { TourPrices } from '../../core/catalog/tour-prices';
 import type { CatalogTour } from '../../core/catalog/tours';
 import { TOURS_BANNER_IMAGE, TOURS_CLOSER_IMAGE, tourPath } from '../../core/catalog/tours';
 import { I18nService } from '../../core/i18n/i18n';
@@ -44,6 +45,7 @@ export class Tours {
   protected readonly closerImage = this.catalog.mediaImage('tours.closer', TOURS_CLOSER_IMAGE);
   protected readonly detailPath = tourPath;
   private readonly analytics = inject(AnalyticsService);
+  private readonly prices = inject(TourPrices);
 
   constructor() {
     usePageMeta(() => ({
@@ -71,6 +73,7 @@ export class Tours {
   }
 
   private item(tour: CatalogTour) {
-    return tourItem(tour, this.i18n.t(tour.titleKey));
+    const currency = asCurrency(this.catalog.booking().currencyCode);
+    return tourItem(tour, this.i18n.t(tour.titleKey), undefined, this.prices.amount(tour.id, currency));
   }
 }

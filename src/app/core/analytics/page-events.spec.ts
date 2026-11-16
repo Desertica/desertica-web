@@ -13,6 +13,7 @@ import { FormsApi } from '../cms/forms-api';
 import { remoteImageLoader } from '../images/remote-image-loader';
 import { WhatsappFab } from '../layout/whatsapp-fab';
 import { AnalyticsService } from './analytics';
+import { loadPublicApi } from '../../testing/public-api';
 
 vi.mock('@spartan-ng/brain/sonner', () => ({ toast: vi.fn() }));
 
@@ -56,6 +57,7 @@ describe('analytics events on the pages', () => {
   });
 
   it('publishes view_item once per tour with currency and value', async () => {
+    loadPublicApi(TestBed, { prices: { USD: { 'dune-buggy': 7900 } } });
     const fixture = TestBed.createComponent(TourDetail);
     fixture.componentRef.setInput('id', 'dune-buggy');
     await fixture.whenStable();
@@ -67,8 +69,19 @@ describe('analytics events on the pages', () => {
     expect(views[0]?.[1]).toMatchObject({
       currency: 'USD',
       value: 79,
-      items: [{ item_id: 'dune-buggy', item_name: 'Dune buggy' }],
+      items: [{ item_id: 'dune-buggy', item_name: 'Dune buggy', price: 79 }],
     });
+  });
+
+  it('publishes view_item without a value when the booking system has no price', async () => {
+    const fixture = TestBed.createComponent(TourDetail);
+    fixture.componentRef.setInput('id', 'dune-buggy');
+    await fixture.whenStable();
+
+    const view = track.mock.calls.find(([name]) => name === 'view_item')?.[1];
+    expect(view).toMatchObject({ currency: 'USD', items: [{ item_id: 'dune-buggy' }] });
+    expect(view).not.toHaveProperty('value');
+    expect(view.items[0]).not.toHaveProperty('price');
   });
 
   it('publishes click_whatsapp from the floating button', async () => {

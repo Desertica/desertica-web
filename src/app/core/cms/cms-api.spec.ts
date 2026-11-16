@@ -66,7 +66,7 @@ describe('CmsApi cache', () => {
       }
 
       if (url.endsWith('/tours')) {
-        const tour = { slug: 'dune-buggy', order: 0, durationHours: 3, priceFrom: price, destination: { slug: 'huacachina' }, title: 'Dune buggy', description: '', meeting: '' };
+        const tour = { slug: 'dune-buggy', order: 0, imageUrl: `https://img/${price}.jpg`, destination: { slug: 'huacachina' }, title: 'Dune buggy', description: '' };
         return page([tour]);
       }
 
@@ -74,7 +74,7 @@ describe('CmsApi cache', () => {
     };
     let get = catalog(79);
     const { api } = setup((url) => get(url));
-    const priceOf = async () => (await api.load(options))?.destinations[0]?.tours[0]?.priceFrom;
+    const priceOf = async () => (await api.load(options))?.destinations[0]?.tours[0]?.image;
     const before = await priceOf();
 
     vi.useFakeTimers({ toFake: ['Date'] });
