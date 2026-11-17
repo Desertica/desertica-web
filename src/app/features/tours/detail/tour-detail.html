@@ -1,6 +1,6 @@
 @if (resolved(); as data) {
   <div class="mx-auto max-w-6xl px-4 pt-10 sm:px-6 sm:pt-14">
-    <app-tour-heading [tour]="data.tour" [page]="data.page" />
+    <app-tour-heading [tour]="data.tour" />
 
     <app-tour-gallery
       class="mt-8"
@@ -18,20 +18,22 @@
             {{ key | translate: i18n.locale() }}
           </p>
         }
-        @if (mapUrl(data.page); as map) {
+        @if (meeting(); as meeting) {
           <p class="max-w-2xl text-base" id="tour-meeting">
             <strong>{{ 'tour.meeting' | translate: i18n.locale() }}:</strong>
-            {{ data.page.meetingKey | translate: i18n.locale() }}
-            <a
-              [href]="map"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="underline underline-offset-4"
-              id="tour-map-link"
-            >
-              {{ 'tour.viewMap' | translate: i18n.locale() }}
-              <span class="sr-only">{{ 'a11y.newTab' | translate: i18n.locale() }}</span>
-            </a>
+            {{ meeting.text }}
+            @if (meeting.map; as map) {
+              <a
+                [href]="map"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline underline-offset-4"
+                id="tour-map-link"
+              >
+                {{ 'tour.viewMap' | translate: i18n.locale() }}
+                <span class="sr-only">{{ 'a11y.newTab' | translate: i18n.locale() }}</span>
+              </a>
+            }
           </p>
         }
       </div>
@@ -41,13 +43,11 @@
           <app-booking-panel
             class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
             [tour]="data.tour"
-            [page]="data.page"
           />
         } @else {
           <app-tour-book
             class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
             [tour]="data.tour"
-            [page]="data.page"
           />
         }
         @if (askHref(); as href) {

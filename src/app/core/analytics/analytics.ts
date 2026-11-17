@@ -25,7 +25,8 @@ export type AnalyticsItem = {
 export type AnalyticsEvents = {
   view_item_list: { item_list_name: string; items: AnalyticsItem[] };
   select_item: { item_list_name: string; items: AnalyticsItem[] };
-  view_item: { currency: Currency; value: number; items: AnalyticsItem[] };
+  /** `value` is left out when the booking system has no price for the tour. */
+  view_item: { currency: Currency; value?: number; items: AnalyticsItem[] };
   begin_checkout: { currency: Currency; value: number; items: AnalyticsItem[]; event_id: string };
   add_payment_info: {
     currency: Currency;

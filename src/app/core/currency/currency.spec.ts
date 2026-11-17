@@ -1,16 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { CurrencyService, priceIn } from './currency';
-
-describe('priceIn', () => {
-  it('uses the soles price when there is one and soles are chosen', () => {
-    expect(priceIn({ priceFrom: 79, pricePen: 290 }, 'PEN')).toEqual({ currency: 'PEN', amount: 290 });
-    expect(priceIn({ priceFrom: 79, pricePen: 290 }, 'USD')).toEqual({ currency: 'USD', amount: 79 });
-  });
-
-  it('keeps dollars for a tour without a soles price', () => {
-    expect(priceIn({ priceFrom: 79 }, 'PEN')).toEqual({ currency: 'USD', amount: 79 });
-  });
-});
+import { CurrencyService } from './currency';
 
 describe('CurrencyService', () => {
   beforeEach(() => localStorage.removeItem('currency'));

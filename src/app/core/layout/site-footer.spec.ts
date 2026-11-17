@@ -5,6 +5,7 @@ import { toast } from '@spartan-ng/brain/sonner';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { remoteImageLoader } from '../images/remote-image-loader';
 import { allowMotion, stubMatchMedia } from '../../testing/match-media';
+import { loadPublicApi } from '../../testing/public-api';
 import { settleMotion } from '../../testing/settle-motion';
 import { SmoothScroll } from '../animation/smooth-scroll';
 import { SiteFooter } from './site-footer';
@@ -31,6 +32,25 @@ describe('SiteFooter', () => {
   afterEach(async () => {
     const { default: ScrollTrigger } = await import('gsap/ScrollTrigger');
     ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+  });
+
+  it('shows the razón social and RUC of the booking system, and no RUC line without it', async () => {
+    const offline = TestBed.createComponent(SiteFooter);
+    await offline.whenStable();
+    expect(offline.nativeElement.textContent).toContain('Desértica');
+    expect(offline.nativeElement.textContent).not.toMatch(/RUC|XXXX/);
+    offline.destroy();
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [SiteFooter],
+      providers: [provideRouter([{ path: '**', children: [] }]), provideSpartanHlm(), { provide: IMAGE_LOADER, useValue: remoteImageLoader }],
+    });
+    loadPublicApi(TestBed, { company: { legalName: 'DESERTICA S.A.C.', ruc: '20616737504', fiscalAddress: 'Ica' } });
+    const fixture = TestBed.createComponent(SiteFooter);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('DESERTICA S.A.C.');
+    expect(fixture.nativeElement.textContent).toMatch(/RUC\s+20616737504/);
   });
 
   it('rejects an empty newsletter address and thanks a valid one', async () => {

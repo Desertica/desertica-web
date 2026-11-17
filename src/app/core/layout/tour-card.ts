@@ -1,6 +1,7 @@
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { PublicData } from '../api/public-data';
 import { CatalogTour } from '../catalog/tours';
 import { TourPrices } from '../catalog/tour-prices';
 import { CurrencyService } from '../currency/currency';
@@ -31,26 +32,30 @@ import { TranslatePipe } from '../i18n/translate-pipe';
         class="tour-card-overlay pointer-events-none absolute inset-0 flex flex-col justify-between p-6 md:p-8"
       >
         <div class="flex max-w-[18rem] flex-col items-start gap-3">
-          <p class="text-xs font-medium tracking-[0.22em] uppercase">
-            {{ tour().durationHours }} {{ 'gallery.hours' | translate: i18n.locale() }}
-          </p>
-          <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+          @if (hours(); as hours) {
+            <p class="text-xs font-medium tracking-[0.22em] uppercase">
+              {{ hours }} {{ 'gallery.hours' | translate: i18n.locale() }}
+            </p>
+            <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+          }
           <h3 hlmCardTitle>
             {{ tour().titleKey | translate: i18n.locale() }}
           </h3>
         </div>
-        <div class="flex flex-col items-start gap-1">
-          <p class="text-xs font-medium tracking-[0.22em] uppercase">
-            {{ 'gallery.from' | translate: i18n.locale() }}
-          </p>
-          <p class="font-heading text-2xl tracking-wide">
-            {{
-              (price().currency === 'PEN' ? 'gallery.currencyPen' : 'gallery.currency')
-                | translate: i18n.locale()
-            }}
-            {{ price().amount }}
-          </p>
-        </div>
+        @if (price(); as price) {
+          <div class="flex flex-col items-start gap-1">
+            <p class="text-xs font-medium tracking-[0.22em] uppercase">
+              {{ 'gallery.from' | translate: i18n.locale() }}
+            </p>
+            <p class="font-heading text-2xl tracking-wide">
+              {{
+                (price.currency === 'PEN' ? 'gallery.currencyPen' : 'gallery.currency')
+                  | translate: i18n.locale()
+              }}
+              {{ price.amount }}
+            </p>
+          </div>
+        }
       </div>
     </section>
   `,
@@ -63,6 +68,8 @@ export class TourCard {
   private readonly currency = inject(CurrencyService);
   private readonly prices = inject(TourPrices);
   protected readonly price = computed(() =>
-    this.prices.priceFor(this.tour(), this.currency.currency()),
+    this.prices.priceFor(this.tour().id, this.currency.currency()),
   );
+  private readonly api = inject(PublicData);
+  protected readonly hours = computed(() => this.api.tour(this.tour().id)?.durationHours);
 }

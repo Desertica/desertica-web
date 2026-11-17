@@ -29,12 +29,13 @@ import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
-import { TourFormat, TourLanguage, TourPage } from '../../../core/catalog/tour-pages';
+import { PublicData } from '../../../core/api/public-data';
+import { TourPrices } from '../../../core/catalog/tour-prices';
 import { CatalogTour } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { CatalogService } from '../../../core/catalog/catalog';
-import { DEFAULT_BOOKING } from '../../../core/cms/booking-defaults';
+import { DEFAULT_BOOKING, DEFAULT_RULES } from '../../../core/cms/booking-defaults';
 import { AnalyticsService } from '../../../core/analytics/analytics';
 import {
   buildTourWhatsappHref,
@@ -43,12 +44,11 @@ import {
   startOfLocalDay,
 } from './tour-whatsapp';
 
-export const TOUR_ADULTS_MIN = DEFAULT_BOOKING.adultsMin;
+export const TOUR_ADULTS_MIN = DEFAULT_RULES.adultsMin;
 export const TOUR_ADULTS_DEFAULT = DEFAULT_BOOKING.adultsDefault;
-export const TOUR_CHILDREN_MIN = DEFAULT_BOOKING.childrenMin;
+export const TOUR_CHILDREN_MIN = DEFAULT_RULES.childrenMin;
 export const TOUR_CHILDREN_DEFAULT = DEFAULT_BOOKING.childrenDefault;
-export const TOUR_PEOPLE_MAX = DEFAULT_BOOKING.peopleMax;
-export const TOUR_DEPOSIT_RATE = DEFAULT_BOOKING.depositRate;
+export const TOUR_PEOPLE_MAX = DEFAULT_RULES.peopleMax;
 
 export type TourPayment = 'full' | 'deposit';
 
@@ -57,8 +57,8 @@ type PartyKind = 'adults' | 'children';
 export function tourDuePrice(
   unitPrice: number,
   payment: TourPayment,
-  people = 1,
-  depositRate = TOUR_DEPOSIT_RATE,
+  people: number,
+  depositRate: number,
 ): number {
   const total = unitPrice * Math.max(people, 1);
   return payment === 'deposit' ? Math.round(total * depositRate) : total;
@@ -107,11 +107,13 @@ function partyMaxValidator(max: number): ValidatorFn {
   template: `
     <section hlmCard>
       <div hlmCardHeader>
-        <p id="tour-due" class="font-heading text-2xl tracking-wide">
-          {{ 'gallery.from' | translate: i18n.locale() }}
-          {{ 'gallery.currency' | translate: i18n.locale() }}
-          {{ duePrice() }}
-        </p>
+        @if (duePrice() !== null) {
+          <p id="tour-due" class="font-heading text-2xl tracking-wide">
+            {{ 'gallery.from' | translate: i18n.locale() }}
+            {{ 'gallery.currency' | translate: i18n.locale() }}
+            {{ duePrice() }}
+          </p>
+        }
       </div>
       <form hlmCardContent class="flex flex-col gap-6" [formGroup]="form" (ngSubmit)="send()" novalidate>
         <div hlmField>
@@ -135,30 +137,31 @@ function partyMaxValidator(max: number): ValidatorFn {
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <div hlmField [class.col-span-2]="!showFormat()">
-            <span hlmFieldLabel id="tour-language-label">{{
-              'tour.language' | translate: i18n.locale()
-            }}</span>
-            <hlm-toggle-group
-              type="single"
-              variant="outline"
-              [value]="form.controls.language.value"
-              (valueChange)="onLanguage($event)"
-              aria-labelledby="tour-language-label"
-            >
-              <button hlmToggleGroupItem type="button" value="es">
-                {{ 'lang.es' | translate: i18n.locale() }}
-              </button>
-              <button hlmToggleGroupItem type="button" value="en">
-                {{ 'lang.en' | translate: i18n.locale() }}
-              </button>
-            </hlm-toggle-group>
-            @if (showError('language')) {
-              <hlm-field-error [forceShow]="true">{{
-                'tour.languageError' | translate: i18n.locale()
-              }}</hlm-field-error>
-            }
-          </div>
+          @if (languages().length) {
+            <div hlmField [class.col-span-2]="!showFormat()">
+              <span hlmFieldLabel id="tour-language-label">{{
+                'tour.language' | translate: i18n.locale()
+              }}</span>
+              <hlm-toggle-group
+                type="single"
+                variant="outline"
+                [value]="language()"
+                (valueChange)="onLanguage($event)"
+                aria-labelledby="tour-language-label"
+              >
+                @for (code of languages(); track code) {
+                  <button hlmToggleGroupItem type="button" [value]="code">
+                    {{ 'lang.' + code | translate: i18n.locale() }}
+                  </button>
+                }
+              </hlm-toggle-group>
+              @if (showError('language')) {
+                <hlm-field-error [forceShow]="true">{{
+                  'tour.languageError' | translate: i18n.locale()
+                }}</hlm-field-error>
+              }
+            </div>
+          }
 
           @if (showFormat()) {
             <div hlmField>
@@ -287,10 +290,12 @@ function partyMaxValidator(max: number): ValidatorFn {
                 <span class="text-sm font-medium tracking-wide uppercase">{{
                   'tour.payFull' | translate: i18n.locale()
                 }}</span>
-                <span id="tour-pay-full-amount">
-                  {{ 'gallery.currency' | translate: i18n.locale() }}
-                  {{ fullPrice() }}
-                </span>
+                @if (fullPrice() !== null) {
+                  <span id="tour-pay-full-amount">
+                    {{ 'gallery.currency' | translate: i18n.locale() }}
+                    {{ fullPrice() }}
+                  </span>
+                }
               </span>
             </label>
             <label hlmLabel [class]="payOptionClass" for="tour-pay-deposit">
@@ -301,10 +306,12 @@ function partyMaxValidator(max: number): ValidatorFn {
                 <span class="text-sm font-medium tracking-wide uppercase">{{
                   'tour.payLater' | translate: i18n.locale()
                 }}</span>
-                <span id="tour-pay-deposit-amount">
-                  {{ 'gallery.currency' | translate: i18n.locale() }}
-                  {{ depositPrice() }}
-                </span>
+                @if (depositPrice() !== null) {
+                  <span id="tour-pay-deposit-amount">
+                    {{ 'gallery.currency' | translate: i18n.locale() }}
+                    {{ depositPrice() }}
+                  </span>
+                }
               </span>
             </label>
           </hlm-radio-group>
@@ -325,19 +332,32 @@ export class TourBook {
   private readonly analytics = inject(AnalyticsService);
 
   readonly tour = input.required<CatalogTour>();
-  readonly page = input.required<TourPage>();
   protected readonly i18n = inject(I18nService);
   protected readonly minDate = startOfLocalDay();
   protected readonly formatPickerDate = formatPickerDate;
-  protected readonly showFormat = computed(() => this.page().format === 'both');
+  private readonly prices = inject(TourPrices);
+  private readonly publicData = inject(PublicData);
+  /** Languages and format belong to the booking system; a choice without options is not shown. */
+  private readonly apiTour = computed(() => this.publicData.tour(this.tour().id));
+  protected readonly languages = computed(() => this.apiTour()?.languages ?? []);
+  protected readonly showFormat = computed(() => this.apiTour()?.format === 'BOTH');
+  /** The message and amounts are in dollars, as before; without an API price no amount is shown or sent. */
+  private readonly unitPrice = computed(() => this.prices.amount(this.tour().id, 'USD'));
   protected readonly payment = signal<TourPayment>('full');
   protected readonly partySize = signal(this.booking.adultsDefault + this.booking.childrenDefault);
-  protected readonly fullPrice = computed(() => this.tour().priceFrom * this.partySize());
-  protected readonly depositPrice = computed(() =>
-    tourDuePrice(this.tour().priceFrom, 'deposit', this.partySize(), this.booking.depositRate),
-  );
+  protected readonly fullPrice = computed(() => {
+    const unit = this.unitPrice();
+    return unit === undefined ? null : unit * this.partySize();
+  });
+  protected readonly depositPrice = computed(() => {
+    const unit = this.unitPrice();
+    const rate = this.booking.depositRate;
+    return unit === undefined || rate === null
+      ? null
+      : tourDuePrice(unit, 'deposit', this.partySize(), rate);
+  });
   protected readonly duePrice = computed(() =>
-    tourDuePrice(this.tour().priceFrom, this.payment(), this.partySize(), this.booking.depositRate),
+    this.payment() === 'deposit' ? this.depositPrice() : this.fullPrice(),
   );
   protected readonly payOptionClass =
     'border-transparent bg-input/50 hover:bg-input/80 flex w-full cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 [&:has([data-checked=true])]:border-primary';
@@ -347,7 +367,7 @@ export class TourBook {
       date: new FormControl<Date | null>(null, {
         validators: [Validators.required, (control) => this.notPast(control)],
       }),
-      language: new FormControl<TourLanguage>(this.i18n.locale(), {
+      language: new FormControl<string>(this.i18n.locale(), {
         nonNullable: true,
         validators: [Validators.required],
       }),
@@ -367,7 +387,7 @@ export class TourBook {
           Validators.max(this.booking.peopleMax),
         ],
       }),
-      format: new FormControl<Exclude<TourFormat, 'both'>>('shared', {
+      format: new FormControl<'shared' | 'private'>('shared', {
         nonNullable: true,
         validators: [Validators.required],
       }),
@@ -449,8 +469,15 @@ export class TourBook {
     this.form.controls.children.setValue(next);
   }
 
+  /** The chosen language when the tour offers it, else the first one offered; '' when the API lists none. */
+  protected language(): string {
+    const options = this.languages();
+    const chosen = this.form.controls.language.value;
+    return options.includes(chosen) ? chosen : (options[0] ?? '');
+  }
+
   protected onLanguage(value: unknown): void {
-    if (value === 'es' || value === 'en') {
+    if (typeof value === 'string' && this.languages().includes(value)) {
       this.form.controls.language.setValue(value);
     }
   }
@@ -489,11 +516,12 @@ export class TourBook {
   }
 
   protected whatsappHref(): string {
-    const page = this.page();
-    const format = page.format === 'both' ? this.form.controls.format.value : page.format;
-    const date = this.form.controls.date.value;
+    const offer = this.apiTour()?.format;
+    const format = offer === 'BOTH' ? this.form.controls.format.value : offer?.toLowerCase();
+    const language = this.language();
     const payment = this.form.controls.payment.value;
-    const people = this.form.controls.adults.value + this.form.controls.children.value;
+    const amount = payment === 'deposit' ? this.depositPrice() : this.fullPrice();
+    const date = this.form.controls.date.value;
     const whatsapp = this.catalog.contact().whatsapp;
     if (!whatsapp) {
       return '';
@@ -502,12 +530,12 @@ export class TourBook {
     return buildTourWhatsappHref(whatsapp, this.i18n.t('tour.whatsappMessage'), {
       tour: this.i18n.t(this.tour().titleKey),
       date: date ? formatTourDate(date) : '',
-      language: this.i18n.t(`lang.${this.form.controls.language.value}`),
+      language: language ? this.i18n.t(`lang.${language}`) : '',
       adults: String(this.form.controls.adults.value),
       children: String(this.form.controls.children.value),
-      format: this.i18n.t(`tour.${format}`),
+      format: format ? this.i18n.t(`tour.${format}`) : '',
       payment: this.i18n.t(payment === 'deposit' ? 'tour.payLater' : 'tour.payFull'),
-      amount: String(tourDuePrice(this.tour().priceFrom, payment, people, this.booking.depositRate)),
+      amount: amount === null ? '' : String(amount),
     });
   }
 

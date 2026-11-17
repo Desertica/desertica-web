@@ -9,10 +9,12 @@ import { SeoService } from '../../../core/seo/seo';
 import { loadSnapshot, tourSnapshot } from '../../../testing/cms-snapshot';
 import { stubWhatsapp } from '../../../testing/contact';
 import { stubMatchMedia } from '../../../testing/match-media';
+import { loadPublicApi, publicTour } from '../../../testing/public-api';
+import type { PublicTour } from '../../../core/api/public-data';
 import { TourDetail } from './tour-detail';
 
 describe('TourDetail with CMS fields', () => {
-  const mount = async (extra: RawEntry) => {
+  const mount = async (extra: RawEntry, api?: Partial<PublicTour>, usd?: number) => {
     stubMatchMedia(() => false);
     await TestBed.configureTestingModule({
       imports: [TourDetail],
@@ -23,6 +25,13 @@ describe('TourDetail with CMS fields', () => {
         { provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, siteUrl: 'https://desertica.pe' } },
       ],
     }).compileComponents();
+    if (api) {
+      loadPublicApi(TestBed, {
+        tours: [publicTour({ meetingPoint: { en: 'Plaza de Armas', es: 'Plaza de Armas ES' }, ...api })],
+        prices: usd ? { USD: { 'dune-buggy': usd } } : {},
+      });
+    }
+
     stubWhatsapp(TestBed);
     await loadSnapshot(TestBed, tourSnapshot(extra));
     const fixture = TestBed.createComponent(TourDetail);
@@ -51,14 +60,30 @@ describe('TourDetail with CMS fields', () => {
     const text = decodeURIComponent(ask?.href.split('text=')[1] ?? '');
     expect(text).toContain('Dune buggy');
     expect(text).toContain('https://desertica.pe/en/tours/dune-buggy');
+    // No API: neither hours nor a price are invented, in the message or in the markup.
+    expect(text).not.toMatch(/ h,|USD|\{/);
+    expect(documents().find((entry) => entry['@type'] === 'TouristTrip')).not.toHaveProperty('offers');
+    expect(root.querySelector('#tour-meeting')).toBeNull();
+  });
+
+  it('puts the API duration and price in the WhatsApp message and the offer', async () => {
+    const root = await mount({}, { durationHours: 2, languages: ['es', 'en'] }, 4500);
+    const ask = root.querySelector<HTMLAnchorElement>('a[href*="wa.me"][target="_blank"]');
+
+    expect(decodeURIComponent(ask?.href.split('text=')[1] ?? '')).toContain('(2 h, from USD 45)');
+    const trip = documents().find((entry) => entry['@type'] === 'TouristTrip');
+    expect(trip?.offers).toMatchObject({ price: 45, priceCurrency: 'USD' });
+    expect(trip?.inLanguage).toEqual(['es', 'en']);
+    // Meeting text without coordinates or a link: the text shows, the map link does not.
+    expect(root.querySelector('#tour-meeting')?.textContent).toContain('Plaza de Armas');
+    expect(root.querySelector('#tour-map-link')).toBeNull();
   });
 
   it('renders the questions and publishes the same ones as FAQPage, with geo on the trip', async () => {
-    const root = await mount({
-      latitude: -14.0875,
-      longitude: -75.7626,
-      faqs: [{ question: 'Is it safe?', answer: 'Yes, with certified guides.' }],
-    });
+    const root = await mount(
+      { faqs: [{ question: 'Is it safe?', answer: 'Yes, with certified guides.' }] },
+      { latitude: -14.0875, longitude: -75.7626 },
+    );
 
     expect(root.querySelector('app-tour-faqs summary')?.textContent).toContain('Is it safe?');
     expect(root.querySelector('app-tour-faqs details p')?.textContent).toContain('certified guides');
@@ -76,13 +101,13 @@ describe('TourDetail with CMS fields', () => {
     });
   });
 
-  it('links the meeting point to the CMS map link, or to a map search built from the coordinates', async () => {
-    const withLink = await mount({ latitude: -14.1, longitude: -75.7, meetingPointUrl: 'https://maps.example/meet' });
+  it('links the meeting point to the API map link, or to a map search built from the coordinates', async () => {
+    const withLink = await mount({}, { latitude: -14.1, longitude: -75.7, meetingPointUrl: 'https://maps.example/meet' });
     expect(withLink.querySelector('#tour-map-link')?.getAttribute('href')).toBe('https://maps.example/meet');
     expect(withLink.querySelector('#tour-map-link')?.getAttribute('rel')).toContain('noopener');
     TestBed.resetTestingModule();
 
-    const byCoordinates = await mount({ latitude: -14.1, longitude: -75.7 });
+    const byCoordinates = await mount({}, { latitude: -14.1, longitude: -75.7 });
     expect(byCoordinates.querySelector('#tour-map-link')?.getAttribute('href')).toBe(
       'https://www.google.com/maps/search/?api=1&query=-14.1,-75.7',
     );

@@ -2,22 +2,68 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideNativeDateAdapter } from '@spartan-ng/brain/date-time';
 import { provideSpartanHlm } from '@spartan-ng/helm/utils';
-import { tourPage } from '../../../core/catalog/tour-pages';
 import { tourById } from '../../../core/catalog/tours';
 import { stubWhatsapp } from '../../../testing/contact';
+import { loadPublicApi, publicTour } from '../../../testing/public-api';
 import { TourBook, tourDuePrice } from './tour-book';
 import { formatTourDate } from './tour-whatsapp';
+
+const PRICE = 79;
 
 describe('TourBook', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  const configure = () =>
+    TestBed.configureTestingModule({
       imports: [TourBook],
       providers: [provideRouter([]), provideSpartanHlm(), provideNativeDateAdapter()],
     }).compileComponents();
+
+  beforeEach(async () => {
+    await configure();
+    // Price, deposit, languages and format are the booking system's.
+    loadPublicApi(TestBed, {
+      tours: [publicTour({ format: 'BOTH', languages: ['es', 'en'] })],
+      rules: { depositPercent: 20, availabilityMonths: 3, adultsMin: 1, childrenMin: 0, peopleMax: 12 },
+      prices: { USD: { 'dune-buggy': PRICE * 100 } },
+    });
+  });
+
+  it('shows no price, language or format, and sends no amount, when the API has none', async () => {
+    TestBed.resetTestingModule();
+    await configure();
+    const tour = tourById('dune-buggy');
+    expect(tour).toBeDefined();
+    if (!tour) {
+      return;
+    }
+
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    stubWhatsapp(TestBed);
+    const fixture = TestBed.createComponent(TourBook);
+    fixture.componentRef.setInput('tour', tour);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('#tour-due')).toBeNull();
+    expect(compiled.querySelector('#tour-pay-full-amount')).toBeNull();
+    expect(compiled.querySelector('#tour-pay-deposit-amount')).toBeNull();
+    expect(compiled.querySelector('#tour-language-label')).toBeNull();
+    expect(compiled.querySelector('#tour-format-label')).toBeNull();
+    expect(compiled.querySelector('#tour-people')?.textContent).toContain('1 adult');
+
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    fixture.componentInstance.form.patchValue({ date, adults: 2 });
+    fixture.componentInstance.send();
+    const text = decodeURIComponent(String(open.mock.calls[0]?.[0] ?? '').split('text=')[1] ?? '');
+    expect(text).toContain('Adults: 2');
+    expect(text).not.toContain('Amount');
+    expect(text).not.toContain('Format');
+    expect(text).not.toContain('Language');
+    expect(text).not.toContain('{');
   });
 
   it('shows price, date picker, people stepper, language, and payment options', async () => {
@@ -29,14 +75,13 @@ describe('TourBook', () => {
 
     const fixture = TestBed.createComponent(TourBook);
     fixture.componentRef.setInput('tour', tour);
-    fixture.componentRef.setInput('page', tourPage(tour));
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
 
     expect(compiled.querySelector('[hlmCardTitle]')).toBeNull();
     expect(compiled.querySelector('#tour-due')?.textContent).toContain('FROM');
     expect(compiled.querySelector('#tour-due')?.textContent).toContain('$USD');
-    expect(compiled.querySelector('#tour-due')?.textContent).toContain(String(tour.priceFrom));
+    expect(compiled.querySelector('#tour-due')?.textContent).toContain(String(PRICE));
     expect(compiled.querySelector('hlm-date-picker')).not.toBeNull();
     expect(compiled.querySelector('#tour-date')).not.toBeNull();
     expect(compiled.querySelector('[data-slot=card]')?.className).toContain('rounded-4xl');
@@ -48,10 +93,10 @@ describe('TourBook', () => {
     expect(compiled.querySelector('#tour-people')?.className).not.toContain('rounded-none');
     expect(compiled.querySelector('#tour-people')?.textContent).toContain('1 adult');
     expect(compiled.querySelector('#tour-pay-full-amount')?.textContent).toContain(
-      String(tour.priceFrom),
+      String(PRICE),
     );
     expect(compiled.querySelector('#tour-pay-deposit-amount')?.textContent).toContain(
-      String(tourDuePrice(tour.priceFrom, 'deposit', 1)),
+      String(tourDuePrice(PRICE, 'deposit', 1, 0.2)),
     );
     expect(compiled.querySelector('#tour-language-label')?.textContent?.trim()).toBe('Language');
     expect(compiled.querySelector('.grid.grid-cols-2')).not.toBeNull();
@@ -74,7 +119,6 @@ describe('TourBook', () => {
 
     const fixture = TestBed.createComponent(TourBook);
     fixture.componentRef.setInput('tour', tour);
-    fixture.componentRef.setInput('page', tourPage(tour));
     await fixture.whenStable();
 
     const deposit = fixture.nativeElement.querySelector(
@@ -86,8 +130,8 @@ describe('TourBook', () => {
     await fixture.whenStable();
 
     const due = fixture.nativeElement.querySelector('#tour-due') as HTMLElement;
-    expect(due.textContent).toContain(String(tourDuePrice(tour.priceFrom, 'deposit', 1)));
-    expect(due.textContent).not.toContain(String(tour.priceFrom));
+    expect(due.textContent).toContain(String(tourDuePrice(PRICE, 'deposit', 1, 0.2)));
+    expect(due.textContent).not.toContain(String(PRICE));
   });
 
   it('scales radio amounts when the party grows', async () => {
@@ -99,7 +143,6 @@ describe('TourBook', () => {
 
     const fixture = TestBed.createComponent(TourBook);
     fixture.componentRef.setInput('tour', tour);
-    fixture.componentRef.setInput('page', tourPage(tour));
     await fixture.whenStable();
 
     fixture.componentInstance.form.controls.adults.setValue(2);
@@ -108,13 +151,13 @@ describe('TourBook', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('#tour-pay-full-amount')?.textContent).toContain(
-      String(tourDuePrice(tour.priceFrom, 'full', 2)),
+      String(tourDuePrice(PRICE, 'full', 2, 0.2)),
     );
     expect(compiled.querySelector('#tour-pay-deposit-amount')?.textContent).toContain(
-      String(tourDuePrice(tour.priceFrom, 'deposit', 2)),
+      String(tourDuePrice(PRICE, 'deposit', 2, 0.2)),
     );
     expect(compiled.querySelector('#tour-due')?.textContent).toContain(
-      String(tourDuePrice(tour.priceFrom, 'full', 2)),
+      String(tourDuePrice(PRICE, 'full', 2, 0.2)),
     );
   });
 
@@ -130,7 +173,6 @@ describe('TourBook', () => {
 
     const fixture = TestBed.createComponent(TourBook);
     fixture.componentRef.setInput('tour', tour);
-    fixture.componentRef.setInput('page', tourPage(tour));
     await fixture.whenStable();
 
     const date = new Date();
@@ -159,7 +201,7 @@ describe('TourBook', () => {
     expect(text).toContain('Group');
     expect(text).not.toContain('Ana');
     expect(text).toContain('Book now, pay later');
-    expect(text).toContain(`$USD ${tourDuePrice(tour.priceFrom, 'deposit', 4)}`);
+    expect(text).toContain(`$USD ${tourDuePrice(PRICE, 'deposit', 4, 0.2)}`);
   });
 
   it('shows field errors, steps the party, and ignores unknown choices', async () => {
@@ -171,9 +213,7 @@ describe('TourBook', () => {
 
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     const fixture = TestBed.createComponent(TourBook);
-    const page = tourPage(tour);
     fixture.componentRef.setInput('tour', tour);
-    fixture.componentRef.setInput('page', { ...page, format: 'private' });
     await fixture.whenStable();
 
     const submit = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
@@ -230,9 +270,6 @@ describe('TourBook', () => {
     language.click();
     await fixture.whenStable();
 
-    fixture.componentRef.setInput('page', page);
-    fixture.detectChanges();
-    await fixture.whenStable();
     const shared = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button) =>
       (button as HTMLButtonElement).textContent?.includes('Group'),
     ) as HTMLButtonElement | undefined;
@@ -254,9 +291,9 @@ describe('TourBook', () => {
 
 describe('tourDuePrice', () => {
   it('takes 20 percent of the party total', () => {
-    expect(tourDuePrice(135, 'full')).toBe(135);
-    expect(tourDuePrice(135, 'deposit')).toBe(27);
-    expect(tourDuePrice(79, 'full', 2)).toBe(158);
-    expect(tourDuePrice(79, 'deposit', 2)).toBe(32);
+    expect(tourDuePrice(135, 'full', 1, 0.2)).toBe(135);
+    expect(tourDuePrice(135, 'deposit', 1, 0.2)).toBe(27);
+    expect(tourDuePrice(79, 'full', 2, 0.2)).toBe(158);
+    expect(tourDuePrice(79, 'deposit', 2, 0.2)).toBe(32);
   });
 });

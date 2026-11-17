@@ -126,7 +126,9 @@ All content lives in Strapi 5, in its own repository: [Desertica/desertica-cms](
 | `Media`           | Banners, About video and images, footer stamps, home/blog/products heroes      |
 | `Pages`           | Terms, privacy, complaints, conduct, MINCETUR and destination hub copy         |
 | `Blog`, `Shop`    | `/blog` and `/products`                                                        |
-| `Site`            | Contact data, socials, legal entity, **theme** (light/dark palettes, radius, fonts, header height, intro), **booking rules** (deposit, party limits, assurances), **form limits**, **navigation** (header, footer, CTA) |
+| `Site`            | Contact data, socials, brand name and legal year, **theme** (light/dark palettes, radius, fonts, header height, intro), **booking form** (starting party, currency, assurances), **form limits**, **navigation** (header, footer, CTA) |
+
+Prices, tour duration/format/languages/meeting point, party limits, calendar months, deposit, razón social and RUC are not in the CMS: the booking API owns them (see `docs/HANDOFF.md`).
 
 ```bash
 git clone https://github.com/Desertica/desertica-cms.git ../desertica-cms

@@ -202,7 +202,6 @@
     "closerLead": "Huacachina, Paracas y Nazca. Elige el eje; nosotros el resto."
   },
   "tour": {
-    "meetingIca": "Encuentro en Ica",
     "practices": "Cómo se corre",
     "included": "Qué incluye",
     "notIncluded": "Qué no incluye",
@@ -258,7 +257,8 @@
     "viewMap": "Ver en el mapa",
     "faqs": "Preguntas frecuentes",
     "askWhatsapp": "Consultar por WhatsApp",
-    "askWhatsappMessage": "Hola, quisiera más información sobre \"{tour}\" ({hours} h, desde USD {price}): {url}"
+    "askWhatsappMessage": "Hola, quisiera más información sobre \"{tour}\" ({hours} h, desde USD {price}): {url}",
+    "askWhatsappMessagePlain": "Hola, quisiera más información sobre \"{tour}\": {url}"
   },
   "tours": {
     "duneBuggy": {
@@ -268,7 +268,6 @@
         "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae nisl at erat tristique tincidunt, sed interdum nisl a tincidunt posuere.",
         "p2": "Suspendisse potenti. Curabitur at lectus nec nisi tincidunt gravida. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."
       },
-      "meeting": "Encuentro en Ica",
       "practices": {
         "group": {
           "title": "Grupo chico",

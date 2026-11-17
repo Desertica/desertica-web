@@ -14,7 +14,9 @@ import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload, lucideMessageCircle } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { meetingMapUrl, tourHasDetails } from '../../../core/catalog/tour-pages';
+import { PublicData, meetingMapUrl } from '../../../core/api/public-data';
+import { tourHasDetails } from '../../../core/catalog/tour-pages';
+import { TourPrices } from '../../../core/catalog/tour-prices';
 import { type CatalogTour, TOURS_PATH, tourPath } from '../../../core/catalog/tours';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
@@ -68,7 +70,15 @@ export class TourDetail {
   private readonly catalog = inject(CatalogService);
   protected readonly resolved = computed(() => this.catalog.resolvedTour(this.id()));
   protected readonly hasDetails = tourHasDetails;
-  protected readonly mapUrl = meetingMapUrl;
+  private readonly prices = inject(TourPrices);
+  private readonly publicData = inject(PublicData);
+  /** Meeting point of the booking system: its text in the page language and the map link, each only when set. */
+  protected readonly meeting = computed(() => {
+    const api = this.publicData.tour(this.id());
+    const text = api?.meetingPoint?.[this.i18n.locale()] ?? '';
+    const map = meetingMapUrl(api);
+    return text || map ? { text, map } : null;
+  });
   /** Online booking replaces the WhatsApp form only while the flag is on. */
   protected readonly bookingEngine = inject(PUBLIC_CONFIG).bookingEngineEnabled;
 
@@ -82,12 +92,20 @@ export class TourDetail {
     }
 
     const origin = this.seo.origin();
-    return buildAskWhatsappHref(whatsapp, this.i18n.t('tour.askWhatsappMessage'), {
-      tour: this.i18n.t(data.tour.titleKey),
-      hours: String(data.tour.durationHours),
-      price: String(data.tour.priceFrom),
-      url: origin ? localizedUrl(origin, tourPath(data.tour.id), locale) : '',
-    });
+    // The message names dollars; without both API values the plain message is sent instead of an invented one.
+    const hours = this.publicData.tour(data.tour.id)?.durationHours;
+    const price = this.prices.amount(data.tour.id, 'USD');
+    const complete = !!hours && price !== undefined;
+    return buildAskWhatsappHref(
+      whatsapp,
+      this.i18n.t(complete ? 'tour.askWhatsappMessage' : 'tour.askWhatsappMessagePlain'),
+      {
+        tour: this.i18n.t(data.tour.titleKey),
+        hours: String(hours ?? ''),
+        price: String(price ?? ''),
+        url: origin ? localizedUrl(origin, tourPath(data.tour.id), locale) : '',
+      },
+    );
   });
 
   protected trackAsk(): void {
@@ -114,6 +132,9 @@ export class TourDetail {
       const origin = this.seo.origin();
       const description = snippet(this.i18n.t(page.seoDescriptionKey ?? page.leadKey));
       const image = page.gallery[0] ?? tour.image;
+      const currency = asCurrency(this.catalog.booking().currencyCode);
+      const api = this.publicData.tour(tour.id);
+      const meetingName = api?.meetingPoint?.[this.i18n.locale()];
       return {
         title: this.i18n.t(page.seoTitleKey ?? tour.titleKey),
         description,
@@ -127,15 +148,15 @@ export class TourDetail {
                 url: localizedUrl(origin, tourPath(tour.id), this.i18n.locale()),
                 image: [absoluteUrl(origin, image)],
                 organizationId: `${origin}/#organization`,
-                price: tour.priceFrom,
-                currency: asCurrency(this.catalog.booking().currencyCode),
-                inLanguage: page.languages,
-                ...(page.latitude !== undefined && page.longitude !== undefined
+                price: this.prices.amount(tour.id, currency),
+                currency,
+                inLanguage: api?.languages ?? [],
+                ...(meetingName && typeof api?.latitude === 'number' && typeof api.longitude === 'number'
                   ? {
                       meetingPoint: {
-                        name: this.i18n.t(page.meetingKey),
-                        latitude: page.latitude,
-                        longitude: page.longitude,
+                        name: meetingName,
+                        latitude: api.latitude,
+                        longitude: api.longitude,
                       },
                     }
                   : {}),
@@ -164,10 +185,12 @@ export class TourDetail {
     }
 
     this.viewed = tour.id;
+    const currency = asCurrency(this.catalog.booking().currencyCode);
+    const value = this.prices.amount(tour.id, currency);
     this.analytics.track('view_item', {
-      currency: asCurrency(this.catalog.booking().currencyCode),
-      value: tour.priceFrom,
-      items: [tourItem(tour, this.i18n.t(tour.titleKey))],
+      currency,
+      ...(value === undefined ? {} : { value }),
+      items: [tourItem(tour, this.i18n.t(tour.titleKey), undefined, value)],
     });
   }
 }

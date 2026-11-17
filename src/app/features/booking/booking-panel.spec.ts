@@ -9,6 +9,7 @@ import { CurrencyService } from '../../core/currency/currency';
 import { DEPARTURE_ID, QUOTE, departure, tomorrowDeparture } from '../../testing/booking-fixtures';
 import { stubMatchMedia } from '../../testing/match-media';
 import { mockApi } from '../../testing/mock-api';
+import { loadPublicApi, publicTour } from '../../testing/public-api';
 import { settle } from '../../testing/settle';
 import { BookingPanel } from './booking-panel';
 
@@ -16,6 +17,13 @@ type PanelInternals = {
   onDate: (date: Date | undefined) => void;
   adults: () => number;
   bump: (kind: 'adults' | 'children', delta: 1 | -1) => void;
+};
+
+type PublicApi = Parameters<typeof loadPublicApi>[1];
+/** What the booking system says about the tour and the party. */
+const API: PublicApi = {
+  tours: [publicTour({ format: 'BOTH', languages: ['es', 'en'] })],
+  rules: { depositPercent: 20, availabilityMonths: 3, adultsMin: 1, childrenMin: 0, peopleMax: 12 },
 };
 
 describe('BookingPanel', () => {
@@ -35,7 +43,7 @@ describe('BookingPanel', () => {
 
   afterEach(() => mock?.restore());
 
-  const mount = async (overrides: Parameters<typeof mockApi>[0] = {}) => {
+  const mount = async (overrides: Parameters<typeof mockApi>[0] = {}, api: PublicApi | null = API) => {
     mock = mockApi({
       'GET /public/tours/*/availability': (call) => ({
         body: { data: call.query.get('month') === day.month ? [departure(day.startsAt)] : [] },
@@ -52,11 +60,14 @@ describe('BookingPanel', () => {
       }),
       ...overrides,
     });
+    if (api) {
+      loadPublicApi(TestBed, api);
+    }
+
     const catalog = TestBed.inject(CatalogService);
     const fixture = TestBed.createComponent(BookingPanel);
     const resolved = catalog.resolvedTour('dune-buggy')!;
     fixture.componentRef.setInput('tour', resolved.tour);
-    fixture.componentRef.setInput('page', resolved.page);
     await settle(fixture);
     return { fixture, internals: fixture.componentInstance as unknown as PanelInternals };
   };
@@ -74,6 +85,37 @@ describe('BookingPanel', () => {
     expect(calls[0]?.query.get('format')).toBe('SHARED');
     expect(calls[0]?.query.get('language')).toBe('en');
     expect(new Set(calls.map((call) => call.query.get('month'))).size).toBe(3);
+  });
+
+  it('takes the calendar months and party limits from the booking rules, and hides filters the API does not list', async () => {
+    const { fixture, internals } = await mount(
+      {},
+      {
+        tours: [publicTour({ format: 'PRIVATE' })],
+        rules: { depositPercent: 20, availabilityMonths: 2, adultsMin: 2, childrenMin: 0, peopleMax: 3 },
+      },
+    );
+    const calls = mock.calls.filter((call) => call.path === '/public/tours/dune-buggy/availability');
+    expect(calls).toHaveLength(2);
+    expect(calls[0]?.query.get('format')).toBe('PRIVATE');
+    // The CMS starts at 1 adult; the API minimum is 2 and the party stops at 3.
+    expect(internals.adults()).toBe(2);
+    internals.bump('adults', -1);
+    expect(internals.adults()).toBe(2);
+    internals.bump('adults', 1);
+    internals.bump('adults', 1);
+    expect(internals.adults()).toBe(3);
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('#booking-language-label')).toBeNull();
+    expect(root.querySelector('#booking-format-label')).toBeNull();
+  });
+
+  it('keeps working with the built-in limits when the API has no public data', async () => {
+    const { fixture, internals } = await mount({}, null);
+    const calls = mock.calls.filter((call) => call.path === '/public/tours/dune-buggy/availability');
+    expect(calls).toHaveLength(3);
+    expect(internals.adults()).toBe(1);
+    expect((fixture.nativeElement as HTMLElement).querySelector('#booking-language-label')).toBeNull();
   });
 
   it('reloads prices when the visitor switches to soles', async () => {

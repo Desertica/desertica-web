@@ -77,6 +77,7 @@ describe('ContentPage legal documents', () => {
     const fixture = TestBed.createComponent(ContentPage);
     await settle(fixture);
 
-    expect(mock.calls).toHaveLength(0);
+    // The catalog reads the booking system's public data on every server render; no legal document is asked for.
+    expect(mock.calls.filter((call) => call.path.includes('legal-documents'))).toHaveLength(0);
   });
 });

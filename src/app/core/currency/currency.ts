@@ -3,7 +3,6 @@ import { afterNextRender, computed, inject, Injectable, PLATFORM_ID, signal } fr
 import { asCurrency } from '../analytics/analytics';
 import type { Currency } from '../api/booking-api';
 import { CatalogService } from '../catalog/catalog';
-import type { CatalogTour } from '../catalog/tours';
 
 export const CURRENCIES: readonly Currency[] = ['USD', 'PEN'];
 const KEY = 'currency';
@@ -51,17 +50,4 @@ export class CurrencyService {
       return null;
     }
   }
-}
-
-/**
- * The price shown for a tour. Soles need an explicit `pricePen` from the CMS (there is no exchange rate in the site);
- * a tour without one keeps showing dollars so the card never loses its price.
- */
-export function priceIn(
-  tour: Pick<CatalogTour, 'priceFrom' | 'pricePen'>,
-  currency: Currency,
-): { currency: Currency; amount: number } {
-  return currency === 'PEN' && tour.pricePen
-    ? { currency: 'PEN', amount: tour.pricePen }
-    : { currency: 'USD', amount: tour.priceFrom };
 }

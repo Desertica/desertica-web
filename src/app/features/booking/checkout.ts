@@ -35,6 +35,7 @@ import { CartService } from '../../core/booking/cart';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { clock, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
+import { TourPrices } from '../../core/catalog/tour-prices';
 import { DEFAULT_PHONE_COUNTRY, phoneCountries } from '../contact/phone';
 import { type IdDocType, billingDocTypes, isValidIdDocument } from '../../core/forms/id-document';
 import { Turnstile } from '../../core/forms/turnstile';
@@ -335,6 +336,7 @@ export class Checkout {
   private readonly router = inject(Router);
   private readonly catalog = inject(CatalogService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly prices = inject(TourPrices);
   private readonly attribution = inject(AttributionService);
   private readonly consent = inject(ConsentService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
@@ -527,7 +529,7 @@ export class Checkout {
     this.analytics.track('begin_checkout', {
       currency: selection.currency,
       value: centsToMajor(booking.totalCents),
-      items: tour ? [{ ...tourItem(tour, this.i18n.t(tour.titleKey), selection.format), quantity: selection.adults + selection.children }] : [],
+      items: tour ? [{ ...tourItem(tour, this.i18n.t(tour.titleKey), selection.format, this.prices.amount(tour.id, selection.currency)), quantity: selection.adults + selection.children }] : [],
       event_id: booking.reference,
     });
     this.flow.clear();
