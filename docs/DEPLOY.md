@@ -17,9 +17,9 @@ docker run -p 4000:4000 -e NG_ALLOWED_HOSTS=localhost -e SITE_URL=http://localho
 | --- | --- | --- |
 | `NG_ALLOWED_HOSTS` | yes | Comma-separated hostnames the server answers to (e.g. `desertica.pe,www.desertica.pe`). Any other `Host` gets 400 (SSRF protection). Defaults only cover `localhost`. |
 | `STRAPI_URL` | to use the CMS | URL the server uses to reach Strapi (private network URL is fine). Empty = bundled static catalog. |
-| `STRAPI_PUBLIC_URL` | if media is served by Strapi | URL browsers use to load uploaded media. Defaults to `STRAPI_URL`. |
-| `FORMS_PROXY_SECRET` | recommended | Same value as in the CMS. Signs the editor's draft preview links. |
-| `TRUST_PROXY` | behind a proxy | Number of proxies in front of the app: `1` behind Traefik/Coolify, `2` with Cloudflare in front too. Plain `true` trusts the whole `X-Forwarded-For` header, so a client can pick its own IP and skip the rate limits; do not use it in production. |
+| `STRAPI_PUBLIC_URL` | yes in production with `STRAPI_URL` | URL browsers use to load uploaded media. Defaults to `STRAPI_URL`. |
+| `FORMS_PROXY_SECRET` | recommended | Same value as in the CMS. Signs the editor's draft preview links. At least 32 characters in production. |
+| `TRUST_PROXY` | yes in production | Number of proxies in front of the app: `1` behind Traefik/Coolify, `2` with Cloudflare in front too. Plain `true` trusts the whole `X-Forwarded-For` header, so a client can pick its own IP and skip the rate limits; do not use it in production. |
 | `SITE_URL` | yes in production | Public origin, no trailing slash (for example `https://desertica.pe`). Canonical, hreflang, sitemap, robots and JSON-LD use it. The server refuses to start in production without it; outside production it falls back to the request `Host`. |
 | `IMAGE_HOSTS` | no | Extra hosts whose images the server resizes to WebP at `/_img` (an R2 or CDN host). The `STRAPI_PUBLIC_URL` host and `images.unsplash.com` are always allowed; the internal `STRAPI_URL` host is not (it would reach the browser). |
 | `PAGE_CACHE_TTL_MS` | no | Seconds-scale cache of rendered public pages, in ms (default `10000`, `0` turns it off). Booking and payment pages are never cached. A CMS change shows up within `STRAPI_CACHE_TTL_MS` + this value (about 40 s). |
@@ -34,14 +34,12 @@ Every route is rendered per request and reads Strapi through a server-side cache
 
 ## Content Security Policy
 
-Rendered pages carry `Content-Security-Policy-Report-Only` (built in `src/security-headers.ts`) next to the enforced `frame-ancestors 'none'`. Inline scripts are allowed by hash, computed from each page. Allowed hosts: Google Tag Manager and Analytics, Cloudflare Turnstile, Stripe, Culqi, the CMS and `IMAGE_HOSTS`, `images.unsplash.com`, `flagcdn.com`. There is no report endpoint yet, so violations show only in the browser console.
+Rendered pages carry an enforced `Content-Security-Policy` plus a `Content-Security-Policy-Report-Only` copy, both built in `src/security-headers.ts`. Inline scripts are allowed by hash, computed from each page, plus the hash of Angular's `onload="this.media='all'"` stylesheet handler (`'unsafe-hashes'`). Every other response keeps `frame-ancestors 'none'`.
 
-Moving to enforce:
-
-1. On staging, open home, a tour, contact, `/checkout`, `/pay/:token` and `/booking` with consent accepted and the payment gateways on. The console must show no `Content-Security-Policy-Report-Only` violation.
-2. Add every host that showed up (a new analytics or payment domain) to `src/security-headers.ts`.
-3. Change the header name in `reportCsp` (`src/server.ts`) from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`. Roll it out to staging first, then production.
-4. `style-src` keeps `'unsafe-inline'` because Angular inlines component styles; dropping it needs a CSP nonce (`CSP_NONCE`) and is a separate change.
+- **Enforced with an exact host list**: `script-src`, `style-src`, `font-src`, `media-src`, `object-src`, `base-uri`, `frame-ancestors`. Allowed script hosts: Google Tag Manager/Analytics (`*.googletagmanager.com`, plus `tagmanager.google.com` for GTM preview), Meta (`connect.facebook.net`), Cloudflare Turnstile, Stripe, Culqi and the device-profiling hosts Culqi 3DS injects (`*.online-metrix.net`, `m.vnforapps.com`). No `'unsafe-inline'` or `'unsafe-eval'` for scripts.
+- **Still open to any `https:` host in the enforced policy**: `img-src`, `connect-src`, `frame-src`, `form-action`. Culqi 3-D Secure posts to and frames hosts chosen at run time (Cardinal, the card issuer), and the payment step is reached by an in-app navigation, so it cannot get a policy of its own. The report-only copy has the exact list for these four: on staging, pay with Culqi 3DS and Stripe test cards with the console open, add every host reported as `[Report Only]` to `src/security-headers.ts`, and then drop `https:` from the `open` set.
+- **GTM container rules** (the policy blocks them otherwise): no Custom HTML tags and no Custom JavaScript variables (they need `'unsafe-inline'` / `'unsafe-eval'`); use gallery templates instead (GA4 Google tag, the Meta Pixel template). A tag that loads a new host (Google Ads, TikTok, Hotjar…) needs that host in `src/security-headers.ts` first.
+- `style-src` keeps `'unsafe-inline'` because Angular inlines component styles; dropping it needs a CSP nonce (`CSP_NONCE`) and is a separate change.
 
 ## Full stack locally
 
@@ -53,7 +51,7 @@ cp .env.example .env   # add the CMS secrets and DATABASE_PASSWORD (see the comp
 docker compose up --build
 ```
 
-Compose passes `TRUST_PROXY` through and defaults it to `0` (nothing in front of the site). Behind Traefik or Cloudflare set it to the number of proxies, otherwise every visitor shares one IP and the form and image rate limits hit everyone. It is only a warning at start, not a hard requirement (pending).
+Compose passes `TRUST_PROXY` through and defaults it to `0` (nothing in front of the site). Behind Traefik or Cloudflare set it to the number of proxies, otherwise every visitor shares one IP and the form and image rate limits hit everyone. In production (`NODE_ENV=production`) the server refuses to start without a numeric `TRUST_PROXY` (`0` means nothing in front).
 
 ## Checklist
 
