@@ -30,9 +30,9 @@ const SIGNER_DOCS: readonly IdDocType[] = ['DNI', 'CE', 'PASSPORT'];
 type Load = 'loading' | 'ready' | 'missing' | 'error';
 
 /**
- * Liability waiver from the e-mailed link (`/waiver/:token`). The text is the tour's `waiverBody`
- * in the CMS, shown next to the version the API will record; without a text the form stays closed
- * because nobody should sign something they cannot read. A guardian signs for a minor by ticking
+ * Liability waiver from the e-mailed link (`/waiver/:token`). The text is the `body` the API returns:
+ * the published version pinned to this booking, exactly what gets signed. Without a text the form
+ * stays closed because nobody should sign something they cannot read. A guardian signs for a minor by ticking
  * the box and giving their own details.
  */
 @Component({
@@ -214,13 +214,8 @@ export class Waiver {
     const at = this.form()?.startsAt;
     return at ? limaTime(at, this.i18n.locale()) : '';
   });
-  /** The CMS Markdown for this tour in the page language; empty when the tour defines none. */
-  protected readonly body = computed(() => {
-    const tour = this.tour();
-    const key = tour ? this.catalog.tourPage(tour).waiverBodyKey : undefined;
-    const text = key ? this.i18n.t(key) : '';
-    return text && text !== key ? text : '';
-  });
+  /** The Markdown the API pinned to this waiver; empty when it sends none. */
+  protected readonly body = computed(() => this.form()?.body ?? '');
 
   constructor() {
     usePageMeta(() => ({ title: this.i18n.t('waiver.title'), noindex: true }));
