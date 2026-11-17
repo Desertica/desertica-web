@@ -31,7 +31,6 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   seoTitle: locale === 'en' ? 'SEO title' : null,
   seoDescription: null,
   assurances: [{ icon: 'lucideShield', title: locale === 'en' ? 'Safe' : 'Seguro', body: 'Body' }],
-  waiverBody: locale === 'en' ? 'I accept the risks' : null,
   faqs: [
     {
       question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?',
@@ -500,11 +499,8 @@ describe('mapCms global settings', () => {
     expect(snapshot.destinations[0]).toMatchObject({ footerOrder: 2, showInFooter: false });
   });
 
-  it('maps waiver text and FAQs', () => {
+  it('maps FAQs', () => {
     const page = snapshot.tourPages['a-tour'];
-    expect(page?.waiverBodyKey).toBe('cms.tours.a-tour.waiverBody');
-    expect(snapshot.messages.en?.['cms.tours.a-tour.waiverBody']).toBe('I accept the risks');
-    expect(snapshot.messages.es?.['cms.tours.a-tour.waiverBody']).toBeUndefined();
     // Only questions with both texts count, and each locale keeps its own copy.
     expect(page?.faqs).toEqual([
       {

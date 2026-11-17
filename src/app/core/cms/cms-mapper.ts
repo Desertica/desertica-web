@@ -113,7 +113,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
       assign(target, tourKey(slug, 'termsSummary'), text(entry['termsSummary']));
       assign(target, tourKey(slug, 'seoTitle'), text(entry['seoTitle']));
       assign(target, tourKey(slug, 'seoDescription'), text(entry['seoDescription']));
-      assign(target, tourKey(slug, 'waiverBody'), text(entry['waiverBody']));
     }
 
     const tour: CatalogTour = {
@@ -159,7 +158,6 @@ export function mapCms(raw: CmsRaw, options: MapOptions): CmsSnapshot {
         ? tourKey(slug, 'seoDescription')
         : undefined,
       faqs: faqs(slug, byLocale, messages),
-      waiverBodyKey: hasText(byLocale, 'waiverBody') ? tourKey(slug, 'waiverBody') : undefined,
     };
   }
 

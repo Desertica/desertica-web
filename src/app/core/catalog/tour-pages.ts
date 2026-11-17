@@ -43,8 +43,6 @@ export type TourPage = {
   seoDescriptionKey?: string;
   itineraryFile?: string;
   faqs?: readonly TourFaq[];
-  /** i18n key of the Markdown waiver text each passenger signs. */
-  waiverBodyKey?: string;
 };
 
 const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string => {
