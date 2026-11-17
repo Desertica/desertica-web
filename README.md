@@ -100,7 +100,7 @@ src/app/
     complaints/                # Libro de Reclamaciones
 src/server.ts                  # Express: headers, /healthz, redirects, proxies, static files, SSR
 src/healthz.ts                 # /healthz probe
-src/security-headers.ts        # Content-Security-Policy-Report-Only with per-page script hashes
+src/security-headers.ts        # Content-Security-Policy (enforced + report-only copy) with per-page script hashes
 src/seo-routes.ts              # sitemap.xml, robots.txt, legacy 301s
 src/locale-routes.ts           # language prefix redirects (/tours -> /en/tours)
 src/page-cache.ts              # 10 s in-memory cache of rendered public pages

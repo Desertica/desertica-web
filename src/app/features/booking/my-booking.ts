@@ -18,6 +18,7 @@ import { BookingApi, type PublicBooking } from '../../core/api/booking-api';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
+import { withLocale } from '../../core/i18n/catalogs';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { usePageMeta } from '../../core/seo/page-meta';
@@ -93,7 +94,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
                 <li class="flex flex-wrap items-center gap-x-3">
                   <span>{{ waiver.passengerName ?? '—' }} · {{ 'myBooking.waiver.' + waiver.status | translate: i18n.locale() }}</span>
                   @if (waiver.status === 'PENDING' && waiver.token) {
-                    <a class="underline underline-offset-4" [routerLink]="['/waiver', waiver.token]">{{ 'myBooking.signWaiver' | translate: i18n.locale() }}</a>
+                    <a class="underline underline-offset-4" [href]="waiverHref(waiver.token)">{{ 'myBooking.signWaiver' | translate: i18n.locale() }}</a>
                   }
                 </li>
               }
@@ -192,6 +193,11 @@ export class MyBooking {
     (this.booking()?.passengers ?? []).map((person) => `${person.firstName} ${person.lastName}`).join(', '),
   );
   protected readonly canPay = computed(() => (this.booking()?.paymentOptions.length ?? 0) > 0);
+
+  /** A full page load, not a router link: GTM skips pages whose URL carries a credential only on the first load. */
+  protected waiverHref(token: string): string {
+    return withLocale(`/waiver/${encodeURIComponent(token)}`, this.i18n.locale());
+  }
 
   constructor() {
     usePageMeta(() => ({ title: this.i18n.t('myBooking.title'), noindex: true }));
