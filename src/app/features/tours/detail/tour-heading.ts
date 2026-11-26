@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideClock, lucideLanguages, lucideMapPin, lucideUsers } from '@ng-icons/lucide';
 import { HlmBadge } from '@spartan-ng/helm/badge';
-import { TourPage } from '../../../core/catalog/tour-pages';
+import { PublicData } from '../../../core/api/public-data';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { CatalogTour, TOURS_PATH } from '../../../core/catalog/tours';
 import { TourPrices } from '../../../core/catalog/tour-prices';
@@ -42,41 +42,48 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
     </h1>
 
     <div class="mt-6 flex flex-wrap gap-2">
-      <span hlmBadge variant="outline">
-        <ng-icon name="lucideClock" />
-        {{ tour().durationHours }} {{ 'gallery.hours' | translate: i18n.locale() }}
-      </span>
+      @if (api()?.durationHours; as hours) {
+        <span hlmBadge variant="outline">
+          <ng-icon name="lucideClock" />
+          {{ hours }} {{ 'gallery.hours' | translate: i18n.locale() }}
+        </span>
+      }
       <span hlmBadge variant="outline">
         <ng-icon name="lucideMapPin" />
         {{ destination().titleKey | translate: i18n.locale() }}
       </span>
-      <span hlmBadge variant="outline">
-        <ng-icon name="lucideLanguages" />
-        {{ languageChip() }}
-      </span>
-      <span hlmBadge variant="outline">
-        <ng-icon name="lucideUsers" />
-        {{ formatKey() | translate: i18n.locale() }}
-      </span>
-      <span hlmBadge variant="secondary">
-        {{ 'gallery.from' | translate: i18n.locale() }}
-        {{
-          (price().currency === 'PEN' ? 'gallery.currencyPen' : 'gallery.currency')
-            | translate: i18n.locale()
-        }}
-        {{ price().amount }}
-      </span>
+      @if (languageChip(); as languages) {
+        <span hlmBadge variant="outline">
+          <ng-icon name="lucideLanguages" />
+          {{ languages }}
+        </span>
+      }
+      @if (formatKey(); as format) {
+        <span hlmBadge variant="outline">
+          <ng-icon name="lucideUsers" />
+          {{ format | translate: i18n.locale() }}
+        </span>
+      }
+      @if (price(); as price) {
+        <span hlmBadge variant="secondary">
+          {{ 'gallery.from' | translate: i18n.locale() }}
+          {{
+            (price.currency === 'PEN' ? 'gallery.currencyPen' : 'gallery.currency')
+              | translate: i18n.locale()
+          }}
+          {{ price.amount }}
+        </span>
+      }
     </div>
   `,
 })
 export class TourHeading {
   readonly tour = input.required<CatalogTour>();
-  readonly page = input.required<TourPage>();
   protected readonly i18n = inject(I18nService);
   private readonly currency = inject(CurrencyService);
   private readonly prices = inject(TourPrices);
   protected readonly price = computed(() =>
-    this.prices.priceFor(this.tour(), this.currency.currency()),
+    this.prices.priceFor(this.tour().id, this.currency.currency()),
   );
   protected readonly toursPath = TOURS_PATH;
   private readonly catalog = inject(CatalogService);
@@ -84,10 +91,14 @@ export class TourHeading {
     const tour = this.tour();
     return this.catalog.tourDestination(tour) ?? { id: tour.destination, titleKey: '' };
   });
+  private readonly publicData = inject(PublicData);
+  /** Duration, languages and format belong to the booking system; a badge without a value is not shown. */
+  protected readonly api = computed(() => this.publicData.tour(this.tour().id));
   protected readonly languageChip = computed(() =>
-    this.page()
-      .languages.map((code) => code.toUpperCase())
-      .join(' / '),
+    (this.api()?.languages ?? []).map((code) => code.toUpperCase()).join(' / '),
   );
-  protected readonly formatKey = computed(() => `tour.${this.page().format}`);
+  protected readonly formatKey = computed(() => {
+    const format = this.api()?.format;
+    return format ? `tour.${format.toLowerCase()}` : null;
+  });
 }

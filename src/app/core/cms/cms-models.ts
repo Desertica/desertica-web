@@ -30,8 +30,6 @@ export type SiteSettings = {
   showLinkedin: boolean;
   showGoogle: boolean;
   showTripadvisor: boolean;
-  legalName: string;
-  ruc: string;
 };
 
 /** CSS custom properties a palette can override, keyed by the CMS field name. */
@@ -81,15 +79,10 @@ export type ThemeSettings = {
   intro: Partial<IntroStyle>;
 };
 
+/** Party limits, calendar months and deposit live in the booking system (`/public/booking-rules`), not here. */
 export type BookingSettings = {
-  depositRate: number;
-  adultsMin: number;
   adultsDefault: number;
-  childrenMin: number;
   childrenDefault: number;
-  peopleMax: number;
-  /** How many months of availability the online booking calendar loads. */
-  availabilityMonths: number;
   currencyCode: string;
   /** Global assurances shown on every tour page, as i18n keys. */
   assurances: readonly TourFeature[];

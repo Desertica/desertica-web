@@ -100,7 +100,6 @@ tourDestinations.forEach((destination, dIndex) => {
         description: t(locale, tour.descriptionKey),
         lead: t(locale, page.leadKey),
       };
-      entry.meeting = t(locale, page.meetingKey);
       entry.paragraphs = list(locale, page.descriptionKeys);
       entry.expandedParagraphs = list(locale, page.expandedDescriptionKeys);
       entry.termsSummary = t(locale, page.termsSummaryKey);
@@ -117,11 +116,7 @@ tourDestinations.forEach((destination, dIndex) => {
       slug: tour.id,
       destination: slug,
       order: tIndex,
-      durationHours: tour.durationHours,
-      priceFrom: tour.priceFrom,
       featured: tour.featured,
-      format: page.format,
-      languages: [...page.languages],
       imageUrl: tour.image,
       galleryUrls: [...page.gallery],
       itineraryFileUrl: page.itineraryFile,
@@ -141,8 +136,6 @@ const siteSetting = {
   linkedin: 'https://www.linkedin.com/company/desertica',
   google: 'https://maps.google.com/?q=Desertica',
   tripadvisor: 'https://www.tripadvisor.com/desertica',
-  legalName: 'XXXXXXXXXXXX S.A.C.',
-  ruc: 'XXXXXXXXXXX',
   brandName: 'Desértica',
   legalYear: 2026, // FOOTER_LEGAL_YEAR in footer-nav.ts
 };
@@ -327,19 +320,15 @@ const navI18n = Object.fromEntries(
 );
 const navigation = { i18n: navI18n };
 
-// Booking rules (tour-book.ts) and assurances (tour-assurances.ts).
+// Starting party, currency and assurances; limits, months and deposit live in the booking API (/public/booking-rules).
 const ASSURANCES = [
   { icon: 'lucideCalendar', titleKey: 'tour.assure.payLater', bodyKey: 'tour.assure.payLaterBody' },
   { icon: 'lucideClock', titleKey: 'tour.assure.cancel', bodyKey: 'tour.assure.cancelBody' },
   { icon: 'lucideCircleDollarSign', titleKey: 'tour.assure.price', bodyKey: 'tour.assure.priceBody' },
 ];
 const bookingSetting = {
-  depositRate: 0.2,
-  adultsMin: 1,
   adultsDefault: 1,
-  childrenMin: 0,
   childrenDefault: 0,
-  peopleMax: 12,
   currencyCode: 'USD',
   i18n: Object.fromEntries(['en', 'es'].map((l) => [l, { assurances: ASSURANCES.map((f) => feature(l, f)) }])),
 };

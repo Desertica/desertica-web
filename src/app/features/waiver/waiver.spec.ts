@@ -16,17 +16,18 @@ const FORM: WaiverForm = {
   passengerName: 'Ana Quispe',
   minAge: 8,
   minHeightCm: 120,
+  body: 'I accept the **risks** of the dunes.',
 };
 
 describe('Waiver', () => {
   let mock: ReturnType<typeof mockApi> | undefined;
 
-  const setup = async (withText: boolean) => {
+  const setup = async () => {
     stubMatchMedia(() => false);
     await TestBed.configureTestingModule({
       providers: [provideRouter([]), provideSpartanHlm()],
     }).compileComponents();
-    await loadSnapshot(TestBed, tourSnapshot(withText ? { waiverBody: 'I accept the **risks** of the dunes.' } : {}));
+    await loadSnapshot(TestBed, tourSnapshot({}));
   };
 
   afterEach(() => mock?.restore());
@@ -51,7 +52,7 @@ describe('Waiver', () => {
   };
 
   it('shows the waiver, its version and the requirements, and signs it with the contract fields', async () => {
-    await setup(true);
+    await setup();
     const { root, type, check, submit } = await mount({
       'GET /public/waivers/*': () => ({ body: FORM }),
       'POST /public/waivers/*/sign': () => ({ body: { ...FORM, status: 'SIGNED' } }),
@@ -88,7 +89,7 @@ describe('Waiver', () => {
   });
 
   it('does not sign without acceptance, a name or a document that fits its type', async () => {
-    await setup(true);
+    await setup();
     const { root, type, check, submit } = await mount({ 'GET /public/waivers/*': () => ({ body: FORM }) });
 
     await submit();
@@ -103,23 +104,23 @@ describe('Waiver', () => {
     expect(mock?.calls.some((call) => call.method === 'POST')).toBe(false);
   });
 
-  it('keeps the form closed when the tour has no waiver text: nobody signs what they cannot read', async () => {
-    await setup(false);
-    const { root } = await mount({ 'GET /public/waivers/*': () => ({ body: FORM }) });
+  it('keeps the form closed when the API sends no waiver text: nobody signs what they cannot read', async () => {
+    await setup();
+    const { root } = await mount({ 'GET /public/waivers/*': () => ({ body: { ...FORM, body: null } }) });
 
     expect(root.querySelector('#waiver-no-text')).not.toBeNull();
     expect(root.querySelector('form')).toBeNull();
   });
 
   it('shows an already signed waiver, a conflict on sign and an invalid link', async () => {
-    await setup(true);
+    await setup();
     const signed = await mount({ 'GET /public/waivers/*': () => ({ body: { ...FORM, status: 'SIGNED' } }) });
     expect(signed.root.querySelector('#waiver-signed')).not.toBeNull();
     expect(signed.root.querySelector('form')).toBeNull();
     mock?.restore();
     TestBed.resetTestingModule();
 
-    await setup(true);
+    await setup();
     const conflict = await mount({
       'GET /public/waivers/*': () => ({ body: FORM }),
       'POST /public/waivers/*/sign': () => ({ status: 409, body: { message: 'signed' } }),
@@ -132,7 +133,7 @@ describe('Waiver', () => {
     mock?.restore();
     TestBed.resetTestingModule();
 
-    await setup(true);
+    await setup();
     const missing = await mount({ 'GET /public/waivers/*': () => ({ status: 404, body: { message: 'x' } }) });
     expect(missing.root.querySelector('#waiver-missing')).not.toBeNull();
   });

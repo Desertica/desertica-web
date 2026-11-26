@@ -17,12 +17,7 @@ const destination = (locale: 'en' | 'es'): RawEntry => ({
 const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false): RawEntry => ({
   slug,
   order,
-  durationHours: 4,
-  priceFrom: 79,
-  pricePen: 300,
   featured,
-  format: 'both',
-  languages: ['es', 'en'],
   imageUrl: 'https://img/tour.jpg',
   galleryUrls: ['https://img/g1.jpg'],
   image: null,
@@ -36,11 +31,6 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
   seoTitle: locale === 'en' ? 'SEO title' : null,
   seoDescription: null,
   assurances: [{ icon: 'lucideShield', title: locale === 'en' ? 'Safe' : 'Seguro', body: 'Body' }],
-  meeting: locale === 'en' ? 'Meet' : 'Punto',
-  latitude: '-14.0875',
-  longitude: -75.7626,
-  meetingPointUrl: 'https://maps.example/meet',
-  waiverBody: locale === 'en' ? 'I accept the risks' : null,
   faqs: [
     {
       question: locale === 'en' ? 'Is it safe?' : '¿Es seguro?',
@@ -126,7 +116,6 @@ const raw: CmsRaw = {
     email: 'a@b.pe',
     phone: '+51 1',
     whatsapp: '+51 999-000',
-    ruc: '123',
   },
   theme: {
     light: { primary: 'red', unknownToken: 'x' },
@@ -143,12 +132,8 @@ const raw: CmsRaw = {
   forms: { nameMin: 3, nameMax: 60, emailMax: 200, messageMax: 400 },
   booking: {
     en: {
-      depositRate: 0.3,
-      adultsMin: 1,
       adultsDefault: 2,
-      childrenMin: 0,
       childrenDefault: 0,
-      peopleMax: 10,
       currencyCode: 'USD',
       assurances: [{ icon: 'lucideClock', title: 'Free cancel', body: 'Up to 24h' }],
     },
@@ -193,9 +178,6 @@ describe('mapCms', () => {
       destination: 'huacachina',
       titleKey: 'cms.tours.a-tour.title',
       descriptionKey: 'cms.tours.a-tour.description',
-      durationHours: 4,
-      priceFrom: 79,
-      pricePen: 300,
       image: 'https://cms.test/uploads/g.jpg',
       featured: true,
     });
@@ -222,7 +204,7 @@ describe('mapCms', () => {
   });
 
   describe('values shared by both languages', () => {
-    const priceOf = (en: RawEntry, es: RawEntry) => {
+    const sharedOf = (en: RawEntry, es: RawEntry) => {
       const tours = raw.tours as unknown as Record<string, RawEntry[]>;
       const mapped = mapCms(
         { ...raw, tours: { en: tours['en'].map((t) => ({ ...t, ...en })), es: tours['es'].map((t) => ({ ...t, ...es })) } } as unknown as CmsRaw,
@@ -232,22 +214,22 @@ describe('mapCms', () => {
     };
 
     it('takes them from the most recently published language, not always English', () => {
-      const tour = priceOf(
-        { priceFrom: 79, pricePen: undefined, publishedAt: '2026-11-01T10:00:00.000Z' },
-        { priceFrom: 99, pricePen: 350, publishedAt: '2026-11-05T10:00:00.000Z' },
+      const tour = sharedOf(
+        { featured: false, publishedAt: '2026-11-01T10:00:00.000Z' },
+        { featured: true, imageFocus: 'top', publishedAt: '2026-11-05T10:00:00.000Z' },
       );
-      expect(tour?.priceFrom).toBe(99);
-      expect(tour?.pricePen).toBe(350);
+      expect(tour?.featured).toBe(true);
+      expect(tour?.imageFocus).toBe('top');
     });
 
     it('keeps English first without dates or when English is the newest', () => {
-      expect(priceOf({ priceFrom: 79 }, { priceFrom: 99 })?.priceFrom).toBe(79);
+      expect(sharedOf({ featured: false }, { featured: true })?.featured).toBe(false);
       expect(
-        priceOf(
-          { priceFrom: 79, publishedAt: '2026-11-05T10:00:00.000Z' },
-          { priceFrom: 99, publishedAt: '2026-11-01T10:00:00.000Z' },
-        )?.priceFrom,
-      ).toBe(79);
+        sharedOf(
+          { featured: false, publishedAt: '2026-11-05T10:00:00.000Z' },
+          { featured: true, publishedAt: '2026-11-01T10:00:00.000Z' },
+        )?.featured,
+      ).toBe(false);
     });
   });
 
@@ -307,7 +289,6 @@ describe('mapCms', () => {
     ]);
     expect(page?.includedKeys).toEqual(['cms.tours.a-tour.included.0']);
     expect(snapshot.messages.en?.['cms.tours.a-tour.notes.0']).toBe('Weather');
-    expect(page?.format).toBe('both');
     expect(page?.termsSummaryKey).toBe('cms.tours.a-tour.termsSummary');
     expect(page?.itineraryFile).toBe('/files/itinerary.pdf');
   });
@@ -479,9 +460,8 @@ describe('mapCms global settings', () => {
 
   it('maps booking rules and localized assurances', () => {
     expect(snapshot.booking).toMatchObject({
-      depositRate: 0.3,
       adultsDefault: 2,
-      peopleMax: 10,
+      childrenDefault: 0,
       assurances: [
         {
           icon: 'lucideClock',
@@ -519,14 +499,8 @@ describe('mapCms global settings', () => {
     expect(snapshot.destinations[0]).toMatchObject({ footerOrder: 2, showInFooter: false });
   });
 
-  it('maps meeting point coordinates, map link, waiver text and FAQs', () => {
+  it('maps FAQs', () => {
     const page = snapshot.tourPages['a-tour'];
-    expect(page?.latitude).toBe(-14.0875);
-    expect(page?.longitude).toBe(-75.7626);
-    expect(page?.meetingPointUrl).toBe('https://maps.example/meet');
-    expect(page?.waiverBodyKey).toBe('cms.tours.a-tour.waiverBody');
-    expect(snapshot.messages.en?.['cms.tours.a-tour.waiverBody']).toBe('I accept the risks');
-    expect(snapshot.messages.es?.['cms.tours.a-tour.waiverBody']).toBeUndefined();
     // Only questions with both texts count, and each locale keeps its own copy.
     expect(page?.faqs).toEqual([
       {
@@ -537,26 +511,31 @@ describe('mapCms global settings', () => {
     expect(snapshot.messages.es?.['cms.tours.a-tour.faqs.0.question']).toBe('¿Es seguro?');
   });
 
-  it('drops out-of-range coordinates and links that are not http(s)', () => {
-    const bad = mapCms(
+  it('ignores the fields that moved to the booking system', () => {
+    const moved = mapCms(
       {
         ...raw,
         tours: both((l) => [
           {
             ...tour(l, 'c-tour', 0),
-            latitude: 120,
-            longitude: 'abc',
-            meetingPointUrl: 'javascript:alert(1)',
-            faqs: [],
+            priceFrom: 79,
+            pricePen: 300,
+            durationHours: 4,
+            format: 'both',
+            languages: ['es'],
+            meeting: 'Meet',
+            meetingPointUrl: 'https://maps.example/meet',
+            latitude: -14.1,
+            longitude: -75.7,
           },
         ]),
-      },
+        site: { ...(raw.site as RawEntry), legalName: 'X S.A.C.', ruc: '123' },
+        booking: { en: { depositRate: 0.3, availabilityMonths: 6, adultsMin: 2, childrenMin: 1, peopleMax: 10, adultsDefault: 2 } },
+      } as unknown as CmsRaw,
       options,
     );
-    const page = bad.tourPages['c-tour'];
-    expect(page?.latitude).toBeUndefined();
-    expect(page?.longitude).toBeUndefined();
-    expect(page?.meetingPointUrl).toBeUndefined();
-    expect(page?.faqs).toBeUndefined();
+    const owned = /priceFrom|pricePen|durationHours|"format"|"languages"|meeting|latitude|longitude|depositRate|availabilityMonths|adultsMin|childrenMin|peopleMax|legalName|"ruc"/;
+    expect(JSON.stringify({ ...moved, messages: Object.keys(moved.messages.en ?? {}) })).not.toMatch(owned);
+    expect(moved.booking?.adultsDefault).toBe(2);
   });
 });

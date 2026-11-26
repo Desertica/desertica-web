@@ -32,7 +32,8 @@ export function touristTripLd(input: {
   url: string;
   image: readonly string[];
   organizationId: string;
-  price: number;
+  /** "From" price of the booking system; without it the trip carries no offer. */
+  price?: number;
   currency: string;
   inLanguage: readonly string[];
   /** Where the tour starts; becomes the trip's `itinerary` Place with its coordinates. */
@@ -60,14 +61,18 @@ export function touristTripLd(input: {
           },
         }
       : {}),
-    offers: {
-      '@type': 'Offer',
-      url: input.url,
-      price: input.price,
-      priceCurrency: input.currency,
-      availability: `${CONTEXT}/InStock`,
-      seller: { '@id': input.organizationId },
-    },
+    ...(input.price === undefined
+      ? {}
+      : {
+          offers: {
+            '@type': 'Offer',
+            url: input.url,
+            price: input.price,
+            priceCurrency: input.currency,
+            availability: `${CONTEXT}/InStock`,
+            seller: { '@id': input.organizationId },
+          },
+        }),
   };
 }
 

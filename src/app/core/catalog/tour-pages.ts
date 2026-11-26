@@ -1,8 +1,5 @@
 import { CatalogTour, destinationById, tourById } from './tours';
 
-export type TourFormat = 'shared' | 'private' | 'both';
-export type TourLanguage = 'es' | 'en';
-
 export type TourFeature = {
   icon: string;
   titleKey: string;
@@ -32,9 +29,6 @@ export type TourPage = {
   leadKey: string;
   descriptionKeys: readonly string[];
   expandedDescriptionKeys: readonly string[];
-  meetingKey: string;
-  languages: readonly TourLanguage[];
-  format: TourFormat;
   practices: readonly TourFeature[];
   itinerary: readonly TourStop[];
   videos: readonly TourVideo[];
@@ -48,14 +42,7 @@ export type TourPage = {
   seoTitleKey?: string;
   seoDescriptionKey?: string;
   itineraryFile?: string;
-  /** Meeting point coordinates (WGS84), for `geo` in the JSON-LD and the map link. */
-  latitude?: number;
-  longitude?: number;
-  /** Map link of the meeting point; falls back to a link built from the coordinates. */
-  meetingPointUrl?: string;
   faqs?: readonly TourFaq[];
-  /** i18n key of the Markdown waiver text each passenger signs. */
-  waiverBodyKey?: string;
 };
 
 const unsplash = (photo: string, size: { w?: number; h?: number } = {}): string => {
@@ -80,9 +67,6 @@ const emptyPage = (tour: CatalogTour): TourPage => ({
   leadKey: tour.descriptionKey,
   descriptionKeys: [],
   expandedDescriptionKeys: [],
-  meetingKey: 'tour.meetingIca',
-  languages: ['es', 'en'],
-  format: 'both',
   practices: [],
   itinerary: [],
   videos: [],
@@ -104,9 +88,6 @@ const duneBuggyPage: TourPage = {
     'tours.duneBuggy.details.description.p1',
     'tours.duneBuggy.details.description.p2',
   ],
-  meetingKey: 'tours.duneBuggy.meeting',
-  languages: ['es', 'en'],
-  format: 'both',
   practices: [
     {
       icon: 'lucideUsers',
@@ -214,18 +195,4 @@ export function tourHasDetails(page: TourPage): boolean {
       page.packKeys.length ||
       page.termsSummaryKey,
   );
-}
-
-/**
- * Map link for the meeting point: the CMS link when there is one, otherwise a Google Maps search
- * built from the coordinates (the documented `maps/search/?api=1&query=` form).
- */
-export function meetingMapUrl(page: TourPage): string | null {
-  if (page.meetingPointUrl) {
-    return page.meetingPointUrl;
-  }
-
-  return page.latitude !== undefined && page.longitude !== undefined
-    ? `https://www.google.com/maps/search/?api=1&query=${page.latitude},${page.longitude}`
-    : null;
 }

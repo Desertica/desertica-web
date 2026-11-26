@@ -9,7 +9,18 @@ State as of the `feat/strapi-global-content` work on top of `develop`.
 
 ## What is driven by Strapi
 
-Destinations and tours (base page per tour), UI copy by page/section, media slots, pages, blog, products, site settings, theme (palettes, radius, fonts, header heights, intro), booking rules and assurances, form limits, navigation and SEO. The app keeps the previous values as defaults when a field is empty or the CMS is unreachable.
+Destinations and tours (base page per tour), UI copy by page/section, media slots, pages, blog, products, site settings, theme (palettes, radius, fonts, header heights, intro), the starting party, default currency and assurances of the booking form, form limits, navigation and SEO. The app keeps the previous values as defaults when a field is empty or the CMS is unreachable.
+
+## What is driven by the booking API (not the CMS)
+
+Every datum has one owner. These are read from `desertica-api` on the server on each render, handed to the browser in TransferState, and are simply absent (never a placeholder or a static number) when `API_URL` is not set or the API is down:
+
+- **Prices** (`core/catalog/tour-prices.ts`, `GET /public/tour-prices`): the "from" price on cards, heading, WhatsApp messages, JSON-LD offer and GA values. The CMS no longer has `priceFrom` / `pricePen`.
+- **Tour operational data** (`core/api/public-data.ts`, `GET /public/tours`): `durationHours`, `format`, `languages`, meeting point text (`meetingPoint.{en,es}`), `meetingPointUrl`, `latitude`, `longitude`. Joined to the CMS tour by `slug`.
+- **Booking rules** (`GET /public/booking-rules`): `depositPercent`, `availabilityMonths`, `adultsMin`, `childrenMin`, `peopleMax`. The CMS `booking-setting` keeps `adultsDefault`, `childrenDefault`, `currencyCode` and `assurances`; the defaults are clamped to the API limits. Built-in limits (3 months, 1 adult, 0 children, 12 people) apply only while the API is unreachable.
+- **Fiscal identity** (`GET /public/company`): `legalName` and `ruc` for the footer and JSON-LD. The CMS `site-setting` keeps `brandName`, `legalYear` and the contact fields. Without a company the footer shows the brand name and no RUC line.
+
+Regenerate the API types from the contract with `npx openapi-typescript <api repo>/openapi/openapi.yaml -o src/app/core/api/schema.d.ts --default-non-nullable=false`.
 
 Intentionally not in the CMS: the animated wordmark and brand SVGs, the Peru map SVG, country/phone data, and the list of locales (`en`/`es`).
 
@@ -23,7 +34,7 @@ npm run cms:dev          # Strapi on :1337; first run seeds the database
 npm run start:cms        # Angular on :4200 reading Strapi
 ```
 
-The first visit to `/admin` asks for an admin user. Contact data in `Site — Settings` is placeholder (`XXXX`) until it is filled: the site hides placeholder phone, e-mail, WhatsApp (button and links) and RUC instead of showing them.
+The first visit to `/admin` asks for an admin user. Contact data in `Site — Settings` is placeholder (`XXXX`) until it is filled: the site hides placeholder phone, e-mail and WhatsApp (button and links) instead of showing them. The RUC comes from the booking API.
 
 ## Ola 1 (tracking, SEO, booking engine, complaints)
 
@@ -35,12 +46,12 @@ The first visit to `/admin` asks for an admin user. Contact data in `Site — Se
 
 ## Ola 2 (payments, e-mailed links, CMS fields)
 
-- **Payment step** (`features/payment/payment-step.ts`, shared by `/checkout/payment/:reference` and `/pay/:token`): the booking's `paymentOptions` say which gateways and kinds are open; amounts come from the booking (`totalCents`, `depositCents`, `pendingCents`), never from `depositRate`. Stripe mounts the Express Checkout Element (Apple Pay, Google Pay) and the Payment Element (card) from the API's `clientSecret` and `publishableKey`, USD only. Culqi opens Culqi.js with `CULQI_PUBLIC_KEY` and sends the token to `culqi-charge`, with the 3DS retry. The browser never decides a payment succeeded: it polls "my booking" until `paidCents` grows (60 s) and otherwise says "pending".
+- **Payment step** (`features/payment/payment-step.ts`, shared by `/checkout/payment/:reference` and `/pay/:token`): the booking's `paymentOptions` say which gateways and kinds are open; amounts come from the booking (`totalCents`, `depositCents`, `pendingCents`), never from the deposit percentage. Stripe mounts the Express Checkout Element (Apple Pay, Google Pay) and the Payment Element (card) from the API's `clientSecret` and `publishableKey`, USD only. Culqi opens Culqi.js with `CULQI_PUBLIC_KEY` and sends the token to `culqi-charge`, with the 3DS retry. The browser never decides a payment succeeded: it polls "my booking" until `paidCents` grows (60 s) and otherwise says "pending".
 - **Third-party scripts** (`core/payments`): Stripe.js (`js.stripe.com`) loads when the visitor continues with Stripe, Culqi.js and Culqi 3DS (`checkout.culqi.com`, `3ds.culqi.com`) when Culqi is picked. They are not analytics and ignore the cookie banner. The CSP is report-only (see `docs/DEPLOY.md`) and already allows `js.stripe.com`, `hooks.stripe.com`, `api.stripe.com` and `*.culqi.com`.
-- **E-mailed links**: `/booking/:ref?token=` (token moves to sessionStorage and leaves the URL), `/waiver/:token` (text = the tour's CMS `waiverBody`; the form stays closed without it) and `/pay/:token`. Those responses send `Referrer-Policy: no-referrer`, robots disallows them, and GTM does not load on a visit that starts on a URL with a credential (`isCredentialUrl`).
+- **E-mailed links**: `/booking/:ref?token=` (token moves to sessionStorage and leaves the URL), `/waiver/:token` (text = the `body` the API returns, the version published in the backoffice; the form stays closed without it) and `/pay/:token`. Those responses send `Referrer-Policy: no-referrer`, robots disallows them, and GTM does not load on a visit that starts on a URL with a credential (`isCredentialUrl`).
 - **Proxy**: `/api/public/*` allows the payment, payment-link and waiver operations. Routes whose path is a secret (links, waivers) count against the write limit, the query string is dropped except on availability and legal documents, and ids are `[A-Za-z0-9_-]{1,128}`.
 - **Analytics**: `purchase` uses `transaction_id` = `event_id` = `<reference>-<n>` (`PurchaseTracker`; n counts payments already reported in this browser). `anonymousId` is the cookie-consent id: it is created with the first decision, filed through `/public/consents` and sent when the booking is created.
-- **CMS**: `latitude`, `longitude`, `meetingPointUrl`, `faqs` (populate `faqs`), `waiverBody`, and the `cancellation` and `cookies` pages. FAQ markup (`FAQPage`) is emitted only with the visible questions; coordinates feed `geo` on the trip and a map link. `availabilityMonths` is read when the CMS exposes it and defaults to 3 (no `claude/ola2-cms` branch existed yet).
+- **CMS**: `faqs` (populate `faqs`), and the `cancellation` and `cookies` pages. FAQ markup (`FAQPage`) is emitted only with the visible questions. The meeting point coordinates (`geo` on the trip, map link) and `availabilityMonths` now come from the booking API (see above).
 - **Unverified against the real thing** (docs for Stripe and Culqi were not reachable from the build environment, the real API and gateways were not run): the Culqi 3DS return page and its `postMessage` hand-off follow Culqi's public PHP demo; `deviceId` and `authentication3DS` on the second charge are not in the contract yet. Test both in the gateways' sandboxes before turning the flag on.
 
 ## Open work

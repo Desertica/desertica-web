@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import type { PublicBooking } from '../api/booking-api';
 import { CatalogService } from '../catalog/catalog';
+import { TourPrices } from '../catalog/tour-prices';
 import { I18nService } from '../i18n/i18n';
 import { readLocal, writeLocal } from '../storage/safe-storage';
 import { AnalyticsService, centsToMajor } from './analytics';
@@ -24,6 +25,7 @@ export class PurchaseTracker {
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly analytics = inject(AnalyticsService);
   private readonly catalog = inject(CatalogService);
+  private readonly prices = inject(TourPrices);
   private readonly i18n = inject(I18nService);
 
   /** Returns true when an event was published. */
@@ -51,7 +53,12 @@ export class PurchaseTracker {
       items: tour
         ? [
             {
-              ...tourItem(tour, this.i18n.t(tour.titleKey), booking.format),
+              ...tourItem(
+                tour,
+                this.i18n.t(tour.titleKey),
+                booking.format,
+                this.prices.amount(tour.id, booking.currency),
+              ),
               quantity: (booking.adults ?? 0) + (booking.children ?? 0),
             },
           ]
