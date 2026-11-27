@@ -28,10 +28,7 @@ Reglas:
 - Cada fondo va con su pareja de texto: `bg-primary` con `text-primary-foreground`, `bg-card` con `text-card-foreground`, etc.
 - Se permite opacidad sobre un token (`hover:bg-primary/80`, `bg-input/50`, `ring-ring/30`), no inventar tonos nuevos.
 - ¿Hace falta un color nuevo? Se añade como token en `:root` **y** en `.dark` de `src/styles.css`, con su campo en el tema del CMS (ver `CLAUDE.md`, "Everything editable belongs in Strapi").
-- El logo es siempre el colibrí blanco sobre el recuadro verde oliva `#5a6b3e`, seguido del logotipo oficial «DESÉRTICA» (mayúsculas finas y espaciadas, no texto con la fuente de títulos); no se recolorea. Por eso `brand` es igual en claro y oscuro y no se edita desde el tema del CMS. El logotipo va en `currentColor` (`text-foreground`: oscuro en claro, crema en oscuro). Los trazados salen del kit de marca del dueño (`ICA/marca/svg/`, fuera del repo) y no se redibujan:
-  - Cabecera y pie: `app-brand-mark` (recuadro, trazados de `perfil.svg`) + `app-brand-logotype` (trazados de `logotipo-oscuro.svg`), con el nombre en texto oculto (`sr-only`) para lectores de pantalla.
-  - Favicon y logo SEO (`src/index.html`, `core/seo/seo.ts`): `public/brand/mark-on-olive.svg` (= `perfil.svg`).
-  - `public/brand/mark.svg`, `lockup.svg` y `lockup-on-olive.svg`: isotipo y logo horizontal del kit, por si una página los necesita como imagen.
+- El logo es siempre el colibrí blanco sobre el recuadro verde oliva `#5a6b3e` (`app-brand-mark`, como `public/brand/mark-on-olive.svg`); no se recolorea. Por eso `brand` es igual en claro y oscuro y no se edita desde el tema del CMS.
 - Excepciones conocidas, y ninguna más: el verde de marca de WhatsApp en `core/layout/whatsapp-fab.ts`; el texto blanco y el degradado oscuro **sobre fotos** (ver §9), que deben salir de una sola clase compartida y no copiarse en cada CSS.
 
 ## 1 bis. Color de acento (terracota)
