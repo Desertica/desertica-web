@@ -186,6 +186,7 @@ Todo lo que se puede tocar tiene estos estados. Los componentes de `libs/ui` ya 
 - Frases completas por clave. No se arma una frase con trozos ("Acepto los" + "política de privacidad"): se crea `checkout.acceptPrivacy` con la frase entera, así concuerdan género y número en cada idioma.
 - Plurales con dos claves (`tour.adult` / `tour.adults`) y se elige por cantidad. Nunca "1 adultos".
 - Precios con un único formato en toda la web (símbolo, código y decimales iguales en ficha, tarjetas, carrito y checkout). Fechas y horas con `Intl` en el idioma de la página; el calendario también.
+- Nota al pie de precio: cada importe al que se refiere lleva un `*` pegado (`<span aria-hidden="true">*</span>`) y la nota va debajo como `<p class="text-muted-foreground text-xs" id="…-tax-note">` que empieza por `<span aria-hidden="true">* </span>` seguido de `booking.taxIncluded` ("Precios con impuestos incluidos.", editable en el CMS sin el asterisco); el grupo de importes la enlaza con `aria-describedby`. Igual en ficha y carrito.
 - Nada de *Lorem ipsum*, "XXXX", "undefined" ni "PRÓXIMAMENTE" de relleno en contenido publicado. Los datos de contacto en `XXXX` se ocultan (ya lo hace el código).
 - Mismo nombre para lo mismo en toda la web: si el panel dice "Reserva ahora, paga después", el checkout no dice "Pagar un depósito ahora".
 

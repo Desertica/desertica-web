@@ -63,12 +63,12 @@ import { usePageMeta } from '../../core/seo/page-meta';
         <section hlmCard>
           <div hlmCardContent class="flex flex-col gap-3">
             @for (total of cart.totals(); track total.currency) {
-              <p class="flex justify-between text-lg font-medium">
+              <p class="flex justify-between text-lg font-medium" aria-describedby="cart-tax-note">
                 <span>{{ 'booking.total' | translate: i18n.locale() }}</span>
-                <span class="tabular-nums">{{ money(total.cents, total.currency) }}</span>
+                <span class="tabular-nums">{{ money(total.cents, total.currency) }}<span aria-hidden="true">*</span></span>
               </p>
             }
-            <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
+            <p class="text-muted-foreground text-xs" id="cart-tax-note"><span aria-hidden="true">* </span>{{ \'booking.taxIncluded\' | translate: i18n.locale() }}</p>
             <app-turnstile (tokenChange)="captcha.set($event)" />
             @if (cart.items().length === 1) {
               <button hlmBtn type="button" class="w-full" [disabled]="blocked()" (click)="reserve(cart.items()[0]!)">

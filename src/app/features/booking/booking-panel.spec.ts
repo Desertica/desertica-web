@@ -201,6 +201,11 @@ describe('BookingPanel', () => {
     expect(full.checked).toBe(true);
     expect(deposit.checked).toBe(false);
     expect(root.querySelector('#booking-deposit')?.textContent).toContain('$USD 31.60');
+    // Tax footnote: hidden asterisk on each price, the note described by both radios.
+    expect(root.querySelector('#booking-deposit [aria-hidden="true"]')?.textContent).toBe('*');
+    expect(full.getAttribute('aria-describedby')).toBe('booking-tax-note');
+    expect(deposit.getAttribute('aria-describedby')).toBe('booking-tax-note');
+    expect(root.querySelector('#booking-tax-note')?.textContent).toContain('*');
 
     deposit.click();
     await settle(fixture);

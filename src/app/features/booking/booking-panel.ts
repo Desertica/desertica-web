@@ -231,23 +231,23 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
               [attr.aria-label]="'checkout.payment' | translate: i18n.locale()"
             >
               <label hlmLabel [class]="payOptionClass" for="booking-pay-full">
-                <hlm-radio value="FULL" inputId="booking-pay-full"><hlm-radio-indicator indicator /></hlm-radio>
+                <hlm-radio value="FULL" inputId="booking-pay-full" aria-describedby="booking-tax-note"><hlm-radio-indicator indicator /></hlm-radio>
                 <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
                   <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payFull' | translate: i18n.locale() }}</span>
-                  <span id="booking-total">{{ short(current.totalCents, current.currency) }}</span>
+                  <span id="booking-total">{{ short(current.totalCents, current.currency) }}<span aria-hidden="true">*</span></span>
                 </span>
               </label>
               @if (current.depositCents > 0) {
                 <label hlmLabel [class]="payOptionClass" for="booking-pay-deposit">
-                  <hlm-radio value="DEPOSIT" inputId="booking-pay-deposit"><hlm-radio-indicator indicator /></hlm-radio>
+                  <hlm-radio value="DEPOSIT" inputId="booking-pay-deposit" aria-describedby="booking-tax-note"><hlm-radio-indicator indicator /></hlm-radio>
                   <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
                     <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payLater' | translate: i18n.locale() }}</span>
-                    <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}</span>
+                    <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}<span aria-hidden="true">*</span></span>
                   </span>
                 </label>
               }
             </hlm-radio-group>
-            <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
+            <p class="text-muted-foreground text-xs" id="booking-tax-note"><span aria-hidden="true">* </span>{{ \'booking.taxIncluded\' | translate: i18n.locale() }}</p>
           </div>
         } @else if (quoting()) {
           <hlm-skeleton class="h-24 w-full" />
