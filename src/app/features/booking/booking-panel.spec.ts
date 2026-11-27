@@ -205,7 +205,7 @@ describe('BookingPanel', () => {
     expect(root.querySelector('#booking-deposit [aria-hidden="true"]')?.textContent).toBe('*');
     expect(full.getAttribute('aria-describedby')).toBe('booking-tax-note');
     expect(deposit.getAttribute('aria-describedby')).toBe('booking-tax-note');
-    expect(root.querySelector('#booking-tax-note')?.textContent).toContain('*');
+    expect(root.querySelector('#booking-tax-note')?.textContent).toContain('(*)');
 
     deposit.click();
     await settle(fixture);
