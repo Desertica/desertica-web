@@ -200,7 +200,7 @@ Antes, en oscuro: `primary` 3,35:1 y `tierra` 3,58:1 (texto claro sobre color me
 ## 10. Textos
 
 - Todo texto visible sale de `src/locales/es.json` **y** `en.json` (o del CMS) con el pipe `translate`. Nada de texto fijo en plantillas ni en TypeScript, ni siquiera "Tours", "Total" o "WhatsApp".
-- Frases completas por clave. No se arma una frase con trozos ("Acepto los" + "política de privacidad"): se crea `checkout.acceptPrivacy` con la frase entera, así concuerdan género y número en cada idioma.
+- Frases completas por clave. No se arma una frase con trozos ("Acepto los" + "política de privacidad"): se crea `checkout.acceptPrivacy` con la frase entera, así concuerdan género y número en cada idioma. Si una parte de la frase es un enlace, va entre corchetes dentro de la misma clave (`checkout.acceptDoc.PRIVACY`: "Acepto la [política de privacidad]").
 - Plurales con dos claves (`tour.adult` / `tour.adults`) y se elige por cantidad. Nunca "1 adultos".
 - Precios con un único formato en toda la web (símbolo, código y decimales iguales en ficha, tarjetas, carrito y checkout). Fechas y horas con `Intl` en el idioma de la página; el calendario también.
 - Nota al pie de precio: cada importe al que se refiere lleva un `*` pegado (`<span aria-hidden="true">*</span>`) y la nota va debajo como `<p class="text-muted-foreground text-xs" id="…-tax-note">` que empieza por `<span aria-hidden="true">* </span>` seguido de `booking.taxIncluded` ("Precios con impuestos incluidos.", editable en el CMS sin el asterisco); el grupo de importes la enlaza con `aria-describedby`. Igual en ficha y carrito.
@@ -232,7 +232,7 @@ Antes, en oscuro: `primary` 3,35:1 y `tierra` 3,58:1 (texto claro sobre color me
 | Detalles plegables | `hlm-accordion` (`tour-full-details.ts`) |
 | Insignia (ubicación, etiqueta) | `hlmBadge` |
 | Selector de cantidad | `features/tours/detail/tour-book.ts` |
-| Teléfono con país | `features/contact/phone.ts` |
+| Teléfono con país | `features/contact/phone-country.ts` (selector, dentro del `hlm-input-group-addon` del número) y `features/contact/phone.ts` (validación y formato) |
 | Iconos | `ng-icon` de `@ng-icons/lucide`, a `size-4` dentro de botones (lo pone `hlmBtn`) |
 
 Un patrón nuevo se construye con `libs/ui` y, si se repite, se convierte en componente en `core/layout`.
