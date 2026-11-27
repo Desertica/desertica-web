@@ -31,7 +31,7 @@ export type AnalyticsEvents = {
   add_payment_info: {
     currency: Currency;
     value: number;
-    payment_type: 'stripe' | 'culqi';
+    payment_type: 'culqi';
     event_id: string;
   };
   purchase: {

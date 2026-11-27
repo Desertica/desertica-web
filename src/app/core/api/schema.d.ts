@@ -236,23 +236,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/public/bookings/{reference}/payments/stripe-intent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Crear un PaymentIntent de Stripe (USD) */
-        post: operations["createBookingStripeIntent"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/public/bookings/{reference}/payments/culqi-charge": {
         parameters: {
             query?: never;
@@ -281,23 +264,6 @@ export interface paths {
         get: operations["getPaymentLinkInfo"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/public/payment-links/{token}/stripe-intent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Crear un PaymentIntent para un enlace de pago */
-        post: operations["createLinkStripeIntent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -369,7 +335,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Firmar el descargo de responsabilidad */
+        /**
+         * Firmar el descargo de responsabilidad
+         * @description `409` si la reserva está cancelada, si ya se firmó o si pasaron más de 2 días desde el inicio del
+         *     tour. `404` si el enlace no existe o el cliente pidió que se borraran sus datos. Las notas médicas se
+         *     guardan cifradas.
+         */
         post: operations["signWaiver"];
         delete?: never;
         options?: never;
@@ -487,29 +458,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhooks/stripe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Eventos de Stripe
-         * @description Valida `Stripe-Signature` sobre el cuerpo crudo (400 si falta o no coincide), guarda el evento en
-         *     `WebhookEvent` (idempotente por `eventId`) y responde 200 aunque ya estuviera procesado. Eventos usados:
-         *     `payment_intent.succeeded|payment_failed|canceled|requires_action`, `refund.created|updated|failed` y
-         *     `charge.dispute.created|updated|closed|funds_withdrawn|funds_reinstated`. 503 si el webhook no está configurado.
-         */
-        post: operations["receiveStripeWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/webhooks/culqi": {
         parameters: {
             query?: never;
@@ -532,6 +480,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhooks/cms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aviso de Strapi al publicar o despublicar un tour
+         * @description Webhook de Strapi (ver `docs/WEBHOOKS.md` del CMS). Exige la cabecera `X-Webhook-Secret` igual a
+         *     `CMS_WEBHOOK_SECRET` (401 si falta o no coincide; 503 si el API no tiene secreto). Para `model: tour`
+         *     sincroniza solo ese tour con la misma lógica que `syncTourRefs`: lo crea inactivo si es nuevo, refresca
+         *     su título y lo desactiva si ya no está publicado en ningún idioma. Idempotente: repetir el aviso deja
+         *     el mismo estado. Otros modelos o eventos (y el `trigger-test` del admin) responden 200 con
+         *     `ignored: true`. El botón "Sincronizar con el CMS" sigue como respaldo (Strapi no reintenta).
+         */
+        post: operations["receiveCmsWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/google": {
         parameters: {
             query?: never;
@@ -541,7 +514,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Iniciar sesión con Google (solo dominio de la empresa) */
+        /**
+         * Iniciar sesión con Google (solo dominio de la empresa)
+         * @description Exige un correo verificado del dominio de la empresa que sea una cuenta de su Google Workspace (`hd`):
+         *     una cuenta personal de Google creada con una dirección de la empresa responde 403.
+         */
         post: operations["loginWithGoogle"];
         delete?: never;
         options?: never;
@@ -930,8 +907,31 @@ export interface paths {
          * Cancelar una reserva
          * @description Calcula el reembolso con la política de cancelación vigente al reservar. Con `refund = POLICY`
          *     devuelve lo que corresponde; con `FULL` o `NONE` fuerza el monto (requiere `bookings:override`).
+         *     Anula los enlaces de "mi reserva" ya enviados; el cliente puede pedir uno nuevo.
          */
         post: operations["cancelBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{id}/access-links/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular los enlaces de "mi reserva"
+         * @description Invalida todos los enlaces de "mi reserva" enviados al cliente (p. ej. si reenvió el correo a otra
+         *     persona). El cliente puede pedir uno nuevo a su correo con `requestBookingAccess`. Los enlaces
+         *     también se anulan solos al cancelar la reserva, al cambiar el correo del cliente y al pedir uno nuevo.
+         */
+        post: operations["revokeBookingAccessLinks"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1006,7 +1006,8 @@ export interface paths {
         put?: never;
         /**
          * Registrar un pago manual
-         * @description Efectivo, transferencia o Yape personal. No pasa por pasarela.
+         * @description Efectivo, transferencia o Yape personal. No pasa por pasarela. Para `TRANSFER` y `YAPE` el número de
+         *     operación (`reference`) es obligatorio (422 si falta): Finanzas lo cruza con el banco.
          */
         post: operations["recordManualPayment"];
         delete?: never;
@@ -1444,15 +1445,14 @@ export interface paths {
          * Publicar una nueva versión de un documento legal
          * @description Guarda un snapshot inmutable del texto en el idioma `locale` (un trigger de la base impide
          *     modificarlo o borrarlo). El texto se escribe en el backoffice: con `text` (y `title`) se publica ese
-         *     texto tal cual y no se consulta el CMS. Sin `text` se toma del CMS como antes (en desuso: se retira
-         *     cuando la web y el backoffice dejen de usarlo).
-         *     - Documentos globales (`TERMS`, `PRIVACY`, `CANCELLATION`, `COOKIES`, `CONDUCT`): la página
-         *       `cmsSlug`; la versión es la siguiente de `(kind, locale)`.
-         *     - `WAIVER`: el campo `waiverBody` del tour `tourRefId` en ese idioma (no lleva `cmsSlug`); la versión
-         *       es la siguiente de `(tour, locale)` y la respuesta trae el slug del tour en `cmsSlug`. Los
-         *       descargos de las reservas nuevas apuntan a la última versión publicada (la del idioma de la reserva
-         *       o, si no hay, la de `en`); sin ninguna, el tour no se puede reservar (409).
-         *     Responde 422 si el CMS no tiene esa página, ese tour o su `waiverBody`, y 503 si el CMS no responde.
+         *     texto tal cual y no se consulta el CMS.
+         *     - Documentos globales (`TERMS`, `PRIVACY`, `CANCELLATION`, `COOKIES`, `CONDUCT`): la versión es la
+         *       siguiente de `(kind, locale)`. Sin `text` se toma la página `cmsSlug` del CMS (en desuso: se retira
+         *       cuando el backoffice deje de usarlo); responde 422 si el CMS no tiene esa página y 503 si no responde.
+         *     - `WAIVER`: `title` y `text` son obligatorios (el descargo ya no existe en el CMS), junto con
+         *       `tourRefId`; la versión es la siguiente de `(tour, locale)` y la respuesta trae el slug del tour en
+         *       `cmsSlug`. Los descargos de las reservas nuevas apuntan a la última versión publicada (la del idioma
+         *       de la reserva o, si no hay, la de `en`); sin ninguna, el tour no se puede reservar (409).
          */
         post: operations["publishLegalDocument"];
         delete?: never;
@@ -1727,7 +1727,7 @@ export interface paths {
         /**
          * Reporte de ventas
          * @description Mismas medidas que `sales` del panel, agrupadas por `groupBy`: `day` (fecha de Lima), `tour` (slug
-         *     del tour) o `provider` (`STRIPE`, `CULQI` o `MANUAL`). Con `format=csv` devuelve el mismo contenido
+         *     del tour) o `provider` (`CULQI` o `MANUAL`). Con `format=csv` devuelve el mismo contenido
          *     como `text/csv` (columnas `key,currency,grossCents,refundedCents,bookings`); las celdas que
          *     empezarían con `=`, `+`, `-`, `@`, tabulación o retorno se prefijan con `'` para que una hoja de
          *     cálculo no las evalúe como fórmula.
@@ -1776,7 +1776,7 @@ export interface components {
         /** @enum {string} */
         BookingStatus: "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
         /** @enum {string} */
-        PaymentProvider: "STRIPE" | "CULQI" | "MANUAL";
+        PaymentProvider: "CULQI" | "MANUAL";
         /** @enum {string} */
         PaymentMethod: "CARD" | "WALLET" | "YAPE" | "CASH" | "TRANSFER" | "OTHER";
         /** @enum {string} */
@@ -2208,7 +2208,7 @@ export interface components {
         /** @description Pasarelas y tipos de pago disponibles para la moneda y el saldo de la reserva (vacío si no queda saldo). */
         PaymentOptions: {
             /** @enum {string} */
-            provider: "STRIPE" | "CULQI";
+            provider: "CULQI";
             kinds: components["schemas"]["PaymentKind"][];
         }[];
         PublicBookingCreated: {
@@ -2216,9 +2216,6 @@ export interface components {
             /** @description Se envía como `X-Booking-Token` en las llamadas siguientes y por email. */
             accessToken: string;
             paymentOptions?: components["schemas"]["PaymentOptions"];
-        };
-        CreatePaymentRequest: {
-            kind: components["schemas"]["PaymentKind"];
         };
         CulqiChargeRequest: {
             kind: components["schemas"]["PaymentKind"];
@@ -2237,15 +2234,6 @@ export interface components {
             authentication3DS?: {
                 [key: string]: unknown;
             };
-        };
-        StripeIntent: {
-            /** Format: uuid */
-            paymentId: string;
-            clientSecret: string;
-            publishableKey: string;
-            amountCents: number;
-            /** @enum {string} */
-            currency: "USD";
         };
         CulqiChargeResult: {
             /** Format: uuid */
@@ -2288,7 +2276,7 @@ export interface components {
             amountCents: number;
             /** Format: date-time */
             expiresAt: string;
-            paymentOptions: ("STRIPE" | "CULQI")[];
+            paymentOptions: "CULQI"[];
         };
         Payment: {
             /** Format: uuid */
@@ -2499,6 +2487,11 @@ export interface components {
             accessToken: string;
             /** @description Segundos de vigencia del token de acceso. */
             expiresIn: number;
+            /**
+             * Format: date-time
+             * @description Fin absoluto de la sesión; después hay que volver a entrar con Google.
+             */
+            sessionExpiresAt: string;
             user: components["schemas"]["User"];
         };
         Role: {
@@ -2686,6 +2679,7 @@ export interface components {
                 phone?: string | null;
                 emergencyContactName?: string | null;
                 emergencyContactPhone?: string | null;
+                /** @description Notas médicas del descargo. Siempre `null` si quien consulta no tiene `waivers:read`. */
                 medicalNotes?: string | null;
                 waiverStatus: components["schemas"]["WaiverStatus"];
                 /** @description Saldo por cobrar el día de la salida. */
@@ -3065,37 +3059,6 @@ export interface operations {
             401: components["responses"]["Error"];
         };
     };
-    createBookingStripeIntent: {
-        parameters: {
-            query?: never;
-            header?: {
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            path: {
-                reference: components["parameters"]["Reference"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePaymentRequest"];
-            };
-        };
-        responses: {
-            /** @description Intent creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeIntent"];
-                };
-            };
-            409: components["responses"]["Error"];
-            422: components["responses"]["Error"];
-            502: components["responses"]["Error"];
-        };
-    };
     createBookingCulqiCharge: {
         parameters: {
             query?: never;
@@ -3149,34 +3112,6 @@ export interface operations {
             };
             404: components["responses"]["Error"];
             410: components["responses"]["Error"];
-        };
-    };
-    createLinkStripeIntent: {
-        parameters: {
-            query?: never;
-            header?: {
-                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            path: {
-                token: components["parameters"]["LinkToken"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Intent creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StripeIntent"];
-                };
-            };
-            404: components["responses"]["Error"];
-            409: components["responses"]["Error"];
-            410: components["responses"]["Error"];
-            502: components["responses"]["Error"];
         };
     };
     createLinkCulqiCharge: {
@@ -3309,6 +3244,7 @@ export interface operations {
                     "application/json": components["schemas"]["WaiverForm"];
                 };
             };
+            404: components["responses"]["Error"];
             409: components["responses"]["Error"];
         };
     };
@@ -3472,7 +3408,7 @@ export interface operations {
             };
         };
     };
-    receiveStripeWebhook: {
+    receiveCulqiWebhook: {
         parameters: {
             query?: never;
             header?: never;
@@ -3506,16 +3442,28 @@ export interface operations {
             };
         };
     };
-    receiveCulqiWebhook: {
+    receiveCmsWebhook: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-Webhook-Secret": string;
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
                 "application/json": {
+                    /** @example entry.publish */
+                    event?: string;
+                    /** @example tour */
+                    model?: string;
+                    entry?: {
+                        slug?: string;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                } & {
                     [key: string]: unknown;
                 };
             };
@@ -3526,18 +3474,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-            400: components["responses"]["Error"];
-            /** @description Evento fuera de orden; ver `receiveStripeWebhook`. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": {
+                        ignored?: boolean;
+                        created?: number;
+                        updated?: number;
+                        deactivated?: number;
+                    };
                 };
             };
+            401: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     loginWithGoogle: {
@@ -4325,6 +4273,32 @@ export interface operations {
             };
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    revokeBookingAccessLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enlaces anulados */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Cuántos enlaces vigentes se anularon. */
+                        revoked: number;
+                    };
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     rescheduleBooking: {
@@ -5162,16 +5136,16 @@ export interface operations {
                 "application/json": {
                     kind: components["schemas"]["LegalDocumentKind"];
                     locale: string;
-                    /** @description Sin `text`, obligatorio salvo con `WAIVER`. Con `text` es opcional: por defecto el slug de la página legal de ese tipo (`terms`, `privacy`, `cancellation`, `cookies`, `conduct`). */
+                    /** @description Sin `text`, obligatorio (solo documentos globales). Con `text` es opcional: por defecto el slug de la página legal de ese tipo (`terms`, `privacy`, `cancellation`, `cookies`, `conduct`). */
                     cmsSlug?: string;
                     /**
                      * Format: uuid
                      * @description Obligatorio con `WAIVER` y no admitido con los demás.
                      */
                     tourRefId?: string;
-                    /** @description Obligatorio con `text`. */
+                    /** @description Obligatorio con `text` y con `WAIVER`. */
                     title?: string;
-                    /** @description Texto en Markdown que se publica. Sin él se toma del CMS. */
+                    /** @description Texto en Markdown que se publica. Obligatorio con `WAIVER`; en los demás, sin él se toma del CMS. */
                     text?: string;
                 };
             };

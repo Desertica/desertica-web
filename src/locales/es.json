@@ -476,7 +476,6 @@
     "missing": "No encontramos esta reserva en este navegador. Usa tu referencia y correo para abrirla.",
     "gateway": "Medio de pago",
     "provider": {
-      "STRIPE": "Apple Pay, Google Pay o tarjeta (USD)",
       "CULQI": "Tarjeta (Culqi)"
     },
     "kind": {
@@ -494,8 +493,6 @@
     "pendingBody": "El pago se procesó en tu tarjeta, pero nuestro sistema aún no lo confirma. No pagues de nuevo: recibirás un correo apenas se confirme, y puedes revisar \"Mi reserva\" en unos minutos.",
     "processing": "Procesando tu pago…",
     "confirming": "Confirmando tu pago con nosotros…",
-    "walletLabel": "Paga con Apple Pay o Google Pay",
-    "cardLabel": "Paga con tarjeta",
     "errorGateway": "No se pudo cargar el formulario de pago. Revisa tu conexión e inténtalo de nuevo.",
     "errorDeclined": "El pago no se completó.",
     "errorCancelled": "Se canceló la verificación. Puedes intentarlo de nuevo.",

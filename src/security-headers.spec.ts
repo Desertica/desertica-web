@@ -29,7 +29,6 @@ describe('contentSecurityPolicy', () => {
       'https://*.googletagmanager.com',
       'https://connect.facebook.net',
       'https://challenges.cloudflare.com',
-      'https://js.stripe.com',
       'https://*.culqi.com',
     ]) {
       expect(scripts).toContain(host);
@@ -50,8 +49,8 @@ describe('contentSecurityPolicy', () => {
       expect(directive(reportOnly, name).endsWith(' https:')).toBe(false);
     }
     expect(directive(reportOnly, 'img-src')).toContain('https://cms.desertica.pe');
-    expect(directive(reportOnly, 'connect-src')).toContain('https://api.stripe.com');
-    expect(directive(reportOnly, 'frame-src')).toContain('https://hooks.stripe.com');
+    expect(directive(reportOnly, 'connect-src')).toContain('https://*.cardinalcommerce.com');
+    expect(directive(reportOnly, 'frame-src')).toContain('https://*.culqi.com');
     expect(directive(reportOnly, 'form-action')).toContain('https://*.cardinalcommerce.com');
     expect(directive(reportOnly, 'script-src')).toBe(directive(enforce, 'script-src'));
   });
