@@ -4,16 +4,16 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-brand-mark',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'bg-brand text-brand-foreground inline-block size-9 shrink-0 sm:size-10 lg:size-12',
+    class: 'text-foreground inline-block h-9 w-auto shrink-0 sm:h-10 lg:h-12',
     'aria-hidden': 'true',
   },
   template: `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" class="block size-full">
-      <!-- Same framing as public/brand/mark-on-olive.svg. -->
-      <g
-        fill="currentColor"
-        transform="translate(160 160) scale(0.4757) translate(-310.037 -111.247)"
-      >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="117.052 -0.615 385.970 223.724"
+      class="block h-full w-auto"
+    >
+      <g fill="currentColor">
         <path
           d="M227.6,16c6.1,13.6,14,26.2,23.6,37.6c6.3,7.5,13.4,14.3,20.2,21.3c1.9,2,1.7,3.8-0.7,5.2
       c-5.4,3.1-11.1,5.9-15.9,9.7c-7.3,5.9-11.9,14-12.9,23.3c-1.4,13.2,3.1,24.5,13.1,33.4c10.2,9,22.4,12.8,35.6,11.2

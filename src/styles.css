@@ -54,8 +54,6 @@
   --color-tierra: var(--tierra);
   --color-tierra-foreground: var(--tierra-foreground);
   --color-arena: var(--arena);
-  --color-brand: var(--brand);
-  --color-brand-foreground: var(--brand-foreground);
   --color-arena-foreground: var(--arena-foreground);
 }
 
@@ -92,9 +90,6 @@
   --tierra-foreground: oklch(0.98 0.006 84.566);
   --arena: oklch(0.775 0.06 78.704);
   --arena-foreground: oklch(0.271 0.014 81.671);
-  /* Official logo colours (#5a6b3e, white): set once, not in .dark nor the CMS theme, since the logo is never recoloured. */
-  --brand: oklch(0.502 0.07 125.689);
-  --brand-foreground: oklch(1 0 0);
   --sidebar: oklch(0.98 0.006 84.566);
   --sidebar-foreground: oklch(0.271 0.014 81.671);
   --sidebar-primary: oklch(0.502 0.07 125.689);
