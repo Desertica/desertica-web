@@ -139,6 +139,7 @@ Reglas:
 - **Prohibido** `<input type="checkbox">`, `<input type="radio">` y `<select>` nativos: no siguen el modo oscuro ni el resto de la web.
 - **Un control que parece elegible debe serlo.** Una tarjeta con borde, fondo, hover o puntero es un radio, casilla o segmento real (con `role`, teclado y estado `aria-checked`/`aria-pressed`). Si solo informa, no lleva hover, ni puntero, ni aspecto de seleccionado.
 - La opción elegida se ve sin ambigüedad: `bg-primary text-primary-foreground` o borde `border-primary` más el indicador del control.
+  - Excepción: los selectores de idioma y moneda de la cabecera (`core/layout/locale-switcher.ts`, `currency-switcher.ts`) son texto como los enlaces del menú (elegida en `text-foreground` y `font-medium`, el resto en `text-muted-foreground`), para que el CTA sea lo único verde de la cabecera.
 - Obligatorios y opcionales: todos los campos son obligatorios salvo que la etiqueta diga "(opcional)". Sin asteriscos.
 - El texto de ejemplo (`placeholder`) muestra un ejemplo ("987 654 321", "¿Qué tienes pensado?") y nunca repite la etiqueta.
 - Errores debajo del campo con `<hlm-field-error>`, en `text-destructive`, después de tocar el campo o enviar. Un error de todo el formulario va en un `<p role="alert">` encima de los botones.
