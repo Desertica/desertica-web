@@ -521,9 +521,9 @@ export interface paths {
         put?: never;
         /**
          * Eventos de Culqi
-         * @description Valida la firma HMAC-SHA256 del cuerpo en `x-culqi-signature` (400 si falta o no coincide; 503 si no hay
-         *     secreto configurado). El API no confía en el contenido del evento: vuelve a consultar el cargo a Culqi.
-         *     El esquema de firma está pendiente de verificar contra la documentación oficial de Culqi.
+         * @description Culqi no documenta una firma para sus webhooks. El API no confía en el cuerpo: toma solo el `id` del evento
+         *     (`evt_test_…` / `evt_live_…`) y lo consulta en `GET /v2/events/{id}` con la clave secreta; los cargos se
+         *     vuelven a consultar también. 400 si falta el id o Culqi no conoce ese evento; 503 si no hay clave secreta.
          */
         post: operations["receiveCulqiWebhook"];
         delete?: never;
@@ -2231,6 +2231,8 @@ export interface components {
              * @description Pago `REQUIRES_ACTION` que se continúa tras la autenticación 3DS (con `authentication3DS`).
              */
             paymentId?: string;
+            /** @description Resultado de `Culqi3DS.generateDevice()`. Se envía igual en el cargo y en su reintento 3DS. */
+            deviceId?: string;
             /** @description Parámetros que devolvió la autenticación 3DS en el navegador (Culqi3DS). */
             authentication3DS?: {
                 [key: string]: unknown;
@@ -3200,6 +3202,8 @@ export interface operations {
                      * @description Pago `REQUIRES_ACTION` que se continúa tras 3DS.
                      */
                     paymentId?: string;
+                    /** @description Resultado de `Culqi3DS.generateDevice()`. */
+                    deviceId?: string;
                     authentication3DS?: {
                         [key: string]: unknown;
                     };
