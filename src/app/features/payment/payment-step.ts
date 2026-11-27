@@ -474,7 +474,8 @@ export class PaymentStep {
     this.phase.set('processing');
     const first = await this.api.culqiCharge(
       this.target(),
-      { kind, token: token.id, email: token.email },
+      // Culqi wants the same device id on the charge and on its 3DS retry.
+      { kind, token: token.id, email: token.email, ...(this.deviceId ? { deviceId: this.deviceId } : {}) },
       crypto.randomUUID(),
     );
     await this.afterCharge(first, kind, token);
@@ -491,7 +492,7 @@ export class PaymentStep {
 
     const charge = result.data;
     if (charge.status === 'REQUIRES_ACTION' && charge.action?.type === 'THREE_DS') {
-      return this.runThreeDS(kind, token);
+      return this.runThreeDS(kind, token, charge.paymentId);
     }
 
     if (charge.status === 'SUCCEEDED' || charge.status === 'PENDING') {
@@ -505,7 +506,11 @@ export class PaymentStep {
    * The bank asked for 3DS: Culqi's window runs the challenge and posts the authentication
    * parameters back to this page, and the charge is repeated with them.
    */
-  private async runThreeDS(kind: PaymentKind, token: { id: string; email: string }): Promise<void> {
+  private async runThreeDS(
+    kind: PaymentKind,
+    token: { id: string; email: string },
+    paymentId: string,
+  ): Promise<void> {
     const culqi = this.culqi;
     if (!culqi) {
       return this.fail('payment.errorGateway');
@@ -514,7 +519,7 @@ export class PaymentStep {
     const view = this.document.defaultView;
     const origin = view?.location.origin ?? '';
     culqi.threeDS.settings = {
-      charge: { totalAmount: this.amountOf(kind), returnUrl: `${origin}/payment/3ds` },
+      charge: { totalAmount: this.amountOf(kind), returnUrl: `${origin}/payment/3ds`, currency: this.currency() },
       card: { email: token.email },
     };
 
@@ -554,7 +559,8 @@ export class PaymentStep {
     const parameters = outcome.parameters;
     const retry = await this.api.culqiCharge(
       this.target(),
-      { kind, token: token.id, email: token.email, deviceId: this.deviceId, authentication3DS: parameters },
+      // The retry continues the same payment (`paymentId`); a new one would be refused for a link.
+      { kind, token: token.id, email: token.email, paymentId, deviceId: this.deviceId, authentication3DS: parameters },
       crypto.randomUUID(),
     );
     if (!retry.ok) {

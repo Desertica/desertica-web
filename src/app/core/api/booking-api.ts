@@ -34,14 +34,15 @@ export type PayTarget =
   { type: 'booking'; reference: string; accessToken: string } | { type: 'link'; token: string };
 
 /**
- * Culqi's 3DS step needs the device id and the browser's authentication parameters on a second
- * charge. The contract's `CulqiChargeRequest` has neither yet (see "Contract change requests" in
- * the PR), so they travel as extra properties that the typed client would otherwise reject.
+ * Body of a Culqi charge (`CulqiChargeRequest` in the contract). The 3DS retry repeats the token
+ * and the device id and adds `paymentId` and the browser's `authentication3DS`.
  */
 export type CulqiChargeInput = {
   kind: PaymentKind;
   token: string;
   email: string;
+  /** The `REQUIRES_ACTION` payment that the 3DS retry continues. */
+  paymentId?: string;
   deviceId?: string;
   authentication3DS?: Record<string, unknown>;
 };
