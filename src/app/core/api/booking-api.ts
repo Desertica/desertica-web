@@ -18,7 +18,6 @@ export type LegalDocument = Schemas['LegalDocument'];
 export type LegalDocumentWithText = Schemas['LegalDocumentWithText'];
 export type PaymentOption = PublicBooking['paymentOptions'][number];
 export type PaymentKind = Schemas['PaymentKind'];
-export type StripeIntent = Schemas['StripeIntent'];
 export type CulqiChargeResult = Schemas['CulqiChargeResult'];
 export type PaymentLinkInfo = Schemas['PaymentLinkInfo'];
 export type WaiverForm = Schemas['WaiverForm'];
@@ -173,31 +172,6 @@ export class BookingApi {
   }
 
   /** The same token goes in the header for bookings and in the path for payment links. */
-  stripeIntent(
-    target: PayTarget,
-    kind: PaymentKind,
-    idempotencyKey: string,
-  ): Promise<ApiResult<StripeIntent>> {
-    if (target.type === 'link') {
-      return settle(
-        this.api.POST('/public/payment-links/{token}/stripe-intent', {
-          params: { path: { token: target.token }, header: { 'Idempotency-Key': idempotencyKey } },
-        }),
-      );
-    }
-
-    return settle(
-      this.api.POST('/public/bookings/{reference}/payments/stripe-intent', {
-        body: { kind },
-        params: {
-          path: { reference: target.reference },
-          header: { 'Idempotency-Key': idempotencyKey },
-        },
-        headers: { 'X-Booking-Token': target.accessToken },
-      }),
-    );
-  }
-
   culqiCharge(
     target: PayTarget,
     input: CulqiChargeInput,

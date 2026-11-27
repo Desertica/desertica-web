@@ -476,7 +476,6 @@
     "missing": "We could not find this booking in this browser. Use your reference and email to open it.",
     "gateway": "Payment method",
     "provider": {
-      "STRIPE": "Apple Pay, Google Pay or card (USD)",
       "CULQI": "Card (Culqi)"
     },
     "kind": {
@@ -494,8 +493,6 @@
     "pendingBody": "The payment went through on the card side, but our system has not confirmed it yet. Do not pay again: you will get an email as soon as it is confirmed, and you can check \"My booking\" in a few minutes.",
     "processing": "Processing your payment…",
     "confirming": "Confirming your payment with us…",
-    "walletLabel": "Pay with Apple Pay or Google Pay",
-    "cardLabel": "Pay with a card",
     "errorGateway": "The payment form could not be loaded. Check your connection and try again.",
     "errorDeclined": "The payment was not completed.",
     "errorCancelled": "The verification was cancelled. You can try again.",
