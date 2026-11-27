@@ -21,6 +21,8 @@ export type BookingSelection = {
   adults: number;
   children: number;
   quote: Quote;
+  /** Chosen on the tour page; the checkout starts with it. */
+  paymentKind?: 'FULL' | 'DEPOSIT';
 };
 
 /** Message key for a failed seat hold, shared by the tour page and the cart. */

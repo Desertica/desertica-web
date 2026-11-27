@@ -18,7 +18,9 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCalendar } from '@spartan-ng/helm/calendar';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
+import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
+import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
 import { HlmSkeleton } from '@spartan-ng/helm/skeleton';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import {
@@ -59,6 +61,8 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
     HlmSkeleton,
     HlmToggleGroupImports,
     HlmPopoverImports,
+    HlmLabel,
+    HlmRadioGroupImports,
     NgIcon,
     Turnstile,
   ],
@@ -219,14 +223,30 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
 
         @if (quote(); as current) {
           <div class="flex flex-col gap-3" id="booking-quote">
-            <div [class]="amountClass">
-              <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payFull' | translate: i18n.locale() }}</span>
-              <span id="booking-total">{{ short(current.totalCents, current.currency) }}</span>
-            </div>
-            <div [class]="amountClass">
-              <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payLater' | translate: i18n.locale() }}</span>
-              <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}</span>
-            </div>
+            <hlm-radio-group
+              class="w-full gap-3"
+              name="booking-payment"
+              [value]="chosenKind()"
+              (valueChange)="onPaymentKind($event)"
+              [attr.aria-label]="'checkout.payment' | translate: i18n.locale()"
+            >
+              <label hlmLabel [class]="payOptionClass" for="booking-pay-full">
+                <hlm-radio value="FULL" inputId="booking-pay-full"><hlm-radio-indicator indicator /></hlm-radio>
+                <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
+                  <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payFull' | translate: i18n.locale() }}</span>
+                  <span id="booking-total">{{ short(current.totalCents, current.currency) }}</span>
+                </span>
+              </label>
+              @if (current.depositCents > 0) {
+                <label hlmLabel [class]="payOptionClass" for="booking-pay-deposit">
+                  <hlm-radio value="DEPOSIT" inputId="booking-pay-deposit"><hlm-radio-indicator indicator /></hlm-radio>
+                  <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
+                    <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payLater' | translate: i18n.locale() }}</span>
+                    <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}</span>
+                  </span>
+                </label>
+              }
+            </hlm-radio-group>
             <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
           </div>
         } @else if (quoting()) {
@@ -317,7 +337,11 @@ export class BookingPanel {
   /** Same look as the WhatsApp booking form: soft field buttons and amount cards. */
   protected readonly selectClass =
     'bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-3xl border border-transparent px-3 text-sm font-normal outline-none focus-visible:ring-3';
-  protected readonly amountClass = 'bg-input/50 flex w-full flex-col gap-0.5 rounded-3xl px-4 py-3.5';
+  protected readonly payOptionClass =
+    'border-transparent bg-input/50 hover:bg-input/80 flex w-full cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 [&:has([data-checked=true])]:border-primary';
+  /** Full payment unless the visitor picks the deposit; a quote without a deposit is always full. */
+  protected readonly paymentKind = signal<'FULL' | 'DEPOSIT'>('FULL');
+  protected readonly chosenKind = computed(() => ((this.quote()?.depositCents ?? 0) > 0 ? this.paymentKind() : 'FULL'));
   /** Lowest adult price among the loaded departures, as on the tour cards (\$USD 45). */
   protected readonly fromLabel = computed(() => {
     const prices = this.departures().map((d) => d.price.adultCents);
@@ -408,6 +432,12 @@ export class BookingPanel {
     }
   }
 
+  protected onPaymentKind(value: unknown): void {
+    if (value === 'FULL' || value === 'DEPOSIT') {
+      this.paymentKind.set(value);
+    }
+  }
+
   protected onDate(value: Date | undefined): void {
     this.date.set(value);
     this.reserveError.set(null);
@@ -487,6 +517,7 @@ export class BookingPanel {
       adults: this.adults(),
       children: this.children(),
       quote,
+      paymentKind: this.chosenKind(),
     };
   }
 

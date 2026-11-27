@@ -53,7 +53,7 @@ describe('Checkout', () => {
     },
   });
 
-  const mount = async (routes: Parameters<typeof mockApi>[0] = {}, withHold = true) => {
+  const mount = async (routes: Parameters<typeof mockApi>[0] = {}, withHold = true, picked: Partial<BookingSelection> = {}) => {
     mock = mockApi({
       'GET /public/legal-documents/current': () => ({ body: { data: LEGAL_DOCUMENTS } }),
       'POST /public/bookings': created,
@@ -61,7 +61,7 @@ describe('Checkout', () => {
     });
     const flow = TestBed.inject(BookingFlow);
     if (withHold) {
-      flow.selection.set(selection());
+      flow.selection.set({ ...selection(), ...picked });
       flow.hold.set({
         token: 'hold-1',
         departureId: DEPARTURE_ID,
@@ -147,6 +147,13 @@ describe('Checkout', () => {
       items: [expect.objectContaining({ item_id: 'dune-buggy', item_variant: 'PRIVATE', quantity: 3 })],
       event_id: 'DES-2026-0001',
     });
+  });
+
+  it('starts with the payment chosen on the tour page', async () => {
+    const { fixture, form } = await mount({}, true, { paymentKind: 'DEPOSIT' });
+
+    expect(form.controls.paymentKind.value).toBe('DEPOSIT');
+    expect((fixture.nativeElement.querySelector('#k-deposit') as HTMLInputElement).checked).toBe(true);
   });
 
   it('sends attribution only when marketing consent was given', async () => {
