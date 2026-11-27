@@ -69,7 +69,7 @@ describe('BookingApi against the mocked contract', () => {
         body: {
           booking: { reference: 'DES-1', status: 'PENDING_PAYMENT', tourSlug: 'dune-buggy', startsAt: '2026-12-01T14:00:00.000Z', currency: 'USD', totalCents: 15800, paidCents: 0, pendingCents: 15800 },
           accessToken: 'access-1',
-          paymentOptions: [{ provider: 'STRIPE', kinds: ['FULL', 'DEPOSIT'] }],
+          paymentOptions: [{ provider: 'CULQI', kinds: ['FULL', 'DEPOSIT'] }],
         },
       }),
     });
@@ -127,26 +127,22 @@ describe('BookingApi against the mocked contract', () => {
 
   it('addresses payments by booking (header token) or by payment link (path token)', async () => {
     setup({
-      'POST /public/bookings/*/payments/stripe-intent': () => ({ status: 201, body: { paymentId: 'p1' } }),
       'POST /public/bookings/*/payments/culqi-charge': () => ({ status: 201, body: { paymentId: 'p2', status: 'SUCCEEDED' } }),
-      'POST /public/payment-links/*/stripe-intent': () => ({ status: 201, body: { paymentId: 'p3' } }),
       'POST /public/payment-links/*/culqi-charge': () => ({ status: 201, body: { paymentId: 'p4', status: 'SUCCEEDED' } }),
     });
     const booking = { type: 'booking', reference: 'DES-1', accessToken: 'tok' } as const;
     const link = { type: 'link', token: 'lnk' } as const;
 
-    await api.stripeIntent(booking, 'DEPOSIT', 'key-1');
     await api.culqiCharge(booking, { kind: 'FULL', token: 'tkn', email: 'a@b.co' }, 'key-2');
-    await api.stripeIntent(link, 'FULL', 'key-3');
     await api.culqiCharge(link, { kind: 'FULL', token: 'tkn', email: 'a@b.co' }, 'key-4');
 
-    const [stripe, culqi, linkStripe, linkCulqi] = mock.calls;
-    expect(stripe).toMatchObject({ path: '/public/bookings/DES-1/payments/stripe-intent', body: { kind: 'DEPOSIT' } });
-    expect(stripe?.headers.get('x-booking-token')).toBe('tok');
-    expect(stripe?.headers.get('idempotency-key')).toBe('key-1');
+    const [culqi, linkCulqi] = mock.calls;
+    expect(culqi).toMatchObject({ path: '/public/bookings/DES-1/payments/culqi-charge' });
     expect(culqi?.body).toEqual({ kind: 'FULL', token: 'tkn', email: 'a@b.co' });
-    expect(linkStripe?.path).toBe('/public/payment-links/lnk/stripe-intent');
-    expect(linkStripe?.headers.get('x-booking-token')).toBeNull();
+    expect(culqi?.headers.get('x-booking-token')).toBe('tok');
+    expect(culqi?.headers.get('idempotency-key')).toBe('key-2');
+    expect(linkCulqi?.path).toBe('/public/payment-links/lnk/culqi-charge');
+    expect(linkCulqi?.headers.get('x-booking-token')).toBeNull();
     expect(linkCulqi?.body).toEqual({ token: 'tkn', email: 'a@b.co' });
   });
 

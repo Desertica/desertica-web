@@ -18,7 +18,6 @@ const googleBeacons = ['https://*.g.doubleclick.net', 'https://www.google.com'];
 const gtmPreview = ['https://tagmanager.google.com', 'https://www.gstatic.com', 'https://ssl.gstatic.com'];
 /** Meta pixel through its GTM template (not a Custom HTML tag: inline scripts are blocked). */
 const meta = ['https://connect.facebook.net', 'https://www.facebook.com'];
-const stripeJs = ['https://js.stripe.com', 'https://*.js.stripe.com'];
 const culqi = 'https://*.culqi.com';
 /** Culqi 3DS: device profiling scripts it injects, and the Cardinal frames and forms it posts to. */
 const culqi3dsScripts = ['https://*.online-metrix.net', 'https://m.vnforapps.com'];
@@ -54,7 +53,6 @@ export function contentSecurityPolicy(
       gtmPreview[0]!,
       meta[0]!,
       turnstile,
-      ...stripeJs,
       culqi,
       ...culqi3dsScripts,
     ],
@@ -65,7 +63,6 @@ export function contentSecurityPolicy(
     'font-src': ["'self'", 'data:'],
     'connect-src': [
       "'self'",
-      'https://api.stripe.com',
       ...google,
       ...googleBeacons,
       ...meta,
@@ -73,7 +70,7 @@ export function contentSecurityPolicy(
       ...culqi3dsScripts,
       ...cardinal,
     ],
-    'frame-src': [...stripeJs, 'https://hooks.stripe.com', culqi, ...cardinal, turnstile, 'https://www.googletagmanager.com'],
+    'frame-src': [culqi, ...cardinal, turnstile, 'https://www.googletagmanager.com'],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
     'form-action': ["'self'", culqi, ...cardinal],

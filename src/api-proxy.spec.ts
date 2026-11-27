@@ -94,9 +94,9 @@ describe('apiProxy', () => {
         ...(method === 'POST' ? { headers: { 'Content-Type': 'application/json' }, body: '{}' } : {}),
       }).then((response) => response.status);
 
-    expect(await attempt('/webhooks/stripe', 'POST')).toBe(404);
+    expect(await attempt('/webhooks/culqi', 'POST')).toBe(404);
     expect(await attempt('/bookings/DES-1/payments/refund', 'POST')).toBe(404);
-    expect(await attempt('/bookings/DES-1/payments/stripe-intent', 'GET')).toBe(404);
+    expect(await attempt('/bookings/DES-1/payments/culqi-charge', 'GET')).toBe(404);
     expect(await attempt('/payment-links', 'POST')).toBe(404);
     expect(await attempt('/waivers/abc/sign', 'GET')).toBe(404);
     expect(await attempt('/complaints', 'POST')).toBe(404);
@@ -116,25 +116,21 @@ describe('apiProxy', () => {
         ...(method === 'POST' ? { body: JSON.stringify({ kind: 'FULL' }) } : {}),
       }).then((response) => response.status);
 
-    expect(await call('/bookings/DES-2026-0001/payments/stripe-intent', 'POST', { 'X-Booking-Token': 't', 'Idempotency-Key': 'k1' })).toBe(200);
     expect(await call('/bookings/DES-2026-0001/payments/culqi-charge', 'POST', { 'X-Booking-Token': 't', 'Idempotency-Key': 'k2' })).toBe(200);
     expect(await call('/payment-links/abc_DEF-123', 'GET')).toBe(200);
-    expect(await call('/payment-links/abc_DEF-123/stripe-intent', 'POST')).toBe(200);
     expect(await call('/payment-links/abc_DEF-123/culqi-charge', 'POST')).toBe(200);
     expect(await call('/waivers/tok-1', 'GET')).toBe(200);
     expect(await call('/waivers/tok-1/sign', 'POST')).toBe(200);
 
     expect(upstream.received.map((entry) => `${entry.method} ${entry.url}`)).toEqual([
-      'POST /api/public/bookings/DES-2026-0001/payments/stripe-intent',
       'POST /api/public/bookings/DES-2026-0001/payments/culqi-charge',
       'GET /api/public/payment-links/abc_DEF-123',
-      'POST /api/public/payment-links/abc_DEF-123/stripe-intent',
       'POST /api/public/payment-links/abc_DEF-123/culqi-charge',
       'GET /api/public/waivers/tok-1',
       'POST /api/public/waivers/tok-1/sign',
     ]);
     expect(upstream.received[0]?.headers['x-booking-token']).toBe('t');
-    expect(upstream.received[0]?.headers['idempotency-key']).toBe('k1');
+    expect(upstream.received[0]?.headers['idempotency-key']).toBe('k2');
     expect(upstream.received[0]?.body).toEqual({ kind: 'FULL' });
   });
 

@@ -5,8 +5,6 @@ import {
   DestroyRef,
   ElementRef,
   InjectionToken,
-  Injector,
-  afterNextRender,
   computed,
   effect,
   inject,
@@ -19,7 +17,6 @@ import {
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
-import type { Stripe, StripeElements, StripeError } from '@stripe/stripe-js';
 import { AnalyticsService, centsToMajor } from '../../core/analytics/analytics';
 import {
   BookingApi,
@@ -36,7 +33,6 @@ import { PUBLIC_CONFIG } from '../../core/config/public-config';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { CulqiLoader, type CulqiGlobals } from '../../core/payments/culqi-loader';
-import { StripeLoader } from '../../core/payments/stripe-loader';
 
 type Provider = PaymentOption['provider'];
 
@@ -62,9 +58,8 @@ const SITE_TITLE = 'Desértica';
 /**
  * Payment step shared by the checkout and the e-mailed payment link. The visitor picks a gateway
  * and, when the API offers several, deposit or full amount. Amounts come from the booking; the API
- * decides what is allowed (`paymentOptions`). Stripe mounts the Express Checkout Element (Apple Pay,
- * Google Pay) and the Payment Element (card); Culqi opens Culqi.js. Card numbers are typed into
- * the gateways' own frames and never reach this code. A payment only counts as done when the API
+ * decides what is allowed (`paymentOptions`). Culqi opens Culqi.js; card numbers are typed into
+ * its own frames and never reach this code. A payment only counts as done when the API
  * says so: this component asks for the booking again until `paidCents` grows, with a time limit.
  */
 @Component({
@@ -81,25 +76,39 @@ const SITE_TITLE = 'Desértica';
         [id]="phase() === 'success' ? 'payment-success' : 'payment-pending'"
       >
         <h2 class="font-heading text-xl">
-          {{ (phase() === 'success' ? 'payment.successTitle' : 'payment.pendingTitle') | translate: i18n.locale() }}
+          {{
+            (phase() === 'success' ? 'payment.successTitle' : 'payment.pendingTitle')
+              | translate: i18n.locale()
+          }}
         </h2>
         <p class="text-sm">
-          {{ (phase() === 'success' ? 'payment.successBody' : 'payment.pendingBody') | translate: i18n.locale() }}
+          {{
+            (phase() === 'success' ? 'payment.successBody' : 'payment.pendingBody')
+              | translate: i18n.locale()
+          }}
         </p>
       </div>
     } @else if (!shown().length) {
       <p id="payment-no-options">{{ 'payment.noOptions' | translate: i18n.locale() }}</p>
     } @else {
       <p class="text-sm">
-        {{ 'booking.currency' | translate: i18n.locale() }}: <strong id="payment-currency">{{ currency() }}</strong>
+        {{ 'booking.currency' | translate: i18n.locale() }}:
+        <strong id="payment-currency">{{ currency() }}</strong>
       </p>
 
       <fieldset class="flex flex-col gap-3" [disabled]="busy()">
         <legend class="font-medium">{{ 'payment.gateway' | translate: i18n.locale() }}</legend>
-        <hlm-radio-group class="w-full" name="payment-provider" [value]="provider()" (valueChange)="onProvider($event)">
+        <hlm-radio-group
+          class="w-full"
+          name="payment-provider"
+          [value]="provider()"
+          (valueChange)="onProvider($event)"
+        >
           @for (option of shown(); track option.provider) {
             <label hlmLabel class="flex items-center gap-3" [for]="'provider-' + option.provider">
-              <hlm-radio [value]="option.provider" [inputId]="'provider-' + option.provider"><hlm-radio-indicator indicator /></hlm-radio>
+              <hlm-radio [value]="option.provider" [inputId]="'provider-' + option.provider"
+                ><hlm-radio-indicator indicator
+              /></hlm-radio>
               {{ 'payment.provider.' + option.provider | translate: i18n.locale() }}
             </label>
           }
@@ -109,11 +118,19 @@ const SITE_TITLE = 'Desértica';
       @if (kinds().length > 1) {
         <fieldset class="flex flex-col gap-3" [disabled]="busy()">
           <legend class="font-medium">{{ 'checkout.payment' | translate: i18n.locale() }}</legend>
-          <hlm-radio-group class="w-full" name="payment-kind" [value]="kind()" (valueChange)="onKind($event)">
+          <hlm-radio-group
+            class="w-full"
+            name="payment-kind"
+            [value]="kind()"
+            (valueChange)="onKind($event)"
+          >
             @for (item of kinds(); track item) {
               <label hlmLabel class="flex items-center gap-3" [for]="'kind-' + item">
-                <hlm-radio [value]="item" [inputId]="'kind-' + item"><hlm-radio-indicator indicator /></hlm-radio>
-                {{ 'payment.kind.' + item | translate: i18n.locale() }} · {{ money(amountOf(item)) }}
+                <hlm-radio [value]="item" [inputId]="'kind-' + item"
+                  ><hlm-radio-indicator indicator
+                /></hlm-radio>
+                {{ 'payment.kind.' + item | translate: i18n.locale() }} ·
+                {{ money(amountOf(item)) }}
               </label>
             }
           </hlm-radio-group>
@@ -136,51 +153,40 @@ const SITE_TITLE = 'Desértica';
 
       @if (phase() === 'processing' || phase() === 'confirming') {
         <p role="status" id="payment-working" class="text-sm">
-          {{ (phase() === 'processing' ? 'payment.processing' : 'payment.confirming') | translate: i18n.locale() }}
+          {{
+            (phase() === 'processing' ? 'payment.processing' : 'payment.confirming')
+              | translate: i18n.locale()
+          }}
         </p>
       }
 
-      @if (provider() === 'STRIPE' && stripeReady()) {
-        <div class="flex flex-col gap-4" [attr.aria-busy]="busy()">
-          <div role="group" [attr.aria-label]="'payment.walletLabel' | translate: i18n.locale()">
-            <div #express id="stripe-express"></div>
-          </div>
-          <div role="group" [attr.aria-label]="'payment.cardLabel' | translate: i18n.locale()">
-            <div #card id="stripe-card"></div>
-          </div>
-          <button hlmBtn type="button" size="lg" id="stripe-pay" class="w-fit" [disabled]="busy()" (click)="payWithStripeCard()">
-            {{ 'payment.pay' | translate: i18n.locale() }} · {{ money(amountOf(kind())) }}
-          </button>
-        </div>
-      } @else {
-        <button
-          hlmBtn
-          type="button"
-          size="lg"
-          id="payment-continue"
-          class="w-fit"
-          [disabled]="busy() || !canContinue()"
-          [attr.aria-busy]="busy()"
-          (click)="continue()"
-        >
-          {{ (provider() === 'CULQI' ? 'payment.pay' : 'payment.continue') | translate: i18n.locale() }}
-          @if (kind()) {
-            · {{ money(amountOf(kind())) }}
-          }
-        </button>
-      }
+      <button
+        hlmBtn
+        type="button"
+        size="lg"
+        id="payment-continue"
+        class="w-fit"
+        [disabled]="busy() || !canContinue()"
+        [attr.aria-busy]="busy()"
+        (click)="continue()"
+      >
+        {{
+          (provider() === 'CULQI' ? 'payment.pay' : 'payment.continue') | translate: i18n.locale()
+        }}
+        @if (kind()) {
+          · {{ money(amountOf(kind())) }}
+        }
+      </button>
     }
   `,
 })
 export class PaymentStep {
   private readonly api = inject(BookingApi);
   private readonly analytics = inject(AnalyticsService);
-  private readonly stripeLoader = inject(StripeLoader);
   private readonly culqiLoader = inject(CulqiLoader);
   private readonly config = inject(PUBLIC_CONFIG);
   private readonly polling = inject(PAYMENT_POLLING);
   private readonly document = inject(DOCUMENT);
-  private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly target = input.required<PayTarget>();
@@ -200,17 +206,12 @@ export class PaymentStep {
   protected readonly kind = signal<PaymentKind | ''>('');
   protected readonly error = signal<string | null>(null);
   protected readonly detail = signal<string | null>(null);
-  protected readonly stripeReady = signal(false);
   private readonly culqiReady = signal(false);
   protected readonly busy = computed(() => ['processing', 'confirming'].includes(this.phase()));
 
-  /** Stripe sells in USD only, and Culqi needs its public key to be configured. */
+  /** Culqi needs its public key to be configured. */
   protected readonly shown = computed(() =>
-    this.options().filter((option) =>
-      option.provider === 'STRIPE'
-        ? this.currency() === 'USD'
-        : this.config.culqiPublicKey !== null,
-    ),
+    this.config.culqiPublicKey !== null ? this.options() : [],
   );
   protected readonly kinds = computed(
     () => this.shown().find((option) => option.provider === this.provider())?.kinds ?? [],
@@ -219,19 +220,13 @@ export class PaymentStep {
     () => !!this.provider() && !!this.kind() && (this.provider() !== 'CULQI' || this.culqiReady()),
   );
 
-  private readonly express = viewChild<ElementRef<HTMLElement>>('express');
-  private readonly card = viewChild<ElementRef<HTMLElement>>('card');
   private readonly result = viewChild<ElementRef<HTMLElement>>('result');
 
-  private mounted: { destroy(): void }[] = [];
-  private stripe: Stripe | null = null;
-  private elements: StripeElements | null = null;
   private culqi: CulqiGlobals | null = null;
   private deviceId: string | undefined;
   private stopCulqi: (() => void) | null = null;
   /** Ends a 3DS challenge that is waiting for the bank (window closed or page left). */
   private endThreeDS: (() => void) | null = null;
-  private readonly keys = new Map<string, string>();
   private destroyed = false;
 
   constructor() {
@@ -255,7 +250,6 @@ export class PaymentStep {
 
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
-      this.teardownStripe();
       this.stopCulqi?.();
       this.endThreeDS?.();
       this.culqi?.threeDS.reset();
@@ -271,7 +265,7 @@ export class PaymentStep {
   }
 
   protected onProvider(value: unknown): void {
-    if ((value === 'STRIPE' || value === 'CULQI') && !this.busy()) {
+    if (value === 'CULQI' && !this.busy()) {
       this.reset();
       this.provider.set(value);
       this.kind.set(this.kinds()[0] ?? '');
@@ -299,106 +293,11 @@ export class PaymentStep {
     this.analytics.track('add_payment_info', {
       currency: this.currency(),
       value: centsToMajor(this.amountOf(kind)),
-      payment_type: provider === 'STRIPE' ? 'stripe' : 'culqi',
+      payment_type: 'culqi',
       event_id: this.reference(),
     });
 
-    if (provider === 'STRIPE') {
-      await this.startStripe(kind);
-    } else {
-      this.openCulqi(kind);
-    }
-  }
-
-  // ---------------------------------------------------------------------------------- Stripe
-
-  private async startStripe(kind: PaymentKind): Promise<void> {
-    this.phase.set('processing');
-    const intent = await this.api.stripeIntent(this.target(), kind, this.keyFor(`stripe:${kind}`));
-    if (!intent.ok) {
-      return this.fail(this.messageFor(intent.status));
-    }
-
-    try {
-      this.stripe = await this.stripeLoader.load(intent.data.publishableKey);
-    } catch {
-      this.stripe = null;
-    }
-
-    if (!this.stripe || this.destroyed) {
-      return this.fail('payment.errorGateway');
-    }
-
-    this.elements = this.stripe.elements({
-      clientSecret: intent.data.clientSecret,
-      locale: this.i18n.locale() === 'es' ? 'es' : 'en',
-    });
-    this.stripeReady.set(true);
-    this.phase.set('ready');
-    afterNextRender(() => this.mountStripe(), { injector: this.injector });
-  }
-
-  private mountStripe(): void {
-    const elements = this.elements;
-    const express = this.express()?.nativeElement;
-    const card = this.card()?.nativeElement;
-    if (!elements || !express || !card) {
-      return;
-    }
-
-    const wallets = elements.create('expressCheckout', { buttonHeight: 48 });
-    const cardElement = elements.create('payment');
-    this.mounted = [wallets, cardElement];
-    wallets.on('confirm', (event) => {
-      void this.confirmStripe(() => event.paymentFailed({ reason: 'fail' }));
-    });
-    // Apple Pay and Google Pay only render where the browser supports them: hide an empty slot.
-    wallets.on('loaderror', () => express.replaceChildren());
-    wallets.mount(express);
-    cardElement.mount(card);
-  }
-
-  protected async payWithStripeCard(): Promise<void> {
-    await this.confirmStripe(() => undefined);
-  }
-
-  private async confirmStripe(onFailure: () => void): Promise<void> {
-    if (!this.stripe || !this.elements || this.busy()) {
-      return;
-    }
-
-    this.error.set(null);
-    this.detail.set(null);
-    this.phase.set('processing');
-    const origin = this.document.defaultView?.location.origin ?? '';
-    const { error } = await this.stripe.confirmPayment({
-      elements: this.elements,
-      confirmParams: { return_url: `${origin}/booking/${encodeURIComponent(this.reference())}` },
-      redirect: 'if_required',
-    });
-    if (error) {
-      onFailure();
-      return this.failStripe(error);
-    }
-
-    await this.awaitApi();
-  }
-
-  private failStripe(error: StripeError): void {
-    // Card and validation errors are written for the customer by Stripe, in their language.
-    const customer = error.type === 'card_error' || error.type === 'validation_error';
-    this.fail('payment.errorDeclined', customer ? error.message : undefined);
-  }
-
-  private teardownStripe(): void {
-    for (const element of this.mounted) {
-      element.destroy();
-    }
-
-    this.mounted = [];
-    this.elements = null;
-    this.stripe = null;
-    this.stripeReady.set(false);
+    this.openCulqi(kind);
   }
 
   // ----------------------------------------------------------------------------------- Culqi
@@ -475,7 +374,12 @@ export class PaymentStep {
     const first = await this.api.culqiCharge(
       this.target(),
       // Culqi wants the same device id on the charge and on its 3DS retry.
-      { kind, token: token.id, email: token.email, ...(this.deviceId ? { deviceId: this.deviceId } : {}) },
+      {
+        kind,
+        token: token.id,
+        email: token.email,
+        ...(this.deviceId ? { deviceId: this.deviceId } : {}),
+      },
       crypto.randomUUID(),
     );
     await this.afterCharge(first, kind, token);
@@ -519,7 +423,11 @@ export class PaymentStep {
     const view = this.document.defaultView;
     const origin = view?.location.origin ?? '';
     culqi.threeDS.settings = {
-      charge: { totalAmount: this.amountOf(kind), returnUrl: `${origin}/payment/3ds`, currency: this.currency() },
+      charge: {
+        totalAmount: this.amountOf(kind),
+        returnUrl: `${origin}/payment/3ds`,
+        currency: this.currency(),
+      },
       card: { email: token.email },
     };
 
@@ -529,7 +437,10 @@ export class PaymentStep {
           return;
         }
 
-        const data = event.data as { parameters3DS?: Record<string, unknown>; error?: unknown } | null;
+        const data = event.data as {
+          parameters3DS?: Record<string, unknown>;
+          error?: unknown;
+        } | null;
         if (data?.parameters3DS) {
           finish({ parameters: data.parameters3DS });
         } else if (data?.error) {
@@ -560,7 +471,14 @@ export class PaymentStep {
     const retry = await this.api.culqiCharge(
       this.target(),
       // The retry continues the same payment (`paymentId`); a new one would be refused for a link.
-      { kind, token: token.id, email: token.email, paymentId, deviceId: this.deviceId, authentication3DS: parameters },
+      {
+        kind,
+        token: token.id,
+        email: token.email,
+        paymentId,
+        deviceId: this.deviceId,
+        authentication3DS: parameters,
+      },
       crypto.randomUUID(),
     );
     if (!retry.ok) {
@@ -612,7 +530,6 @@ export class PaymentStep {
   }
 
   private finish(outcome: PaymentOutcome): void {
-    this.teardownStripe();
     this.phase.set(outcome.status === 'confirmed' ? 'success' : 'pending');
     this.settled.emit(outcome);
   }
@@ -622,11 +539,10 @@ export class PaymentStep {
   private fail(message: string, detail?: string): void {
     this.error.set(message);
     this.detail.set(detail ?? null);
-    this.phase.set(this.stripeReady() ? 'ready' : 'choose');
+    this.phase.set('choose');
   }
 
   private reset(): void {
-    this.teardownStripe();
     this.error.set(null);
     this.detail.set(null);
     this.phase.set('choose');
@@ -638,16 +554,5 @@ export class PaymentStep {
       : status === 409 || status === 410
         ? 'payment.errorUnavailable'
         : 'payment.errorGeneric';
-  }
-
-  /** One key per attempt at an amount, so a double click returns the same intent. */
-  private keyFor(scope: string): string {
-    let key = this.keys.get(scope);
-    if (!key) {
-      key = crypto.randomUUID();
-      this.keys.set(scope, key);
-    }
-
-    return key;
   }
 }

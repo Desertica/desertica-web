@@ -42,20 +42,22 @@ export const QUOTE: Schemas['Quote'] = {
   ],
 };
 
-export const LEGAL_DOCUMENTS: Schemas['LegalDocument'][] = (['TERMS', 'PRIVACY', 'CANCELLATION'] as const).map(
-  (kind, index) => ({
-    id: LEGAL_IDS[kind],
-    kind,
-    locale: 'en',
-    version: index + 2,
-    cmsSlug: kind.toLowerCase(),
-    title: kind,
-    contentHash: `hash-${kind}`,
-    publishedAt: '2026-01-01T00:00:00.000Z',
-  }),
-);
+export const LEGAL_DOCUMENTS: Schemas['LegalDocument'][] = (
+  ['TERMS', 'PRIVACY', 'CANCELLATION'] as const
+).map((kind, index) => ({
+  id: LEGAL_IDS[kind],
+  kind,
+  locale: 'en',
+  version: index + 2,
+  cmsSlug: kind.toLowerCase(),
+  title: kind,
+  contentHash: `hash-${kind}`,
+  publishedAt: '2026-01-01T00:00:00.000Z',
+}));
 
-export function publicBooking(overrides: Partial<Schemas['PublicBooking']> = {}): Schemas['PublicBooking'] {
+export function publicBooking(
+  overrides: Partial<Schemas['PublicBooking']> = {},
+): Schemas['PublicBooking'] {
   return {
     reference: 'DES-2026-0001',
     status: 'PENDING_PAYMENT',
@@ -71,10 +73,7 @@ export function publicBooking(overrides: Partial<Schemas['PublicBooking']> = {})
     depositCents: 3160,
     format: 'SHARED',
     passengers: [{ firstName: 'Ana', lastName: 'Quispe' }],
-    paymentOptions: [
-      { provider: 'STRIPE', kinds: ['FULL', 'DEPOSIT'] },
-      { provider: 'CULQI', kinds: ['FULL', 'DEPOSIT'] },
-    ],
+    paymentOptions: [{ provider: 'CULQI', kinds: ['FULL', 'DEPOSIT'] }],
     cancellationTiers: [{ hoursBefore: 48, refundPercent: 100 }],
     ...overrides,
   };

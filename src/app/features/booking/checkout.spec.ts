@@ -49,7 +49,7 @@ describe('Checkout', () => {
     body: {
       booking: publicBooking(),
       accessToken: 'access-1',
-      paymentOptions: [{ provider: 'STRIPE', kinds: ['FULL', 'DEPOSIT'] }],
+      paymentOptions: [{ provider: 'CULQI', kinds: ['FULL', 'DEPOSIT'] }],
     },
   });
 

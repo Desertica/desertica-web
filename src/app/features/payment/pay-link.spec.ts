@@ -17,7 +17,7 @@ const INFO: PaymentLinkInfo = {
   currency: 'USD',
   amountCents: 12640,
   expiresAt: '2026-11-30T00:00:00.000Z',
-  paymentOptions: ['STRIPE', 'CULQI'],
+  paymentOptions: ['CULQI'],
 };
 
 describe('PayLink', () => {
@@ -53,7 +53,7 @@ describe('PayLink', () => {
     expect(root.querySelector('#pay-amount')?.textContent).toBe('$126.40');
     expect(root.textContent).toContain('Remaining balance');
     expect(root.textContent).toContain('Dune buggy');
-    expect(root.textContent).toContain('Apple Pay, Google Pay or card (USD)');
+    expect(root.textContent).toContain('Card (Culqi)');
     // One kind only, so there is no deposit/full choice.
     expect(root.querySelector('[name="payment-kind"]')).toBeNull();
   });

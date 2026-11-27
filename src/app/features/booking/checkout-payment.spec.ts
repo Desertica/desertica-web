@@ -4,7 +4,7 @@ import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import { AnalyticsService } from '../../core/analytics/analytics';
 import { BookingFlow } from '../../core/booking/booking-flow';
 import { DEFAULT_PUBLIC_CONFIG, PUBLIC_CONFIG } from '../../core/config/public-config';
-import { StripeLoader } from '../../core/payments/stripe-loader';
+import { CulqiLoader, type CulqiGlobals } from '../../core/payments/culqi-loader';
 import { publicBooking } from '../../testing/booking-fixtures';
 import { stubMatchMedia } from '../../testing/match-media';
 import { mockApi } from '../../testing/mock-api';
@@ -15,21 +15,52 @@ import { CheckoutPayment } from './checkout-payment';
 describe('CheckoutPayment', () => {
   let mock: ReturnType<typeof mockApi> | undefined;
   const track = vi.fn();
-  const confirmPayment = vi.fn(async () => ({ paymentIntent: { status: 'succeeded' } }));
-  const mounted = { mount: vi.fn(), destroy: vi.fn(), on: vi.fn() };
+  let onResult: (() => void) | null = null;
+  const checkout: CulqiGlobals['checkout'] = {
+    publicKey: '',
+    settings: vi.fn(),
+    options: vi.fn(),
+    open: vi.fn(),
+    close: vi.fn(),
+  };
+  const threeDS: CulqiGlobals['threeDS'] = {
+    publicKey: '',
+    options: {},
+    settings: { charge: { totalAmount: 0, returnUrl: '', currency: 'USD' }, card: { email: '' } },
+    generateDevice: vi.fn(async () => 'device-1'),
+    initAuthentication: vi.fn(),
+    reset: vi.fn(),
+  };
+  const culqi = {
+    load: async () => ({ checkout, threeDS }),
+    onResult: (handler: () => void) => {
+      onResult = handler;
+      return () => undefined;
+    },
+  };
+  /** What Culqi.js does when its modal yields a token. */
+  const emitToken = () => {
+    checkout.token = { id: 'tkn_test_1', email: 'ana@example.com' };
+    onResult?.();
+  };
+  const charged = (status: string) => () => ({
+    status: 201,
+    body: { paymentId: '6f9619ff-8b86-4011-b42d-00c04fc964ff', status },
+  });
 
   beforeEach(async () => {
     track.mockReset();
     stubMatchMedia(() => false);
-    const element = { ...mounted, on: vi.fn(() => element) };
-    const stripe = { elements: () => ({ create: () => element }), confirmPayment };
     await TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         provideSpartanHlm(),
         { provide: AnalyticsService, useValue: { track } },
-        { provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, culqiPublicKey: 'pk_test_abc' } },
-        { provide: StripeLoader, useValue: { load: async () => stripe } },
+        {
+          provide: PUBLIC_CONFIG,
+          useValue: { ...DEFAULT_PUBLIC_CONFIG, culqiPublicKey: 'pk_test_abc' },
+        },
+        { provide: CulqiLoader, useValue: culqi },
         { provide: PAYMENT_POLLING, useValue: { intervalMs: 1, timeoutMs: 40 } },
       ],
     }).compileComponents();
@@ -55,7 +86,6 @@ describe('CheckoutPayment', () => {
 
     expect(mock?.calls[0]?.headers.get('x-booking-token')).toBe('access-1');
     expect(root.querySelector('#payment-reference')?.textContent).toBe('DES-2026-0001');
-    expect(root.textContent).toContain('Apple Pay, Google Pay or card (USD)');
     expect(root.textContent).toContain('Card (Culqi)');
     // The deposit is the API's number, not a rate computed here.
     expect(root.textContent).toContain('Full amount · $158.00');
@@ -66,12 +96,12 @@ describe('CheckoutPayment', () => {
     let reads = 0;
     const fixture = await mount({
       'GET /public/bookings/*': () => ({
-        body: reads++ < 1 ? publicBooking() : publicBooking({ status: 'CONFIRMED', paidCents: 3160, pendingCents: 12640 }),
+        body:
+          reads++ < 1
+            ? publicBooking()
+            : publicBooking({ status: 'CONFIRMED', paidCents: 3160, pendingCents: 12640 }),
       }),
-      'POST /public/bookings/*/payments/stripe-intent': () => ({
-        status: 201,
-        body: { paymentId: '6f9619ff-8b86-4011-b42d-00c04fc964ff', clientSecret: 's', publishableKey: 'pk', amountCents: 3160, currency: 'USD' },
-      }),
+      'POST /public/bookings/*/payments/culqi-charge': charged('SUCCEEDED'),
     });
     const root = fixture.nativeElement as HTMLElement;
 
@@ -79,11 +109,11 @@ describe('CheckoutPayment', () => {
     await settle(fixture);
     (root.querySelector('#payment-continue') as HTMLButtonElement).click();
     await settle(fixture, 10);
-    (root.querySelector('#stripe-pay') as HTMLButtonElement).click();
+    emitToken();
     await new Promise((resolve) => setTimeout(resolve, 30));
     await settle(fixture);
 
-    expect(confirmPayment).toHaveBeenCalled();
+    expect(checkout.open).toHaveBeenCalled();
     expect(root.querySelector('#payment-success')).not.toBeNull();
     const purchases = track.mock.calls.filter(([event]) => event === 'purchase');
     expect(purchases).toHaveLength(1);
@@ -97,16 +127,13 @@ describe('CheckoutPayment', () => {
 
   it('does not publish purchase when the API has not confirmed the payment', async () => {
     const fixture = await mount({
-      'POST /public/bookings/*/payments/stripe-intent': () => ({
-        status: 201,
-        body: { paymentId: '6f9619ff-8b86-4011-b42d-00c04fc964ff', clientSecret: 's', publishableKey: 'pk', amountCents: 15800, currency: 'USD' },
-      }),
+      'POST /public/bookings/*/payments/culqi-charge': charged('PENDING'),
     });
     const root = fixture.nativeElement as HTMLElement;
 
     (root.querySelector('#payment-continue') as HTMLButtonElement).click();
     await settle(fixture, 10);
-    (root.querySelector('#stripe-pay') as HTMLButtonElement).click();
+    emitToken();
     await new Promise((resolve) => setTimeout(resolve, 80));
     await settle(fixture);
 
@@ -117,7 +144,12 @@ describe('CheckoutPayment', () => {
   it('has nothing to pay once the booking is settled', async () => {
     const fixture = await mount({
       'GET /public/bookings/*': () => ({
-        body: publicBooking({ status: 'CONFIRMED', paidCents: 15800, pendingCents: 0, paymentOptions: [] }),
+        body: publicBooking({
+          status: 'CONFIRMED',
+          paidCents: 15800,
+          pendingCents: 0,
+          paymentOptions: [],
+        }),
       }),
     });
 

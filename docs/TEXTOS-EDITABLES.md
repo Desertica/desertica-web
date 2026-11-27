@@ -92,7 +92,6 @@ Las editables entran al seed (`seed/catalog.json` del CMS) como filas de `transl
 | `payment.title` | codigo | Etiqueta de botón/campo de interfaz |
 | `payment.missing` | codigo | Mensaje de error o estado técnico ligado al comportamiento del API |
 | `payment.gateway` | codigo | Etiqueta de botón/campo de interfaz |
-| `payment.provider.STRIPE` | codigo | Nombre de pasarela/medio de pago |
 | `payment.provider.CULQI` | codigo | Nombre de pasarela/medio de pago |
 | `payment.kind.FULL` | codigo | Valor de enumeración del API (tipo de pago) |
 | `payment.kind.DEPOSIT` | codigo | Valor de enumeración del API (tipo de pago) |
@@ -107,8 +106,6 @@ Las editables entran al seed (`seed/catalog.json` del CMS) como filas de `transl
 | `payment.pendingBody` | editable | Mensaje de pago en confirmación (sin datos técnicos) |
 | `payment.processing` | codigo | Texto de estado de carga |
 | `payment.confirming` | codigo | Texto de estado de carga |
-| `payment.walletLabel` | codigo | Etiqueta de control/accesibilidad |
-| `payment.cardLabel` | codigo | Etiqueta de control/accesibilidad |
 | `payment.errorGateway` | codigo | Mensaje de error o estado técnico ligado al comportamiento del API |
 | `payment.errorDeclined` | codigo | Mensaje de error o estado técnico ligado al comportamiento del API |
 | `payment.errorCancelled` | codigo | Mensaje de error o estado técnico ligado al comportamiento del API |
