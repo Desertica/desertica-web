@@ -13,7 +13,7 @@ import { PUBLIC_CONFIG } from '../../../core/config/public-config';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideDownload } from '@ng-icons/lucide';
-import { simpleWhatsapp } from '../../../core/layout/footer-social-icons';
+import { whatsappGlyph } from '../../../core/layout/footer-social-icons';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { PublicData, meetingMapUrl } from '../../../core/api/public-data';
 import { tourHasDetails } from '../../../core/catalog/tour-pages';
@@ -65,7 +65,7 @@ export class TourDetail {
   private readonly seo = inject(SeoService);
   private readonly analytics = inject(AnalyticsService);
   private viewed: string | null = null;
-  protected readonly whatsappIcon = simpleWhatsapp;
+  protected readonly whatsappIcon = whatsappGlyph;
 
   readonly id = input.required<string>();
   protected readonly i18n = inject(I18nService);

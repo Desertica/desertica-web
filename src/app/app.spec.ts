@@ -86,7 +86,7 @@ describe('App', () => {
     );
     expect(compiled.querySelector('app-whatsapp-fab img')).toBeNull();
     expect(compiled.querySelector('app-whatsapp-fab svg')?.getAttribute('viewBox')).toBe('0 0 720 720');
-    expect(compiled.querySelector('app-whatsapp-fab ng-icon')).toBeNull();
+    expect(compiled.querySelector('app-whatsapp-fab ng-icon svg')?.getAttribute('fill')).toBe('currentColor');
   });
 
   it('moves focus to the main content without leaving the page when the skip link is used', async () => {

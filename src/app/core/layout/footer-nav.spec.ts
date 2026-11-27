@@ -7,7 +7,7 @@ import {
   footerSocials,
   footerStamps,
 } from './footer-nav';
-import { simpleWhatsapp } from './footer-social-icons';
+import { whatsappGlyph } from './footer-social-icons';
 
 describe('footer nav', () => {
   it('maps destination hubs and product placeholders', () => {
@@ -36,8 +36,8 @@ describe('footer nav', () => {
   });
 
   it('exposes the official WhatsApp mark', () => {
-    expect(simpleWhatsapp).toContain('<title>WhatsApp</title>');
-    expect(simpleWhatsapp).toContain('viewBox="0 0 24 24"');
+    expect(whatsappGlyph).toContain('viewBox="0 0 720 720"');
+    expect(whatsappGlyph).toContain('fill="currentColor"');
   });
 
   it('shows a social only when its switch is on and its URL is not empty', () => {
