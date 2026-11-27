@@ -105,8 +105,8 @@
 .dark {
   color-scheme: dark;
 
-  --chart-1: oklch(0.62 0.08 125);
-  --chart-2: oklch(0.622 0.121 35.875);
+  --chart-1: oklch(0.68 0.08 125);
+  --chart-2: oklch(0.68 0.121 35.875);
   --chart-3: oklch(0.815 0.056 83.381);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
@@ -116,8 +116,9 @@
   --card-foreground: oklch(0.96 0.01 85);
   --popover: oklch(0.25 0.022 110);
   --popover-foreground: oklch(0.96 0.01 85);
-  --primary: oklch(0.62 0.08 125);
-  --primary-foreground: oklch(0.98 0.006 84.566);
+  /* AA in dark (docs/ESTANDAR-VISUAL.md): light olive with dark text, 6.4:1 (4.5:1 at hover /80). */
+  --primary: oklch(0.68 0.08 125);
+  --primary-foreground: oklch(0.2 0.02 110);
   --secondary: oklch(0.3 0.02 105);
   --secondary-foreground: oklch(0.96 0.01 85);
   --muted: oklch(0.3 0.02 105);
@@ -127,19 +128,19 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(0.38 0.02 100);
   --input: oklch(0.38 0.02 100);
-  --ring: oklch(0.62 0.08 125);
-  --tierra: oklch(0.622 0.121 35.875);
-  --tierra-foreground: oklch(0.98 0.006 84.566);
+  --ring: oklch(0.68 0.08 125);
+  --tierra: oklch(0.68 0.121 35.875);
+  --tierra-foreground: oklch(0.2 0.02 110);
   --arena: oklch(0.815 0.056 83.381);
   --arena-foreground: oklch(0.271 0.014 81.671);
   --sidebar: oklch(0.22 0.02 110);
   --sidebar-foreground: oklch(0.96 0.01 85);
-  --sidebar-primary: oklch(0.62 0.08 125);
-  --sidebar-primary-foreground: oklch(0.98 0.006 84.566);
+  --sidebar-primary: oklch(0.68 0.08 125);
+  --sidebar-primary-foreground: oklch(0.2 0.02 110);
   --sidebar-accent: oklch(0.3 0.02 105);
   --sidebar-accent-foreground: oklch(0.96 0.01 85);
   --sidebar-border: oklch(0.38 0.02 100);
-  --sidebar-ring: oklch(0.62 0.08 125);
+  --sidebar-ring: oklch(0.68 0.08 125);
 }
 
 @media (min-width: 640px) {

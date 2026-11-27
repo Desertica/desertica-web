@@ -1,4 +1,10 @@
-import { buildThemeCss, FONT_STACKS, HEADER_SIZES, RADIUS_VALUES } from './cms-theme';
+import {
+  buildThemeCss,
+  contrastRatio,
+  FONT_STACKS,
+  HEADER_SIZES,
+  RADIUS_VALUES,
+} from './cms-theme';
 
 describe('buildThemeCss', () => {
   it('maps palettes and the selector options to CSS', () => {
@@ -63,5 +69,30 @@ describe('buildThemeCss', () => {
 
   it('returns nothing when the theme has no values', () => {
     expect(buildThemeCss({ light: {}, dark: {}, intro: {} })).toBe('');
+  });
+
+  it('drops a CMS text pair below AA so the stylesheet pair shows', () => {
+    const css = buildThemeCss({
+      light: {},
+      // The old dark olive button: light text on #7b8f59 is 3.35:1.
+      dark: {
+        primary: '#7b8f59',
+        primaryForeground: '#faf8f4',
+        tierra: '#d87b63',
+        tierraForeground: '#16170c',
+        ring: '#7b8f59',
+      },
+      intro: {},
+    });
+
+    expect(css).toBe(
+      ':root.dark,.dark{--ring:#7b8f59;--tierra:#d87b63;--tierra-foreground:#16170c}',
+    );
+  });
+
+  it('measures WCAG contrast for hex colours only', () => {
+    expect(contrastRatio('#000', '#ffffff')).toBeCloseTo(21, 5);
+    expect(contrastRatio('#8da16a', '#16170c')!).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio('oklch(0.5 0 0)', '#fff')).toBeUndefined();
   });
 });

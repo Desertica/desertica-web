@@ -384,6 +384,7 @@
     "view": "Ver carrito",
     "add": "Agregar al carrito"
   },
+  "calendar": { "previousMonth": "Ir al mes anterior", "nextMonth": "Ir al mes siguiente", "previousYear": "Ir al año anterior", "nextYear": "Ir al año siguiente", "previousYears": "Ir a los años anteriores", "nextYears": "Ir a los años siguientes" },
   "booking": {
     "title": "Reserva en línea",
     "lead": "Elige fecha y tu grupo. La moneda se cambia con el selector del sitio (en el encabezado o en el menú). Guardamos tus cupos mientras completas la reserva.",

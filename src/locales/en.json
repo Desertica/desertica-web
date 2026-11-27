@@ -384,6 +384,7 @@
     "view": "View cart",
     "add": "Add to cart"
   },
+  "calendar": { "previousMonth": "Go to the previous month", "nextMonth": "Go to the next month", "previousYear": "Go to the previous year", "nextYear": "Go to the next year", "previousYears": "Go to the previous years", "nextYears": "Go to the next years" },
   "booking": {
     "title": "Book online",
     "lead": "Pick a date and your group. Change the currency with the site selector (in the header or in the menu). We hold your seats while you check out.",

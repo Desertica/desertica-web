@@ -32,6 +32,7 @@ import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import { PublicData } from '../../../core/api/public-data';
 import { TourPrices } from '../../../core/catalog/tour-prices';
 import { CatalogTour } from '../../../core/catalog/tours';
+import { provideCalendarI18n } from '../../../core/i18n/calendar-i18n';
 import { I18nService } from '../../../core/i18n/i18n';
 import { TranslatePipe } from '../../../core/i18n/translate-pipe';
 import { CatalogService } from '../../../core/catalog/catalog';
@@ -100,7 +101,8 @@ function partyMaxValidator(max: number): ValidatorFn {
     HlmRadioGroupImports,
     HlmToggleGroupImports,
   ],
-  providers: [provideIcons({ lucideChevronDown })],
+  // Here, not in app.config: the Spartan calendar would otherwise join the initial bundle.
+  providers: [provideIcons({ lucideChevronDown }), provideCalendarI18n()],
   host: {
     class: 'block w-full',
   },

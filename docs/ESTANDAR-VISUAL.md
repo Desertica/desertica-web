@@ -164,7 +164,24 @@ Todo lo que se puede tocar tiene estos estados. Los componentes de `libs/ui` ya 
 - Las parejas de tokens (`bg-X` + `text-X-foreground`) deben cumplir en claro **y** en oscuro. Quien cambie un token en `styles.css` o en el tema del CMS lo comprueba en los dos modos.
 - `text-muted-foreground` solo sobre `background`, `card` o `muted`, nunca sobre fotos ni sobre `primary`.
 - Texto sobre fotos solo con el degradado oscuro compartido (§9).
-- Hoy falla: el botón principal en oscuro (3,35:1). Ver `REVISION-VISUAL.md`, A6.
+- En oscuro, `primary` y `tierra` son tonos claros con texto oscuro (`*-foreground` = el fondo de la página), no texto claro sobre color medio: así pasan AA y siguen leyéndose como texto sobre el fondo.
+- El tema del CMS no puede romper una pareja: `core/theme/cms-theme.ts` descarta del CMS cualquier pareja `X` / `X-foreground` en hex por debajo de 4,5:1 y deja la de `styles.css`.
+
+Valores medidos (27-11-2026), fondo / texto:
+
+| Pareja | Claro (CMS) | Oscuro (`styles.css`) | Oscuro, hex para el CMS |
+|---|---|---|---|
+| `primary` / `primary-foreground` | 5,49 | 6,40 (4,52 en hover `/80`) | `#8da16a` / `#16170c` |
+| `tierra` / `tierra-foreground` | 5,26 | 5,97 | `#d87b63` / `#16170c` |
+| `arena` / `arena-foreground` | — | 8,45 | sin cambio |
+| `accent` / `accent-foreground` | — | 12,11 | sin cambio |
+| `muted` / `muted-foreground` | 5,13 | 7,50 | sin cambio |
+| `muted-foreground` sobre `background` / `card` | — | 9,96 / 8,79 | sin cambio |
+| `destructive` sobre `background` / `card` | 4,49 ⚠ (falla por poco; pendiente, fuera de A6) | 6,25 / 5,52 | sin cambio |
+| `primary` como texto sobre `background` / `card` | — | 6,40 / 5,64 | — |
+| `tierra` como texto sobre `background` / `card` | — | 5,97 / 5,25 | — |
+
+Antes, en oscuro: `primary` 3,35:1 y `tierra` 3,58:1 (texto claro sobre color medio).
 
 ## 9. Imágenes
 

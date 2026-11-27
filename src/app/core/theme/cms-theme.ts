@@ -50,9 +50,60 @@ function safe(value: string | undefined): string | undefined {
   return trimmed && !/[<>{};\\]/.test(trimmed) ? trimmed : undefined;
 }
 
+/** Background/text pairs that must stay readable (WCAG AA for normal text). */
+const TEXT_PAIRS: readonly [PaletteToken, PaletteToken][] = [
+  ['background', 'foreground'],
+  ['card', 'cardForeground'],
+  ['popover', 'popoverForeground'],
+  ['primary', 'primaryForeground'],
+  ['secondary', 'secondaryForeground'],
+  ['muted', 'mutedForeground'],
+  ['accent', 'accentForeground'],
+  ['tierra', 'tierraForeground'],
+  ['arena', 'arenaForeground'],
+];
+export const MIN_CONTRAST = 4.5;
+
+/** Relative luminance of `#rgb`/`#rrggbb`; undefined for any other CSS colour. */
+function luminance(color: string): number | undefined {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim())?.[1];
+  if (!hex) {
+    return undefined;
+  }
+  const full = hex.length === 3 ? [...hex].map((c) => c + c).join('') : hex;
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(full.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG contrast ratio of two hex colours, or undefined when either is not hex. */
+export function contrastRatio(a: string, b: string): number | undefined {
+  const [x, y] = [luminance(a), luminance(b)];
+  return x === undefined || y === undefined
+    ? undefined
+    : (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+
+/** Drops any CMS pair below AA so the stylesheet's checked pair shows instead of unreadable text. */
+function readable(palette: ThemePalette): ThemePalette {
+  const result = { ...palette };
+  for (const [bg, fg] of TEXT_PAIRS) {
+    const ratio = palette[bg] && palette[fg] ? contrastRatio(palette[bg], palette[fg]) : undefined;
+    // shortcut: only hex values are measured (the CMS stores hex), other CSS colours pass unchecked.
+    if (ratio !== undefined && ratio < MIN_CONTRAST) {
+      delete result[bg];
+      delete result[fg];
+    }
+  }
+  return result;
+}
+
 function declarations(palette: ThemePalette): string[] {
+  const checked = readable(palette);
   return (Object.keys(PALETTE_TOKENS) as PaletteToken[]).flatMap((token) => {
-    const value = safe(palette[token]);
+    const value = safe(checked[token]);
     return value ? [`${PALETTE_TOKENS[token]}:${value}`] : [];
   });
 }
