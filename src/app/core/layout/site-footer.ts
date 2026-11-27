@@ -30,6 +30,7 @@ import { afterNextGsap } from '../animation/gsap';
 import { SmoothScroll } from '../animation/smooth-scroll';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
+import { BrandLogotype } from './brand-logotype';
 import { BrandMark } from './brand-mark';
 import { simpleWhatsapp } from './footer-social-icons';
 
@@ -54,6 +55,7 @@ const PAYMENT_METHODS: readonly { name: string; svg?: string; src?: string }[] =
   imports: [
     RouterLink,
     TranslatePipe,
+    BrandLogotype,
     BrandMark,
     NgIcon,
     NgOptimizedImage,

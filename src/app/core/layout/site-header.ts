@@ -19,6 +19,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
 import { CartService } from '../booking/cart';
 import { PUBLIC_CONFIG } from '../config/public-config';
 import { ThemeService } from '../theme/theme';
+import { BrandLogotype } from './brand-logotype';
 import { BrandMark } from './brand-mark';
 import { CurrencySwitcher } from './currency-switcher';
 import { LocaleSwitcher } from './locale-switcher';
@@ -39,6 +40,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
     LocaleSwitcher,
     TranslatePipe,
     PlanTripHover,
+    BrandLogotype,
     BrandMark,
   ],
   providers: [
@@ -51,12 +53,10 @@ import { isNavGroup, navItemTrack } from './primary-nav';
       <div
         class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-6 xl:px-10"
       >
-        <a
-          routerLink="/"
-          class="text-foreground flex min-w-0 items-center gap-2 font-heading text-lg tracking-tight sm:gap-2.5 sm:text-xl"
-        >
+        <a routerLink="/" class="text-foreground flex min-w-0 items-center gap-3">
           <app-brand-mark />
-          Desértica
+          <app-brand-logotype class="h-4 xl:h-5" />
+          <span class="sr-only">Desértica</span>
         </a>
 
         <div class="flex min-w-0 items-center gap-1.5 sm:gap-2 lg:gap-1 xl:gap-4">
