@@ -4,9 +4,9 @@ import { LOCALES, type AppLocale } from '../i18n/catalogs';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 
-/** Text-only toggle item, shared with the currency selector: as quiet as the nav links, so the CTA stays the only green thing in the header. */
+/** Text-only toggle item, shared with the currency selector: as quiet as the nav links, so the CTA stays the only green thing in the header; the chosen one is marked in the `tierra` accent with a short bar under it. */
 export const SWITCH_ITEM_CLASS =
-  'h-10 min-w-0 gap-1 rounded-md bg-transparent px-1.5 text-sm font-normal text-muted-foreground hover:bg-transparent lg:max-xl:h-9 lg:max-xl:px-1 lg:max-xl:text-xs hover:text-foreground aria-pressed:bg-transparent aria-pressed:font-medium aria-pressed:text-foreground data-[state=on]:bg-transparent data-[size=lg]:h-11 data-[size=lg]:px-2 data-[size=lg]:text-base';
+  'relative h-10 min-w-0 gap-1 rounded-md bg-transparent px-1.5 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground aria-pressed:bg-transparent aria-pressed:font-semibold aria-pressed:text-tierra aria-pressed:hover:text-tierra data-[state=on]:bg-transparent after:absolute after:inset-x-1.5 after:bottom-2 after:h-0.5 after:rounded-full after:bg-tierra after:opacity-0 aria-pressed:after:opacity-100 lg:max-xl:h-9 lg:max-xl:px-1 lg:max-xl:text-xs lg:max-xl:after:inset-x-1 data-[size=lg]:h-11 data-[size=lg]:px-2 data-[size=lg]:text-base data-[size=lg]:after:inset-x-2';
 
 /** Two pressed-state buttons, ES / EN; the one already active does nothing. In the mobile menu (`lg`) it gets a visible label. */
 @Component({
