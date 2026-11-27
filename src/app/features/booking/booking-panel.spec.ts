@@ -191,6 +191,39 @@ describe('BookingPanel', () => {
     expect(TestBed.inject(Router).url).toBe('/checkout');
   });
 
+  it('starts with the full payment and carries the deposit choice to the checkout', async () => {
+    const { fixture, internals } = await mount();
+    internals.onDate(day.date);
+    await settle(fixture);
+    const root = fixture.nativeElement as HTMLElement;
+    const full = root.querySelector('#booking-pay-full') as HTMLInputElement;
+    const deposit = root.querySelector('#booking-pay-deposit') as HTMLInputElement;
+    expect(full.checked).toBe(true);
+    expect(deposit.checked).toBe(false);
+    expect(root.querySelector('#booking-deposit')?.textContent).toContain('$USD 31.60');
+
+    deposit.click();
+    await settle(fixture);
+    expect(deposit.checked).toBe(true);
+    (root.querySelector('#booking-continue') as HTMLButtonElement).click();
+    await settle(fixture);
+
+    expect(TestBed.inject(BookingFlow).selection()?.paymentKind).toBe('DEPOSIT');
+  });
+
+  it('offers only the full payment when the quote has no deposit', async () => {
+    const { fixture, internals } = await mount({ 'POST /public/quotes': () => ({ body: { ...QUOTE, depositCents: 0 } }) });
+    internals.onDate(day.date);
+    await settle(fixture);
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect((root.querySelector('#booking-pay-full') as HTMLInputElement).checked).toBe(true);
+    expect(root.querySelector('#booking-pay-deposit')).toBeNull();
+    (root.querySelector('#booking-continue') as HTMLButtonElement).click();
+    await settle(fixture);
+    expect(TestBed.inject(BookingFlow).selection()?.paymentKind).toBe('FULL');
+  });
+
   it('explains a full departure and refreshes availability', async () => {
     const { fixture, internals } = await mount({
       'POST /public/holds': () => ({

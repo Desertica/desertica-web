@@ -412,6 +412,7 @@ export class Checkout {
         return;
       }
 
+      this.form.controls.paymentKind.setValue(selection.paymentKind ?? 'FULL');
       const party = selection.adults + selection.children;
       while (this.form.controls.passengers.length < party) {
         this.form.controls.passengers.push(personGroup());
