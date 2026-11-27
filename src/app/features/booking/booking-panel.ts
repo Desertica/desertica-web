@@ -249,7 +249,7 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
                 </label>
               }
             </hlm-radio-group>
-            <p class="text-muted-foreground text-xs" id="booking-tax-note"><span aria-hidden="true">* </span>{{ \'booking.taxIncluded\' | translate: i18n.locale() }}</p>
+            <p class="text-muted-foreground text-xs" id="booking-tax-note"><span aria-hidden="true">* </span>{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
           </div>
         } @else if (quoting()) {
           <hlm-skeleton class="h-24 w-full" />

@@ -68,7 +68,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
                 <span class="tabular-nums">{{ money(total.cents, total.currency) }}<span aria-hidden="true">*</span></span>
               </p>
             }
-            <p class="text-muted-foreground text-xs" id="cart-tax-note"><span aria-hidden="true">* </span>{{ \'booking.taxIncluded\' | translate: i18n.locale() }}</p>
+            <p class="text-muted-foreground text-xs" id="cart-tax-note"><span aria-hidden="true">* </span>{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
             <app-turnstile (tokenChange)="captcha.set($event)" />
             @if (cart.items().length === 1) {
               <button hlmBtn type="button" class="w-full" [disabled]="blocked()" (click)="reserve(cart.items()[0]!)">
