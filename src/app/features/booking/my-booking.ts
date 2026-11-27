@@ -16,7 +16,7 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { PurchaseTracker } from '../../core/analytics/purchase';
 import { BookingApi, type PublicBooking } from '../../core/api/booking-api';
 import { BookingFlow } from '../../core/booking/booking-flow';
-import { formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
+import { cancellationTierLines, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import { withLocale } from '../../core/i18n/catalogs';
 import { I18nService } from '../../core/i18n/i18n';
@@ -79,8 +79,8 @@ import { usePageMeta } from '../../core/seo/page-meta';
           <section class="flex flex-col gap-2">
             <h2 class="font-heading text-xl">{{ 'myBooking.cancellation' | translate: i18n.locale() }}</h2>
             <ul class="text-muted-foreground list-disc ps-5 text-sm">
-              @for (tier of current.cancellationTiers; track tier.hoursBefore) {
-                <li>{{ tierLabel(tier.hoursBefore ?? 0, tier.refundPercent ?? 0) }}</li>
+              @for (line of tierLines(current.cancellationTiers); track $index) {
+                <li>{{ line }}</li>
               }
             </ul>
           </section>
@@ -212,8 +212,8 @@ export class MyBooking {
     return formatMoney(cents, this.booking()?.currency ?? 'USD', this.i18n.locale());
   }
 
-  protected tierLabel(hours: number, percent: number): string {
-    return this.i18n.t('checkout.tier').replace('{hours}', String(hours)).replace('{percent}', String(percent));
+  protected tierLines(tiers: Parameters<typeof cancellationTierLines>[0]): string[] {
+    return cancellationTierLines(tiers, (key) => this.i18n.t(key));
   }
 
   protected async requestAccess(): Promise<void> {

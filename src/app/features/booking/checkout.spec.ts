@@ -108,9 +108,13 @@ describe('Checkout', () => {
     expect(root.querySelector('#checkout-total')?.textContent).toContain('$158.00');
     expect(root.querySelector('#checkout-timer')?.textContent).toMatch(/\d\d:\d\d/);
     expect(form.controls.passengers.length).toBe(3);
-    expect(root.querySelector('#checkout-tiers')?.textContent).toContain('48 hours before the tour: 100% refund');
+    expect(root.querySelector('#checkout-tiers')?.textContent).toContain('48 hours or more before the tour: full refund');
+    expect(root.querySelector('#checkout-tiers')?.textContent).toContain('Less than 24 hours before: no refund');
+    expect(root.textContent?.replace(/\s+/g, ' ')).toContain('2 adults · 1 child');
+    expect(root.querySelector('label[for="accept-PRIVACY"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^I accept the privacy policy \(version \d+\)$/);
     expect(root.textContent).toContain('version 2');
     expect(root.textContent).toContain('version 4');
+    expect(root.querySelectorAll('select, input[type="checkbox"]')).toHaveLength(0);
   });
 
   it('creates the booking with the legal document versions, billing and an idempotency key', async () => {
@@ -146,6 +150,28 @@ describe('Checkout', () => {
       value: 158,
       items: [expect.objectContaining({ item_id: 'dune-buggy', item_variant: 'PRIVATE', quantity: 3 })],
       event_id: 'DES-2026-0001',
+    });
+  });
+
+  it('uses the singular for a party of one adult', async () => {
+    const { fixture } = await mount({}, true, { adults: 1, children: 0 });
+
+    expect(fixture.nativeElement.textContent).toContain('1 adult');
+    expect(fixture.nativeElement.textContent).not.toContain('1 adults');
+  });
+
+  it('checks the phone against its country and sends it in international format', async () => {
+    const { fixture, form } = await mount();
+    fill(form);
+    form.controls.customer.controls.phone.setValue('123');
+    await submit(fixture, fixture);
+    expect(mock.calls.some((item) => item.path === '/public/bookings')).toBe(false);
+    expect(fixture.nativeElement.querySelector('[data-country]')?.getAttribute('data-country')).toBe('PE');
+
+    form.controls.customer.controls.phone.setValue('987 654 321');
+    await submit(fixture, fixture);
+    expect(mock.calls.find((item) => item.path === '/public/bookings')?.body).toMatchObject({
+      customer: { phone: '+51987654321' },
     });
   });
 

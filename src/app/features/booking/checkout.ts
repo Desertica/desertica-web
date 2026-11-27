@@ -18,13 +18,18 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
+import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
+import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import { AnalyticsService, centsToMajor } from '../../core/analytics/analytics';
 import { tourItem } from '../../core/analytics/items';
@@ -33,10 +38,12 @@ import { ConsentService } from '../../core/analytics/consent';
 import { BookingApi, type CreatePublicBooking, type LegalDocument } from '../../core/api/booking-api';
 import { CartService } from '../../core/booking/cart';
 import { BookingFlow } from '../../core/booking/booking-flow';
-import { clock, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
+import { cancellationTierLines, clock, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import { TourPrices } from '../../core/catalog/tour-prices';
-import { DEFAULT_PHONE_COUNTRY, phoneCountries } from '../contact/phone';
+import type { CountryCode } from 'libphonenumber-js/min';
+import { applyPhoneInput, DEFAULT_PHONE_COUNTRY, isValidWhatsapp, type PhoneCountry, phoneCountries, toE164 } from '../contact/phone';
+import { PhoneCountryPicker } from '../contact/phone-country';
 import { type IdDocType, billingDocTypes, isValidIdDocument } from '../../core/forms/id-document';
 import { Turnstile } from '../../core/forms/turnstile';
 import { I18nService } from '../../core/i18n/i18n';
@@ -90,11 +97,16 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
     TranslatePipe,
     HlmButton,
     HlmCardImports,
+    HlmCheckbox,
+    HlmComboboxImports,
     HlmFieldImports,
     HlmInput,
+    HlmInputGroupImports,
     HlmLabel,
     HlmTextarea,
     HlmRadioGroupImports,
+    HlmSelectImports,
+    PhoneCountryPicker,
     Turnstile,
   ],
   template: `
@@ -114,9 +126,9 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               <p class="text-muted-foreground">{{ selection.meetingPoint }}</p>
             }
             <p>
-              {{ selection.adults }} {{ 'tour.adults' | translate: i18n.locale() }}
+              {{ selection.adults }} {{ (selection.adults === 1 ? 'tour.adult' : 'tour.adults') | translate: i18n.locale() }}
               @if (selection.children) {
-                · {{ selection.children }} {{ 'tour.children' | translate: i18n.locale() }}
+                · {{ selection.children }} {{ (selection.children === 1 ? 'tour.child' : 'tour.children') | translate: i18n.locale() }}
               }
             </p>
             <p class="font-medium">
@@ -167,17 +179,41 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorEmail' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
-                <div hlmField>
+                <div hlmField class="min-w-0">
                   <label hlmFieldLabel for="c-phone">{{ 'checkout.phone' | translate: i18n.locale() }}</label>
-                  <input hlmInput id="c-phone" type="tel" formControlName="phone" autocomplete="tel" maxlength="32" />
+                  <div hlmInputGroup class="min-w-0">
+                    <hlm-input-group-addon class="ps-1">
+                      <app-phone-country buttonId="c-phone-country" [country]="phoneCountry()" (countryChange)="onPhoneCountry($event)" />
+                    </hlm-input-group-addon>
+                    <input
+                      hlmInputGroupInput
+                      id="c-phone"
+                      type="tel"
+                      inputmode="tel"
+                      autocomplete="tel"
+                      maxlength="32"
+                      [attr.placeholder]="'contact.whatsappPlaceholder' | translate: i18n.locale()"
+                      formControlName="phone"
+                      (input)="onPhoneInput()"
+                    />
+                  </div>
+                  @if (invalid(form.controls.customer.controls.phone)) {
+                    <hlm-field-error [forceShow]="true">{{ 'complaints.phoneError' | translate: i18n.locale() }}</hlm-field-error>
+                  }
                 </div>
                 <div hlmField class="sm:col-span-2">
                   <label hlmFieldLabel for="c-country">{{ 'checkout.country' | translate: i18n.locale() }}</label>
-                  <select hlmInput id="c-country" formControlName="country" autocomplete="country">
-                    @for (country of countries(); track country.code) {
-                      <option [value]="country.code">{{ country.label }}</option>
-                    }
-                  </select>
+                  <hlm-combobox [value]="customerCountry()" [itemToString]="countryLabel" [isItemEqualToValue]="sameCountry" (valueChange)="onCountry($event)">
+                    <hlm-combobox-input inputId="c-country" [triggerAriaLabel]="'checkout.country' | translate: i18n.locale()" />
+                    <hlm-combobox-content *hlmComboboxPortal>
+                      <hlm-combobox-empty>{{ 'contact.noCountry' | translate: i18n.locale() }}</hlm-combobox-empty>
+                      <div hlmComboboxList class="max-h-60 overflow-y-auto overscroll-contain">
+                        @for (country of countries(); track country.code) {
+                          <hlm-combobox-item [value]="country">{{ country.label }}</hlm-combobox-item>
+                        }
+                      </div>
+                    </hlm-combobox-content>
+                  </hlm-combobox>
                 </div>
               </div>
             </fieldset>
@@ -221,11 +257,16 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               <div class="grid gap-4 sm:grid-cols-2">
                 <div hlmField>
                   <label hlmFieldLabel for="b-type">{{ 'checkout.docType' | translate: i18n.locale() }}</label>
-                  <select hlmInput id="b-type" formControlName="idDocType">
-                    @for (type of docTypes(); track type) {
-                      <option [value]="type">{{ 'checkout.doc.' + type | translate: i18n.locale() }}</option>
-                    }
-                  </select>
+                  <hlm-select formControlName="idDocType" [itemToString]="docLabel">
+                    <hlm-select-trigger buttonId="b-type" class="w-full">
+                      <hlm-select-value />
+                    </hlm-select-trigger>
+                    <hlm-select-content *hlmSelectPortal>
+                      @for (type of docTypes(); track type) {
+                        <hlm-select-item [value]="type">{{ 'checkout.doc.' + type | translate: i18n.locale() }}</hlm-select-item>
+                      }
+                    </hlm-select-content>
+                  </hlm-select>
                 </div>
                 <div hlmField>
                   <label hlmFieldLabel for="b-number">{{ 'checkout.docNumber' | translate: i18n.locale() }}</label>
@@ -242,7 +283,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
                   }
                 </div>
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="b-address">{{ 'checkout.address' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="b-address">{{ (form.controls.billing.controls.docType.value === 'FACTURA' ? 'checkout.address' : 'checkout.addressOptional') | translate: i18n.locale() }}</label>
                   <input hlmInput id="b-address" formControlName="address" maxlength="200" autocomplete="street-address" />
                   @if (submitted() && form.controls.billing.hasError('address')) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
@@ -277,24 +318,19 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               }
               @if (selection.quote.cancellationTiers?.length) {
                 <ul class="text-muted-foreground list-disc ps-5 text-sm" id="checkout-tiers">
-                  @for (tier of selection.quote.cancellationTiers; track tier.hoursBefore) {
-                    <li>{{ tierLabel(tier.hoursBefore ?? 0, tier.refundPercent ?? 0) }}</li>
+                  @for (line of tierLines(selection.quote.cancellationTiers); track $index) {
+                    <li>{{ line }}</li>
                   }
                 </ul>
               }
               @for (kind of legalKinds; track kind) {
+                @let sentence = acceptSentence(kind);
                 <label class="flex items-start gap-3 text-sm" [for]="'accept-' + kind">
-                  <input
-                    type="checkbox"
-                    class="border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm border"
-                    [id]="'accept-' + kind"
-                    [formControl]="form.controls.accept.controls[kind]"
-                  />
+                  <hlm-checkbox class="mt-0.5" [inputId]="'accept-' + kind" [formControl]="form.controls.accept.controls[kind]" />
                   <span>
-                    {{ 'checkout.accept' | translate: i18n.locale() }}
-                    <a [routerLink]="legalPath[kind]" target="_blank" class="underline underline-offset-4">{{ 'checkout.legalDoc.' + kind | translate: i18n.locale() }}</a>
+                    {{ sentence.before }}<a [routerLink]="legalPath[kind]" target="_blank" class="underline underline-offset-4 focus-visible:underline">{{ sentence.link }}</a>{{ sentence.after }}
                     @if (legal()[kind]; as document) {
-                      <span class="text-muted-foreground">({{ 'checkout.version' | translate: i18n.locale() }} {{ document.version }})</span>
+                      <span class="text-muted-foreground"> {{ versionNote(document.version) }}</span>
                     }
                   </span>
                 </label>
@@ -302,6 +338,9 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorAccept' | translate: i18n.locale() }}</hlm-field-error>
                 }
               }
+              <p class="text-muted-foreground text-sm">
+                <a routerLink="/complaints" class="underline underline-offset-4 focus-visible:underline">{{ 'checkout.complaints' | translate: i18n.locale() }}</a>
+              </p>
             </fieldset>
 
             <app-turnstile (tokenChange)="token.set($event)" />
@@ -309,19 +348,15 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               <p class="text-destructive text-sm" role="alert">{{ 'contact.captchaError' | translate: i18n.locale() }}</p>
             }
 
-            <p class="text-muted-foreground text-sm">
-              <a routerLink="/complaints" class="underline underline-offset-4">{{ 'checkout.complaints' | translate: i18n.locale() }}</a>
-            </p>
-
             @if (error(); as key) {
               <p class="text-destructive text-sm" role="alert" id="checkout-error">{{ key | translate: i18n.locale() }}</p>
             }
 
-            <div class="flex flex-wrap gap-3">
-              <button hlmBtn type="submit" size="lg" id="checkout-submit" [disabled]="sending()">
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <button hlmBtn type="submit" size="lg" id="checkout-submit" class="w-full sm:w-auto" [disabled]="sending()">
                 {{ (sending() ? 'checkout.sending' : 'checkout.submit') | translate: i18n.locale() }}
               </button>
-              <button hlmBtn type="button" variant="outline" size="lg" (click)="startOver()">
+              <button hlmBtn type="button" variant="outline" size="lg" class="w-full sm:w-auto" (click)="startOver()">
                 {{ 'checkout.chooseAgain' | translate: i18n.locale() }}
               </button>
             </div>
@@ -357,13 +392,18 @@ export class Checkout {
   protected readonly token = signal<string | null>(null);
   protected readonly turnstileRequired = computed(() => this.turnstile()?.enabled === true);
   protected readonly countries = computed(() => phoneCountries(this.i18n.locale()));
+  protected readonly phoneCountry = signal<CountryCode>(DEFAULT_PHONE_COUNTRY);
+  protected readonly docLabel = (type: string): string => this.i18n.t(`checkout.doc.${type}`);
+  protected readonly countryLabel = (item: PhoneCountry | null | undefined): string => item?.label ?? '';
+  protected readonly sameCountry = (item: PhoneCountry | null | undefined, selected: PhoneCountry | null | undefined): boolean =>
+    item?.code === selected?.code;
 
   protected readonly form = new FormGroup({
     customer: new FormGroup({
       firstName: text(80),
       lastName: text(80),
       email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email, Validators.maxLength(254)] }),
-      phone: text(32, false),
+      phone: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(32), (control) => this.validatePhone(control)] }),
       country: new FormControl<string>(DEFAULT_PHONE_COUNTRY, { nonNullable: true }),
     }),
     passengers: new FormArray<ReturnType<typeof personGroup>>([]),
@@ -401,6 +441,11 @@ export class Checkout {
     return at ? limaTime(at, this.i18n.locale()) : '';
   });
   protected readonly countdown = computed(() => clock(this.flow.secondsLeft()));
+  private readonly customerValue = toSignal(this.form.controls.customer.valueChanges, { initialValue: this.form.controls.customer.getRawValue() });
+  protected readonly customerCountry = computed(() => {
+    const code = this.customerValue().country;
+    return this.countries().find((item) => item.code === code) ?? null;
+  });
 
   constructor() {
     usePageMeta(() => ({ title: this.i18n.t('checkout.title'), noindex: true }));
@@ -443,11 +488,46 @@ export class Checkout {
     return formatMoney(cents, this.flow.selection()?.currency ?? 'USD', this.i18n.locale());
   }
 
-  protected tierLabel(hours: number, percent: number): string {
-    return this.i18n
-      .t('checkout.tier')
-      .replace('{hours}', String(hours))
-      .replace('{percent}', String(percent));
+  protected tierLines(tiers: Parameters<typeof cancellationTierLines>[0]): string[] {
+    return cancellationTierLines(tiers, (key) => this.i18n.t(key));
+  }
+
+  /** The whole sentence is one key per document; the part in brackets becomes the link. */
+  protected acceptSentence(kind: LegalKind): { before: string; link: string; after: string } {
+    const [before = '', link = '', after = ''] = this.i18n.t(`checkout.acceptDoc.${kind}`).split(/\[|\]/);
+    return { before, link, after };
+  }
+
+  protected versionNote(version: number | string): string {
+    return this.i18n.t('checkout.versionNote').replace('{version}', String(version));
+  }
+
+  protected onCountry(value: unknown): void {
+    const code = (value as PhoneCountry | null)?.code;
+    if (code) {
+      this.form.controls.customer.controls.country.setValue(code);
+    }
+  }
+
+  protected onPhoneCountry(code: CountryCode): void {
+    this.phoneCountry.set(code);
+    this.form.controls.customer.controls.phone.updateValueAndValidity();
+  }
+
+  protected onPhoneInput(): void {
+    const control = this.form.controls.customer.controls.phone;
+    const applied = applyPhoneInput(control.value, this.phoneCountry());
+    this.phoneCountry.set(applied.country);
+    if (applied.national !== control.value) {
+      control.setValue(applied.national, { emitEvent: false });
+    }
+
+    control.updateValueAndValidity();
+  }
+
+  private validatePhone(control: AbstractControl): ValidationErrors | null {
+    const value = String(control.value ?? '').trim();
+    return !value || isValidWhatsapp(value, this.phoneCountry()) ? null : { phone: true };
   }
 
   protected onDocType(value: unknown): void {
@@ -557,7 +637,7 @@ export class Checkout {
         firstName: value.customer.firstName.trim(),
         lastName: value.customer.lastName.trim(),
         email: value.customer.email.trim(),
-        phone: optional(value.customer.phone),
+        phone: value.customer.phone.trim() ? (toE164(value.customer.phone, this.phoneCountry()) ?? value.customer.phone.trim()) : undefined,
         country: value.customer.country,
         locale: this.i18n.locale(),
       },

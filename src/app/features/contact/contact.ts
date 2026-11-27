@@ -18,7 +18,6 @@ import {
 } from '@angular/forms';
 import { toast } from '@spartan-ng/brain/sonner';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
@@ -39,9 +38,8 @@ import {
   DEFAULT_PHONE_COUNTRY,
   isValidWhatsapp,
   toE164,
-  phoneCountries,
-  type PhoneCountry,
 } from './phone';
+import { PhoneCountryPicker } from './phone-country';
 
 export const NAME_MIN = DEFAULT_FORMS.nameMin;
 export const NAME_MAX = DEFAULT_FORMS.nameMax;
@@ -56,11 +54,11 @@ export const MESSAGE_MAX = DEFAULT_FORMS.messageMax;
     ReactiveFormsModule,
     TranslatePipe,
     HlmButton,
-    HlmComboboxImports,
     HlmFieldImports,
     HlmInput,
     HlmInputGroupImports,
     HlmTextarea,
+    PhoneCountryPicker,
     Turnstile,
   ],
   templateUrl: './contact.html',
@@ -84,12 +82,6 @@ export class Contact {
   protected readonly messageMax = this.limits.messageMax;
   protected readonly messageChars = signal(0);
   protected readonly countryCode = signal<CountryCode>(DEFAULT_PHONE_COUNTRY);
-  protected readonly countries = computed(() => phoneCountries(this.i18n.locale()));
-  protected readonly selectedCountry = computed(
-    () =>
-      this.countries().find((country) => country.code === this.countryCode()) ??
-      this.countries()[0],
-  );
 
   readonly form = new FormGroup({
     name: new FormControl('', {
@@ -123,14 +115,6 @@ export class Contact {
     }));
 
   }
-
-  protected readonly countryToString = (item: PhoneCountry | null | undefined): string =>
-    item ? `${item.label} +${item.callingCode} ${item.code}` : '';
-
-  protected readonly sameCountry = (
-    item: PhoneCountry | null | undefined,
-    selected: PhoneCountry | null | undefined,
-  ): boolean => item?.code === selected?.code;
 
   protected readonly messageCountLabel = computed(() =>
     this.i18n.t('contact.messageCount').replace('{count}', String(this.messageChars())),
@@ -170,14 +154,9 @@ export class Contact {
     return control.invalid && control.touched;
   }
 
-  protected onCountryPicked(value: unknown): void {
-    const country = this.asPhoneCountry(value);
-    if (!country || country.code === this.countryCode()) {
-      return;
-    }
-
+  protected onCountryPicked(code: CountryCode): void {
     this.phoneTouched.set(true);
-    this.setCountry(country.code);
+    this.setCountry(code);
   }
 
   protected onWhatsappInput(): void {
@@ -237,14 +216,5 @@ export class Contact {
     }
 
     return isValidWhatsapp(value, this.countryCode()) ? null : { whatsapp: true };
-  }
-
-  private asPhoneCountry(value: unknown): PhoneCountry | null {
-    if (typeof value === 'object' && value !== null && 'code' in value) {
-      const code = (value as PhoneCountry).code;
-      return this.countries().find((country) => country.code === code) ?? null;
-    }
-
-    return null;
   }
 }

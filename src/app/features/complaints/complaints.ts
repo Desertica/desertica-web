@@ -1,4 +1,4 @@
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -19,11 +19,12 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmComboboxImports } from '@spartan-ng/helm/combobox';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import type { CountryCode } from 'libphonenumber-js/min';
 import { CatalogService } from '../../core/catalog/catalog';
@@ -39,10 +40,9 @@ import {
   applyPhoneInput,
   DEFAULT_PHONE_COUNTRY,
   isValidWhatsapp,
-  type PhoneCountry,
-  phoneCountries,
   toE164,
 } from '../contact/phone';
+import { PhoneCountryPicker } from '../contact/phone-country';
 
 /** Letters (any alphabet), spaces, apostrophes, dots and hyphens; no digits or symbols. */
 const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}'’.\- ]*$/u;
@@ -97,8 +97,6 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
   return Object.keys(errors).length ? errors : null;
 }
 
-const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm border';
-
 /**
  * Libro de Reclamaciones: the hoja de reclamación of INDECOPI (Anexo I) in four steps, one per
  * section of the form: consumer, contracted good, claim and request, and the send step that
@@ -111,18 +109,19 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    NgOptimizedImage,
     ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
     ContentBody,
     HlmButton,
-    HlmComboboxImports,
+    HlmCheckbox,
     HlmFieldImports,
     HlmInput,
     HlmInputGroupImports,
     HlmLabel,
+    HlmSelectImports,
     HlmTextarea,
+    PhoneCountryPicker,
     Turnstile,
   ],
   template: `
@@ -170,22 +169,27 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
               <legend hlmFieldLegend>{{ 'complaints.s1' | translate: i18n.locale() }}</legend>
               <div class="grid gap-4 sm:grid-cols-2">
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="cp-name">{{ 'complaints.name' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                  <label hlmFieldLabel for="cp-name">{{ 'complaints.name' | translate: i18n.locale() }}</label>
                   <input hlmInput id="cp-name" required [formControl]="form.controls.consumerName" autocomplete="name" [attr.maxlength]="limits.name" />
                   @if (invalid(form.controls.consumerName)) {
                     <hlm-field-error [forceShow]="true">{{ nameError(form.controls.consumerName) | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
-                  <select hlmInput id="cp-doc-type" required [formControl]="form.controls.idDocType">
-                    @for (type of docTypes; track type) {
-                      <option [value]="type">{{ 'checkout.doc.' + type | translate: i18n.locale() }}</option>
-                    }
-                  </select>
+                  <label hlmFieldLabel for="cp-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }}</label>
+                  <hlm-select [formControl]="form.controls.idDocType" [itemToString]="docLabel">
+                    <hlm-select-trigger buttonId="cp-doc-type" class="w-full">
+                      <hlm-select-value />
+                    </hlm-select-trigger>
+                    <hlm-select-content *hlmSelectPortal>
+                      @for (type of docTypes; track type) {
+                        <hlm-select-item [value]="type">{{ 'checkout.doc.' + type | translate: i18n.locale() }}</hlm-select-item>
+                      }
+                    </hlm-select-content>
+                  </hlm-select>
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                  <label hlmFieldLabel for="cp-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }}</label>
                   <input
                     hlmInput
                     id="cp-doc-number"
@@ -201,58 +205,24 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
                   }
                 </div>
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="cp-address">{{ 'checkout.address' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                  <label hlmFieldLabel for="cp-address">{{ 'checkout.address' | translate: i18n.locale() }}</label>
                   <input hlmInput id="cp-address" required [formControl]="form.controls.address" autocomplete="street-address" [attr.maxlength]="limits.address" />
                   @if (invalid(form.controls.address)) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-email">{{ 'checkout.email' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                  <label hlmFieldLabel for="cp-email">{{ 'checkout.email' | translate: i18n.locale() }}</label>
                   <input hlmInput id="cp-email" required type="email" [formControl]="form.controls.email" autocomplete="email" [attr.maxlength]="limits.email" />
                   @if (invalid(form.controls.email)) {
                     <hlm-field-error [forceShow]="true">{{ (form.controls.email.value ? 'checkout.errorEmail' : 'checkout.errorRequired') | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-phone">{{ 'complaints.phone' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-phone">{{ 'complaints.phoneLabel' | translate: i18n.locale() }}</label>
                   <div hlmInputGroup class="min-w-0">
                     <hlm-input-group-addon class="ps-1">
-                      <hlm-combobox
-                        class="inline-flex"
-                        [value]="selectedCountry()"
-                        [itemToString]="countryToString"
-                        [isItemEqualToValue]="sameCountry"
-                        (valueChange)="onCountryPicked($event)"
-                      >
-                        <hlm-combobox-trigger
-                          buttonId="cp-country"
-                          variant="ghost"
-                          class="h-8 min-w-0 gap-1.5 px-1.5 font-normal"
-                          [attr.aria-label]="'contact.country' | translate: i18n.locale()"
-                          [attr.data-country]="countryCode()"
-                        >
-                          <ng-template hlmComboboxValueTemplate let-value>
-                            @if (value) {
-                              <img [ngSrc]="value.flagSrc" width="40" height="27" alt="" class="h-5 w-auto rounded-sm" />
-                              <span>+{{ value.callingCode }}</span>
-                            }
-                          </ng-template>
-                        </hlm-combobox-trigger>
-                        <hlm-combobox-content *hlmComboboxPortal class="min-w-72">
-                          <hlm-combobox-input showTrigger="false" [placeholder]="'contact.searchCountry' | translate: i18n.locale()" />
-                          <hlm-combobox-empty>{{ 'contact.noCountry' | translate: i18n.locale() }}</hlm-combobox-empty>
-                          <div hlmComboboxList class="max-h-60 overflow-y-auto overscroll-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5">
-                            @for (country of countries(); track country.code) {
-                              <hlm-combobox-item [value]="country">
-                                <img [src]="country.flagSrc" width="20" height="15" alt="" class="size-5 rounded-sm object-cover" />
-                                <span class="min-w-0 flex-1 truncate">{{ country.label }}</span>
-                                <span class="text-muted-foreground">+{{ country.callingCode }}</span>
-                              </hlm-combobox-item>
-                            }
-                          </div>
-                        </hlm-combobox-content>
-                      </hlm-combobox>
+                      <app-phone-country buttonId="cp-country" [country]="countryCode()" (countryChange)="onCountryPicked($event)" />
                     </hlm-input-group-addon>
                     <input
                       hlmInputGroupInput
@@ -271,12 +241,12 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
                 </div>
               </div>
               <label class="flex items-start gap-3 text-sm" for="cp-minor">
-                <input type="checkbox" id="cp-minor" class="${CHECKBOX}" [formControl]="form.controls.isMinor" />
+                <hlm-checkbox inputId="cp-minor" class="mt-0.5" [formControl]="form.controls.isMinor" />
                 {{ 'complaints.minor' | translate: i18n.locale() }}
               </label>
               @if (form.controls.isMinor.value) {
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-guardian">{{ 'complaints.guardian' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                  <label hlmFieldLabel for="cp-guardian">{{ 'complaints.guardian' | translate: i18n.locale() }}</label>
                   <input hlmInput id="cp-guardian" required [formControl]="form.controls.guardianName" [attr.maxlength]="limits.guardian" autocomplete="off" />
                   @if (form.controls.guardianName.touched && form.hasError('guardian') || submitted() && form.hasError('guardian')) {
                     <hlm-field-error [forceShow]="true">{{ (form.controls.guardianName.value ? 'complaints.errorName' : 'checkout.errorRequired') | translate: i18n.locale() }}</hlm-field-error>
@@ -289,13 +259,13 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
           @if (step() === 2) {
             <fieldset hlmFieldSet>
               <legend hlmFieldLegend>{{ 'complaints.s2' | translate: i18n.locale() }}</legend>
-              <p class="text-muted-foreground text-sm">{{ 'complaints.goodHelp' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></p>
-              <label class="flex items-center gap-3 text-sm" for="good-product">
-                <input type="checkbox" id="good-product" class="${CHECKBOX}" [formControl]="form.controls.isProduct" />
+              <p class="text-muted-foreground text-sm">{{ 'complaints.goodHelp' | translate: i18n.locale() }}</p>
+              <label class="flex items-start gap-3 text-sm" for="good-product">
+                <hlm-checkbox inputId="good-product" class="mt-0.5" [formControl]="form.controls.isProduct" />
                 {{ 'complaints.product' | translate: i18n.locale() }}
               </label>
-              <label class="flex items-center gap-3 text-sm" for="good-service">
-                <input type="checkbox" id="good-service" class="${CHECKBOX}" [formControl]="form.controls.isService" />
+              <label class="flex items-start gap-3 text-sm" for="good-service">
+                <hlm-checkbox inputId="good-service" class="mt-0.5" [formControl]="form.controls.isService" />
                 {{ 'complaints.service' | translate: i18n.locale() }}
               </label>
               @if (submitted() && form.hasError('goods')) {
@@ -317,16 +287,21 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-currency">{{ 'booking.currency' | translate: i18n.locale() }}</label>
-                  <select hlmInput id="cp-currency" [formControl]="form.controls.currency">
-                    <option value="">—</option>
-                    <option value="PEN">PEN</option>
-                    <option value="USD">USD</option>
-                  </select>
+                  <label hlmFieldLabel for="cp-currency">{{ 'complaints.currency' | translate: i18n.locale() }}</label>
+                  <hlm-select [formControl]="form.controls.currency" [itemToString]="currencyLabel">
+                    <hlm-select-trigger buttonId="cp-currency" class="w-full">
+                      <hlm-select-value />
+                    </hlm-select-trigger>
+                    <hlm-select-content *hlmSelectPortal>
+                      @for (code of currencies; track code) {
+                        <hlm-select-item [value]="code">{{ currencyLabel(code) }}</hlm-select-item>
+                      }
+                    </hlm-select-content>
+                  </hlm-select>
                 </div>
               </div>
               <div hlmField>
-                <label hlmFieldLabel for="cp-description">{{ 'complaints.description' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                <label hlmFieldLabel for="cp-description">{{ 'complaints.description' | translate: i18n.locale() }}</label>
                 <textarea hlmTextarea id="cp-description" required rows="2" [formControl]="form.controls.description" [attr.maxlength]="limits.description"></textarea>
                 @if (invalid(form.controls.description)) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
@@ -338,27 +313,27 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
           @if (step() === 3) {
             <fieldset hlmFieldSet>
               <legend hlmFieldLegend>{{ 'complaints.s3' | translate: i18n.locale() }}</legend>
-              <p class="text-muted-foreground text-sm">{{ 'complaints.kindHelp' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></p>
+              <p class="text-muted-foreground text-sm">{{ 'complaints.kindHelp' | translate: i18n.locale() }}</p>
               <label class="flex items-start gap-3 text-sm" for="kind-reclamo">
-                <input type="checkbox" id="kind-reclamo" class="${CHECKBOX}" [formControl]="form.controls.isReclamo" />
+                <hlm-checkbox inputId="kind-reclamo" class="mt-0.5" [formControl]="form.controls.isReclamo" />
                 <span><strong>{{ 'complaints.reclamo' | translate: i18n.locale() }}</strong> — {{ 'complaints.reclamoHelp' | translate: i18n.locale() }}</span>
               </label>
               <label class="flex items-start gap-3 text-sm" for="kind-queja">
-                <input type="checkbox" id="kind-queja" class="${CHECKBOX}" [formControl]="form.controls.isQueja" />
+                <hlm-checkbox inputId="kind-queja" class="mt-0.5" [formControl]="form.controls.isQueja" />
                 <span><strong>{{ 'complaints.queja' | translate: i18n.locale() }}</strong> — {{ 'complaints.quejaHelp' | translate: i18n.locale() }}</span>
               </label>
               @if (submitted() && form.hasError('kinds')) {
                 <hlm-field-error [forceShow]="true">{{ 'complaints.errorChoose' | translate: i18n.locale() }}</hlm-field-error>
               }
               <div hlmField>
-                <label hlmFieldLabel for="cp-detail">{{ 'complaints.detail' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                <label hlmFieldLabel for="cp-detail">{{ 'complaints.detail' | translate: i18n.locale() }}</label>
                 <textarea hlmTextarea id="cp-detail" required rows="5" [formControl]="form.controls.detail" [attr.maxlength]="limits.detail"></textarea>
                 @if (invalid(form.controls.detail)) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                 }
               </div>
               <div hlmField>
-                <label hlmFieldLabel for="cp-request">{{ 'complaints.request' | translate: i18n.locale() }} <span class="text-destructive" aria-hidden="true">*</span></label>
+                <label hlmFieldLabel for="cp-request">{{ 'complaints.request' | translate: i18n.locale() }}</label>
                 <textarea hlmTextarea id="cp-request" required rows="3" [formControl]="form.controls.request" [attr.maxlength]="limits.request"></textarea>
                 @if (invalid(form.controls.request)) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
@@ -392,18 +367,18 @@ const CHECKBOX = 'border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm 
             </fieldset>
           }
 
-          <div class="flex flex-wrap gap-3">
+          <div class="flex flex-col-reverse gap-3 sm:flex-row">
             @if (step() > 1) {
-              <button hlmBtn variant="outline" type="button" size="lg" id="complaint-back" (click)="back()">
+              <button hlmBtn variant="outline" type="button" size="lg" id="complaint-back" class="w-full sm:w-auto" (click)="back()">
                 {{ 'complaints.back' | translate: i18n.locale() }}
               </button>
             }
             @if (step() < steps.length) {
-              <button hlmBtn type="button" size="lg" id="complaint-next" (click)="next()">
+              <button hlmBtn type="button" size="lg" id="complaint-next" class="w-full sm:w-auto" (click)="next()">
                 {{ 'complaints.next' | translate: i18n.locale() }}
               </button>
             } @else {
-              <button hlmBtn type="submit" size="lg" id="complaint-submit" class="w-fit" [disabled]="sending()">
+              <button hlmBtn type="submit" size="lg" id="complaint-submit" class="w-full sm:w-auto" [disabled]="sending()">
                 {{ (sending() ? 'complaints.sending' : 'complaints.submit') | translate: i18n.locale() }}
               </button>
             }
@@ -425,6 +400,10 @@ export class ComplaintsBook {
   protected readonly i18n = inject(I18nService);
   protected readonly limits = COMPLAINT_LIMITS;
   protected readonly docTypes = ID_DOC_TYPES;
+  protected readonly currencies = ['', 'PEN', 'USD'] as const;
+  protected readonly docLabel = (type: string): string => this.i18n.t(`checkout.doc.${type}`);
+  /** No currency is a valid choice while no amount is claimed. */
+  protected readonly currencyLabel = (code: string): string => code || '—';
   protected readonly steps = [1, 2, 3, 4] as const;
   protected readonly stepTitles = ['complaints.s1', 'complaints.s2', 'complaints.s3', 'complaints.s4'] as const;
   protected readonly step = signal(1);
@@ -450,14 +429,6 @@ export class ComplaintsBook {
   });
 
   protected readonly countryCode = signal<CountryCode>(DEFAULT_PHONE_COUNTRY);
-  protected readonly countries = computed(() => phoneCountries(this.i18n.locale()));
-  protected readonly selectedCountry = computed(
-    () => this.countries().find((country) => country.code === this.countryCode()) ?? this.countries()[0],
-  );
-  protected readonly countryToString = (item: PhoneCountry | null | undefined): string =>
-    item ? `${item.label} +${item.callingCode} ${item.code}` : '';
-  protected readonly sameCountry = (item: PhoneCountry | null | undefined, selected: PhoneCountry | null | undefined): boolean =>
-    item?.code === selected?.code;
 
   readonly form = new FormGroup(
     {
@@ -565,13 +536,9 @@ export class ComplaintsBook {
     }
   }
 
-  protected onCountryPicked(value: unknown): void {
-    const code = typeof value === 'object' && value !== null && 'code' in value ? (value as PhoneCountry).code : null;
-    const country = this.countries().find((item) => item.code === code);
-    if (country && country.code !== this.countryCode()) {
-      this.countryCode.set(country.code);
-      this.form.controls.phone.updateValueAndValidity();
-    }
+  protected onCountryPicked(code: CountryCode): void {
+    this.countryCode.set(code);
+    this.form.controls.phone.updateValueAndValidity();
   }
 
   protected onPhoneInput(): void {

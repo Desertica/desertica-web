@@ -81,7 +81,8 @@ describe('Contact', () => {
     expect(compiled.querySelector('#contact-email')?.hasAttribute('required')).toBe(true);
     expect(compiled.querySelector('#contact-whatsapp')?.hasAttribute('required')).toBe(true);
     expect(compiled.querySelector('#contact-message')?.hasAttribute('required')).toBe(true);
-    expect(compiled.querySelectorAll('.text-destructive').length).toBeGreaterThanOrEqual(4);
+    // Every field is required, so no label carries a mark (see docs/ESTANDAR-VISUAL.md §6).
+    expect(compiled.querySelector('form')?.textContent).not.toContain('*');
     expect(compiled.querySelector('#contact-message')?.getAttribute('placeholder')).toBe(
       'What did you have in mind?',
     );

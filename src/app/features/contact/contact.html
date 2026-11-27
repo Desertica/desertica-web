@@ -27,7 +27,6 @@
           <div hlmField>
             <label hlmFieldLabel for="contact-name">
               {{ 'contact.name' | translate: i18n.locale() }}
-              <span class="text-destructive" aria-hidden="true">*</span>
             </label>
             <input
               hlmInput
@@ -49,7 +48,6 @@
             <div hlmField class="min-w-0">
               <label hlmFieldLabel for="contact-email">
                 {{ 'contact.email' | translate: i18n.locale() }}
-                <span class="text-destructive" aria-hidden="true">*</span>
               </label>
               <input
                 hlmInput
@@ -70,65 +68,14 @@
             <div hlmField class="min-w-0">
               <label hlmFieldLabel for="contact-whatsapp">
                 {{ 'contact.whatsapp' | translate: i18n.locale() }}
-                <span class="text-destructive" aria-hidden="true">*</span>
               </label>
               <div hlmInputGroup class="min-w-0">
               <hlm-input-group-addon class="ps-1">
-                <hlm-combobox
-                  class="inline-flex"
-                  [value]="selectedCountry()"
-                  [itemToString]="countryToString"
-                  [isItemEqualToValue]="sameCountry"
-                  (valueChange)="onCountryPicked($event)"
-                >
-                  <hlm-combobox-trigger
-                    buttonId="contact-country"
-                    variant="ghost"
-                    class="h-8 min-w-0 gap-1.5 px-1.5 font-normal"
-                    [attr.aria-label]="'contact.country' | translate: i18n.locale()"
-                    [attr.data-country]="countryCode()"
-                  >
-                    <ng-template hlmComboboxValueTemplate let-value>
-                      @if (value) {
-                        <img
-                          [ngSrc]="value.flagSrc"
-                          width="40"
-                          height="27"
-                          alt=""
-                          class="h-5 w-auto rounded-sm"
-                        />
-                        <span>+{{ value.callingCode }}</span>
-                      }
-                    </ng-template>
-                  </hlm-combobox-trigger>
-                  <hlm-combobox-content *hlmComboboxPortal class="min-w-72">
-                    <hlm-combobox-input
-                      showTrigger="false"
-                      [placeholder]="'contact.searchCountry' | translate: i18n.locale()"
-                    />
-                    <hlm-combobox-empty>{{
-                      'contact.noCountry' | translate: i18n.locale()
-                    }}</hlm-combobox-empty>
-                    <div
-                      hlmComboboxList
-                      class="max-h-60 overflow-y-auto overscroll-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5"
-                    >
-                      @for (country of countries(); track country.code) {
-                        <hlm-combobox-item [value]="country">
-                          <img
-                            [src]="country.flagSrc"
-                            width="20"
-                            height="15"
-                            alt=""
-                            class="size-5 rounded-sm object-cover"
-                          />
-                          <span class="min-w-0 flex-1 truncate">{{ country.label }}</span>
-                          <span class="text-muted-foreground">+{{ country.callingCode }}</span>
-                        </hlm-combobox-item>
-                      }
-                    </div>
-                  </hlm-combobox-content>
-                </hlm-combobox>
+                <app-phone-country
+                  buttonId="contact-country"
+                  [country]="countryCode()"
+                  (countryChange)="onCountryPicked($event)"
+                />
               </hlm-input-group-addon>
               <input
                 hlmInputGroupInput
@@ -153,7 +100,6 @@
           <div hlmField>
             <label hlmFieldLabel for="contact-message">
               {{ 'contact.message' | translate: i18n.locale() }}
-              <span class="text-destructive" aria-hidden="true">*</span>
             </label>
             <textarea
               hlmTextarea

@@ -12,8 +12,10 @@ import {
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmCheckbox } from '@spartan-ng/helm/checkbox';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmSelectImports } from '@spartan-ng/helm/select';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import { BookingApi, type WaiverForm } from '../../core/api/booking-api';
 import { limaDateLong, limaTime } from '../../core/booking/format';
@@ -44,8 +46,10 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
     ContentBody,
     HlmButton,
     HlmCardImports,
+    HlmCheckbox,
     HlmFieldImports,
     HlmInput,
+    HlmSelectImports,
     HlmTextarea,
   ],
   template: `
@@ -94,13 +98,7 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
 
               <form class="flex flex-col gap-6" [formGroup]="sign" (ngSubmit)="submit()" novalidate>
                 <label class="flex items-start gap-3 text-sm" for="w-minor">
-                  <input
-                    type="checkbox"
-                    id="w-minor"
-                    class="border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm border"
-                    formControlName="onBehalfOfMinor"
-                    aria-describedby="w-minor-hint"
-                  />
+                  <hlm-checkbox inputId="w-minor" class="mt-0.5" formControlName="onBehalfOfMinor" aria-describedby="w-minor-hint" />
                   <span>
                     {{ 'waiver.minor' | translate: i18n.locale() }}
                     <span id="w-minor-hint" class="text-muted-foreground block">{{ 'waiver.minorHint' | translate: i18n.locale() }}</span>
@@ -117,11 +115,16 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
                   </div>
                   <div hlmField>
                     <label hlmFieldLabel for="w-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }}</label>
-                    <select hlmInput id="w-doc-type" formControlName="signerDocType">
-                      @for (type of docTypes; track type) {
-                        <option [value]="type">{{ 'checkout.doc.' + type | translate: i18n.locale() }}</option>
-                      }
-                    </select>
+                    <hlm-select formControlName="signerDocType" [itemToString]="docLabel">
+                      <hlm-select-trigger buttonId="w-doc-type" class="w-full">
+                        <hlm-select-value />
+                      </hlm-select-trigger>
+                      <hlm-select-content *hlmSelectPortal>
+                        @for (type of docTypes; track type) {
+                          <hlm-select-item [value]="type">{{ 'checkout.doc.' + type | translate: i18n.locale() }}</hlm-select-item>
+                        }
+                      </hlm-select-content>
+                    </hlm-select>
                   </div>
                   <div hlmField>
                     <label hlmFieldLabel for="w-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }}</label>
@@ -145,12 +148,7 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
                 </div>
 
                 <label class="flex items-start gap-3 text-sm" for="w-accept">
-                  <input
-                    type="checkbox"
-                    id="w-accept"
-                    class="border-input accent-primary mt-0.5 size-5 shrink-0 rounded-sm border"
-                    formControlName="accepted"
-                  />
+                  <hlm-checkbox inputId="w-accept" class="mt-0.5" formControlName="accepted" />
                   <span>{{ 'waiver.accept' | translate: i18n.locale() }}</span>
                 </label>
                 @if (invalid('accepted')) {
@@ -160,7 +158,7 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
                 @if (error(); as message) {
                   <p class="text-destructive text-sm" role="alert" id="waiver-error">{{ message | translate: i18n.locale() }}</p>
                 }
-                <button hlmBtn type="submit" size="lg" id="waiver-sign" class="w-fit" [disabled]="sending()" [attr.aria-busy]="sending()">
+                <button hlmBtn type="submit" size="lg" id="waiver-sign" class="w-full sm:w-auto" [disabled]="sending()" [attr.aria-busy]="sending()">
                   {{ 'waiver.sign' | translate: i18n.locale() }}
                 </button>
               </form>
@@ -180,6 +178,7 @@ export class Waiver {
   readonly token = input.required<string>();
   protected readonly i18n = inject(I18nService);
   protected readonly docTypes = SIGNER_DOCS;
+  protected readonly docLabel = (type: string): string => this.i18n.t(`checkout.doc.${type}`);
   protected readonly load = signal<Load>('loading');
   protected readonly form = signal<WaiverForm | null>(null);
   protected readonly signed = signal(false);
