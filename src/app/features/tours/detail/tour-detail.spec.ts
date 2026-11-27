@@ -42,7 +42,8 @@ describe('TourDetail', () => {
 
     expect(compiled.querySelector('h1')?.textContent).toContain('Dune buggy');
     expect(compiled.textContent).toContain('Ride the Huacachina dunes');
-    expect(compiled.textContent).toContain('Lorem ipsum dolor sit amet');
+    expect(compiled.textContent).toContain('We meet in Ica');
+    expect(compiled.textContent).not.toMatch(/lorem ipsum/i);
     expect(compiled.textContent).not.toContain('What the day includes');
     expect(compiled.textContent).toContain('How we run it');
     expect(compiled.textContent).toContain('The day');
@@ -51,7 +52,6 @@ describe('TourDetail', () => {
     expect(compiled.textContent).not.toContain('Book on WhatsApp');
     expect(compiled.textContent).toContain('Included');
     expect(compiled.textContent).toContain('Details');
-    expect(compiled.textContent).toContain('Video coming soon');
     expect(compiled.textContent).not.toContain('On the dunes');
     const heading = compiled.querySelector('app-tour-heading');
     const gallery = compiled.querySelector('app-tour-gallery');
@@ -60,11 +60,11 @@ describe('TourDetail', () => {
     expect(heading).not.toBeNull();
     expect(gallery).not.toBeNull();
     expect(book).not.toBeNull();
-    expect(videos).not.toBeNull();
+    // No clip filmed yet: the videos section is not shown at all.
+    expect(videos).toBeNull();
     expect(
       heading!.compareDocumentPosition(gallery!) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(book!.compareDocumentPosition(videos!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const features = compiled.querySelector('app-tour-features');
     const timeline = compiled.querySelector('app-tour-timeline');
     const details = compiled.querySelector('app-tour-full-details');
@@ -74,16 +74,9 @@ describe('TourDetail', () => {
     expect(
       timeline!.compareDocumentPosition(features!) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(
-      timeline!.compareDocumentPosition(videos!) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      details!.compareDocumentPosition(videos!) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
     expect(features!.querySelector('[data-slot=card]')).toBeNull();
     expect(features!.querySelector('section')?.className).toContain('bg-muted');
     expect(compiled.querySelectorAll('app-tour-gallery img').length).toBeGreaterThanOrEqual(3);
-    expect(compiled.querySelectorAll('app-tour-videos article').length).toBe(2);
     expect(compiled.querySelectorAll('app-tour-timeline img').length).toBe(5);
     expect(compiled.querySelector('app-tour-timeline img')?.getAttribute('sizes')).toContain(
       '9rem',

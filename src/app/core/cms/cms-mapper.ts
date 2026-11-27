@@ -531,17 +531,10 @@ function stops(
 function videos(value: unknown, mediaBase: string | null): TourVideo[] {
   return (asList(value) ?? []).flatMap((item): TourVideo[] => {
     const poster = mediaUrl(item['poster'], mediaBase) ?? text(item['posterUrl']);
-    if (!poster) {
-      return [];
-    }
-
-    return [
-      compact({
-        poster,
-        webm: mediaUrl(item['webm'], mediaBase) ?? text(item['webmUrl']),
-        mp4: mediaUrl(item['mp4'], mediaBase) ?? text(item['mp4Url']),
-      }),
-    ];
+    const webm = mediaUrl(item['webm'], mediaBase) ?? text(item['webmUrl']);
+    const mp4 = mediaUrl(item['mp4'], mediaBase) ?? text(item['mp4Url']);
+    // A poster without a file is not a video: the section only shows clips that play.
+    return poster && (webm || mp4) ? [compact({ poster, webm, mp4 })] : [];
   });
 }
 
@@ -554,7 +547,10 @@ function bodyKeys(
   const parts = Object.fromEntries(
     LOCALES.map((locale) => [
       locale,
-      (text(byLocale[locale]?.['body']) ?? '').split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean),
+      (text(byLocale[locale]?.['body']) ?? '')
+        .split(/\n\s*\n/)
+        .map((part) => part.trim())
+        .filter((part) => part && !isFiller(part)),
     ]),
   ) as Record<AppLocale, string[]>;
   const count = Math.max(...LOCALES.map((locale) => parts[locale].length));
@@ -616,6 +612,14 @@ function assign(target: Record<string, string>, key: string, value: string | und
   if (value) {
     target[key] = value;
   }
+}
+
+/** shortcut: catches the usual Lorem ipsum filler only, not any other placeholder an editor types. */
+const FILLER = /\b(lorem ipsum|dolor sit amet|consectetur adipiscing|suspendisse potenti|pellentesque habitant|vestibulum ante ipsum)\b/i;
+
+/** Placeholder Latin left by the seed or an editor: never shown on a real page. */
+export function isFiller(value: string): boolean {
+  return FILLER.test(value);
 }
 
 function text(value: unknown): string | undefined {

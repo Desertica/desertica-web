@@ -128,7 +128,6 @@ describe('i18n catalogs', () => {
     expect(translate('tour.book', 'es')).not.toContain('WhatsApp');
     expect(translate('tour.payLater', 'es')).toContain('paga después');
     expect(translate('tour.detailsLabel', 'en')).toBe('Details');
-    expect(translate('tour.videoSoon', 'es')).toBe('Video próximamente');
     expect(translate('tours.duneBuggy.lead', 'es')).toContain('tubular');
     expect(translate('tours.duneBuggy.lead', 'en')).toContain('tubular');
     expect(translate('tours.duneBuggy.itinerary.meet.title', 'es')).toBe('Encuentro');

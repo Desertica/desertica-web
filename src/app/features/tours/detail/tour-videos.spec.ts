@@ -1,7 +1,5 @@
 import { IMAGE_LOADER } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
-import { tourPage } from '../../../core/catalog/tour-pages';
-import { tourById } from '../../../core/catalog/tours';
 import { remoteImageLoader } from '../../../core/images/remote-image-loader';
 import { TourVideos } from './tour-videos';
 
@@ -11,35 +9,6 @@ describe('TourVideos', () => {
       imports: [TourVideos],
       providers: [{ provide: IMAGE_LOADER, useValue: remoteImageLoader }],
     }).compileComponents();
-  });
-
-  it('renders two vertical posters without a player', async () => {
-    const tour = tourById('dune-buggy');
-    expect(tour).toBeDefined();
-    if (!tour) {
-      return;
-    }
-
-    const fixture = TestBed.createComponent(TourVideos);
-    fixture.componentRef.setInput('clips', tourPage(tour).videos);
-    fixture.componentRef.setInput('title', 'Dune buggy');
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-
-    const frames = compiled.querySelectorAll('article');
-    expect(frames.length).toBe(2);
-    for (const frame of Array.from(frames)) {
-      expect(frame.className).toContain('aspect-[9/16]');
-    }
-    const images = compiled.querySelectorAll('img');
-    expect(images.length).toBe(2);
-    for (const image of Array.from(images)) {
-      expect(image.className).toContain('rounded-none');
-    }
-    expect(compiled.textContent).toContain('Video coming soon');
-    expect(compiled.querySelector('video')).toBeNull();
-    expect(compiled.querySelector('button')).toBeNull();
-    expect(compiled.querySelector('[data-slot=card]')).toBeNull();
   });
 
   it('plays a clip, pauses when it ends, and stops when it leaves the viewport', async () => {
@@ -72,7 +41,6 @@ describe('TourVideos', () => {
     fixture.componentRef.setInput('clips', [
       { poster: '/clips/a.jpg', webm: '/clips/a.webm', mp4: '/clips/a.mp4' },
       { poster: '/clips/b.jpg', webm: '/clips/b.webm' },
-      { poster: '/clips/c.jpg' },
     ]);
     fixture.componentRef.setInput('title', 'Dune buggy');
     await fixture.whenStable();
@@ -97,7 +65,6 @@ describe('TourVideos', () => {
     observed[0]?.([{ isIntersecting: false } as IntersectionObserverEntry], new FakeObserver(() => undefined));
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('video')).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Video coming soon');
 
     fixture.destroy();
     vi.unstubAllGlobals();

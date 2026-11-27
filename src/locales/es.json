@@ -213,7 +213,6 @@
     "detailsLabel": "Detalles",
     "detailsOverview": "Descripción e itinerario",
     "videosLabel": "Videos del tour",
-    "videoSoon": "Video próximamente",
     "clipPlay": "Reproducir {tour}, video {n}",
     "book": "Reservar",
     "bookLead": "Fecha, idioma y grupo. Te respondemos en el hilo.",
@@ -266,10 +265,6 @@
     "duneBuggy": {
       "lead": "Recorre las dunas de Huacachina en tubular, con paradas para bajar en tabla y quedarte a la luz baja.",
       "lead2": "El encuentro es en Ica. El ritmo, el del grupo. Confirmación antes de encender el motor.",
-      "description": {
-        "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae nisl at erat tristique tincidunt, sed interdum nisl a tincidunt posuere.",
-        "p2": "Suspendisse potenti. Curabitur at lectus nec nisi tincidunt gravida. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas."
-      },
       "practices": {
         "group": {
           "title": "Grupo chico",
@@ -313,12 +308,6 @@
           "title": "Cierre",
           "body": "Vuelta hacia el oasis cuando se va la luz.",
           "expanded": "Vuelta hacia el oasis cuando se va la luz. El cierre depende del día, no de un reloj fijo."
-        }
-      },
-      "details": {
-        "description": {
-          "p1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam tincidunt, sapien at fermentum pretium, lorem nisl iaculis erat, vitae vehicula nisl lorem sit amet nisl.",
-          "p2": "Praesent sagittis, lorem a tincidunt tincidunt, nisl nisl aliquam nisl, a tincidunt nisl nisl sit amet nisl. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae."
         }
       },
       "termsSummary": "La reserva se confirma por WhatsApp. Cancelaciones y cambios siguen los términos publicados.",

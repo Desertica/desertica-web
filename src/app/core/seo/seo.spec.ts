@@ -26,6 +26,15 @@ describe('SeoService', () => {
     await TestBed.inject(Router).navigateByUrl(url);
   };
 
+  it('does not repeat the brand when the page title already names it', async () => {
+    const seo = TestBed.inject(SeoService);
+    await navigate('/tours/x');
+    seo.setPage({}, { title: 'Tour de ejemplo | Desértica' });
+    TestBed.tick();
+
+    expect(document.title).toBe('Tour de ejemplo | Desértica');
+  });
+
   it('writes canonical, hreflang, Open Graph and Twitter tags for the current route', async () => {
     const seo = TestBed.inject(SeoService);
     await navigate('/tours/dune-buggy');

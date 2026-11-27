@@ -79,15 +79,9 @@ const emptyPage = (tour: CatalogTour): TourPage => ({
 const duneBuggyPage: TourPage = {
   gallery: duneGallery,
   leadKey: 'tours.duneBuggy.lead',
-  descriptionKeys: [
-    'tours.duneBuggy.lead2',
-    'tours.duneBuggy.description.p1',
-    'tours.duneBuggy.description.p2',
-  ],
-  expandedDescriptionKeys: [
-    'tours.duneBuggy.details.description.p1',
-    'tours.duneBuggy.details.description.p2',
-  ],
+  descriptionKeys: ['tours.duneBuggy.lead2'],
+  // Same as a CMS tour with `body`: the accordion repeats the whole description.
+  expandedDescriptionKeys: ['tours.duneBuggy.lead', 'tours.duneBuggy.lead2'],
   practices: [
     {
       icon: 'lucideUsers',
@@ -142,7 +136,8 @@ const duneBuggyPage: TourPage = {
       expandedBodyKey: 'tours.duneBuggy.itinerary.close.expanded',
     },
   ],
-  videos: [{ poster: dunePosters[0] }, { poster: dunePosters[1] }],
+  // No clips filmed yet: a poster alone is not a video, so the section stays hidden.
+  videos: [],
   includedKeys: [
     'tours.duneBuggy.included.guide',
     'tours.duneBuggy.included.buggy',

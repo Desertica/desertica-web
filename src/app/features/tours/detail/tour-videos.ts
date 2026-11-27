@@ -31,7 +31,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
       <div class="grid grid-cols-2 gap-3">
         @for (clip of clips(); track clip.poster; let i = $index) {
           <article class="relative aspect-[9/16] overflow-hidden">
-            @if (canPlay(clip) && playing() === i) {
+            @if (playing() === i) {
               <video
                 #player
                 class="absolute inset-0 size-full object-cover"
@@ -48,7 +48,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
                   <source [src]="clip.mp4" type="video/mp4" />
                 }
               </video>
-            } @else if (canPlay(clip)) {
+            } @else {
               <button
                 type="button"
                 class="absolute inset-0"
@@ -69,19 +69,6 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
                   <ng-icon name="lucidePlay" class="size-5" />
                 </span>
               </button>
-            } @else {
-              <img
-                [ngSrc]="clip.poster"
-                fill
-                sizes="(min-width: 768px) 22rem, 45vw"
-                [alt]="alt(i)"
-                class="rounded-none object-cover"
-              />
-              <p
-                class="bg-background/80 text-foreground absolute inset-x-0 bottom-0 px-3 py-2 text-xs font-medium tracking-wide uppercase"
-              >
-                {{ 'tour.videoSoon' | translate: i18n.locale() }}
-              </p>
             }
           </article>
         }
@@ -126,10 +113,6 @@ export class TourVideos {
         void play.catch(() => undefined);
       }
     });
-  }
-
-  protected canPlay(clip: TourVideo): boolean {
-    return Boolean(clip.webm || clip.mp4);
   }
 
   protected play(index: number): void {

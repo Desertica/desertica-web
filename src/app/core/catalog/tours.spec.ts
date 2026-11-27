@@ -63,10 +63,10 @@ describe('tour catalog', () => {
     const page = tourPage(dune);
     expect(page.gallery).toHaveLength(3);
     expect(new Set(page.gallery.map(unsplashPhotoId)).size).toBe(3);
-    expect(page.videos).toHaveLength(2);
+    expect(page.videos).toEqual([]);
     expect(page.itinerary).toHaveLength(5);
     expect(page.itinerary.every((stop) => Boolean(stop.image))).toBe(true);
-    expect(page.descriptionKeys.length).toBeGreaterThan(1);
+    expect(page.descriptionKeys).toEqual(['tours.duneBuggy.lead2']);
     expect(page.leadKey).toBe('tours.duneBuggy.lead');
 
     const stub = tourPage(sandboard);

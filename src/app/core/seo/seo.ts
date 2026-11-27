@@ -92,7 +92,13 @@ export class SeoService {
     const settings = this.catalog.site();
     const origin = this.origin();
     const path = pathOf(this.url());
-    const title = seo.title ? `${seo.title} | ${site}` : site;
+    const brand = settings.brandName.trim().toLowerCase();
+    // A title that already names the brand (an SEO title from the CMS) gets no second one.
+    const title = !seo.title
+      ? site
+      : brand && seo.title.toLowerCase().includes(brand)
+        ? seo.title
+        : `${seo.title} | ${site}`;
     const description = seo.description || this.i18n.t('meta.description');
     const image = seo.image || settings.shareImage;
     const canonical = origin ? localizedUrl(origin, path, locale) : '';

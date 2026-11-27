@@ -60,6 +60,7 @@ const tour = (locale: 'en' | 'es', slug: string, order: number, featured = false
       mp4: { url: '/uploads/v.mp4' },
       mp4Url: null,
     },
+    { poster: null, posterUrl: 'https://img/no-file.jpg', webm: null, webmUrl: null, mp4: null, mp4Url: null },
   ],
   included: [{ text: 'Guide' }],
   excluded: [],
@@ -256,6 +257,14 @@ describe('mapCms', () => {
       ]);
       expect(messages.en?.['cms.tours.a-tour.body.2']).toBe('Three');
       expect(messages.es?.['cms.tours.a-tour.body.1']).toBe('Dos');
+    });
+
+    it('drops Lorem ipsum paragraphs left in the CMS text', () => {
+      const filler = 'Lorem ipsum dolor sit amet.\n\nSuspendisse potenti. Curabitur at lectus.';
+      const { page, messages } = pageWith(`Real lead\n\n${filler}`, `Entrada real\n\n${filler}`);
+      expect(page?.descriptionKeys).toEqual([]);
+      expect(page?.expandedDescriptionKeys).toEqual(['cms.tours.a-tour.body.0']);
+      expect(messages.es?.['cms.tours.a-tour.body.0']).toBe('Entrada real');
     });
 
     it('works with a single language', () => {
