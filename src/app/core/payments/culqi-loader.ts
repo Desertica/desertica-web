@@ -20,7 +20,11 @@ export type CulqiCheckout = {
 export type Culqi3DS = {
   publicKey: string;
   options: Record<string, unknown>;
-  settings: { charge: { totalAmount: number; returnUrl: string }; card: { email: string } };
+  /** `currency` is `PEN` (Culqi's default) or `USD`; `totalAmount` in minor units. */
+  settings: {
+    charge: { totalAmount: number; returnUrl: string; currency: 'PEN' | 'USD' };
+    card: { email: string };
+  };
   generateDevice(): Promise<string | undefined>;
   initAuthentication(tokenId: string): void;
   reset(): void;

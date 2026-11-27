@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import { cspReportOnly } from './security-headers';
+import { contentSecurityPolicy } from './security-headers';
 
-describe('cspReportOnly', () => {
+describe('contentSecurityPolicy', () => {
   const theme = '(function () { document.documentElement.dataset.intro = "done"; })();';
   const html = `<html><head>
     <script>${theme}</script>
@@ -11,29 +11,48 @@ describe('cspReportOnly', () => {
     <script src="main.js" type="module"></script>
   </head></html>`;
   const hash = (script: string) => `'sha256-${createHash('sha256').update(script).digest('base64')}'`;
+  const directive = (policy: string, name: string) =>
+    policy.split('; ').find((part) => part.startsWith(`${name} `)) ?? '';
 
-  it('allows exactly the inline executable scripts by hash', () => {
-    const policy = cspReportOnly(html, []);
-    expect(policy).toContain(hash(theme));
-    expect(policy).toContain(hash('(()=>{})();'));
-    expect(policy.match(/'sha256-/g)).toHaveLength(2);
+  it('allows exactly the inline executable scripts by hash, plus the stylesheet onload handler', () => {
+    const { enforce } = contentSecurityPolicy(html, []);
+    expect(enforce).toContain(hash(theme));
+    expect(enforce).toContain(hash('(()=>{})();'));
+    expect(directive(enforce, 'script-src')).toContain(`'unsafe-hashes' ${hash("this.media='all'")}`);
+    expect(enforce.match(/'sha256-/g)).toHaveLength(3);
   });
 
-  it('allows the third-party hosts the site loads and nothing in script-src beyond them', () => {
-    const policy = cspReportOnly(html, ['https://cms.desertica.pe']);
-    const directive = (name: string) => policy.split('; ').find((part) => part.startsWith(`${name} `)) ?? '';
-    expect(directive('script-src')).toContain('https://www.googletagmanager.com');
-    expect(directive('script-src')).toContain('https://challenges.cloudflare.com');
-    expect(directive('script-src')).toContain('https://js.stripe.com');
-    expect(directive('script-src')).toContain('https://*.culqi.com');
-    expect(directive('script-src')).not.toContain("'unsafe-inline'");
-    expect(directive('frame-src')).toContain('https://js.stripe.com');
-    expect(directive('frame-src')).toContain('https://challenges.cloudflare.com');
-    expect(directive('img-src')).toContain('https://cms.desertica.pe');
-    expect(directive('img-src')).toContain('https://images.unsplash.com');
-    expect(directive('img-src')).toContain('https://flagcdn.com');
-    expect(directive('img-src')).toContain('data:');
-    expect(directive('connect-src')).toContain('https://api.stripe.com');
-    expect(directive('frame-ancestors')).toBe("frame-ancestors 'none'");
+  it('enforces an exact host list for scripts, with no inline or eval escape hatch', () => {
+    const { enforce } = contentSecurityPolicy(html, ['https://cms.desertica.pe']);
+    const scripts = directive(enforce, 'script-src');
+    for (const host of [
+      'https://*.googletagmanager.com',
+      'https://connect.facebook.net',
+      'https://challenges.cloudflare.com',
+      'https://js.stripe.com',
+      'https://*.culqi.com',
+    ]) {
+      expect(scripts).toContain(host);
+    }
+    expect(scripts).not.toMatch(/'unsafe-inline'|'unsafe-eval'|https: |https:$/);
+    expect(directive(enforce, 'object-src')).toBe("object-src 'none'");
+    expect(directive(enforce, 'frame-ancestors')).toBe("frame-ancestors 'none'");
+    expect(directive(enforce, 'media-src')).toBe(
+      "media-src 'self' https://images.unsplash.com https://flagcdn.com https://cms.desertica.pe",
+    );
+  });
+
+  it('opens only the directives Culqi 3DS needs to any https host, and reports the exact list', () => {
+    const { enforce, reportOnly } = contentSecurityPolicy(html, ['https://cms.desertica.pe']);
+    for (const name of ['img-src', 'connect-src', 'frame-src', 'form-action']) {
+      expect(directive(enforce, name).endsWith(' https:')).toBe(true);
+      expect(directive(reportOnly, name)).not.toContain('https: ');
+      expect(directive(reportOnly, name).endsWith(' https:')).toBe(false);
+    }
+    expect(directive(reportOnly, 'img-src')).toContain('https://cms.desertica.pe');
+    expect(directive(reportOnly, 'connect-src')).toContain('https://api.stripe.com');
+    expect(directive(reportOnly, 'frame-src')).toContain('https://hooks.stripe.com');
+    expect(directive(reportOnly, 'form-action')).toContain('https://*.cardinalcommerce.com');
+    expect(directive(reportOnly, 'script-src')).toBe(directive(enforce, 'script-src'));
   });
 });

@@ -54,7 +54,7 @@ function fakeCulqi() {
   const threeDS: CulqiGlobals['threeDS'] = {
     publicKey: '',
     options: {},
-    settings: { charge: { totalAmount: 0, returnUrl: '' }, card: { email: '' } },
+    settings: { charge: { totalAmount: 0, returnUrl: '', currency: 'PEN' }, card: { email: '' } },
     generateDevice: vi.fn(async () => 'device-1'),
     initAuthentication: vi.fn(),
     reset: vi.fn(),
@@ -344,7 +344,7 @@ describe('PaymentStep', () => {
 
       const charge = mock.calls.find((call) => call.path.endsWith('/culqi-charge'));
       expect(charge?.path).toBe('/public/bookings/DES-2026-0001/payments/culqi-charge');
-      expect(charge?.body).toEqual({ kind: 'DEPOSIT', token: 'tkn_test_1', email: 'ana@example.com' });
+      expect(charge?.body).toEqual({ kind: 'DEPOSIT', token: 'tkn_test_1', email: 'ana@example.com', deviceId: 'device-1' });
       expect(charge?.headers.get('x-booking-token')).toBe('access-1');
       expect(culqi.checkout.close).toHaveBeenCalled();
       expect(outcomes[0]).toMatchObject({ status: 'confirmed' });
@@ -370,7 +370,7 @@ describe('PaymentStep', () => {
 
       expect(culqi.threeDS.initAuthentication).toHaveBeenCalledWith('tkn_test_1');
       expect(culqi.threeDS.settings).toEqual({
-        charge: { totalAmount: 15800, returnUrl: `${location.origin}/payment/3ds` },
+        charge: { totalAmount: 15800, returnUrl: `${location.origin}/payment/3ds`, currency: 'USD' },
         card: { email: 'ana@example.com' },
       });
       // A message from another origin is ignored.
@@ -387,12 +387,27 @@ describe('PaymentStep', () => {
         kind: 'FULL',
         token: 'tkn_test_1',
         email: 'ana@example.com',
+        paymentId: '6f9619ff-8b86-4011-b42d-00c04fc964ff',
         deviceId: 'device-1',
         authentication3DS: { eci: '05' },
       });
       expect(calls[1]?.headers.get('idempotency-key')).not.toBe(calls[0]?.headers.get('idempotency-key'));
       expect(culqi.threeDS.reset).toHaveBeenCalled();
       expect(outcomes[0]?.status).toBe('confirmed');
+    });
+
+    it('tells Culqi 3DS the booking currency (soles)', async () => {
+      await setup();
+      mock = mockApi({
+        'POST /public/bookings/*/payments/culqi-charge': () =>
+          chargeBody('REQUIRES_ACTION', { action: { type: 'THREE_DS', parameters: {} } }),
+      });
+      const { click } = await mount({ currency: 'PEN' });
+      await click('#payment-continue');
+      culqi.emitToken();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      expect(culqi.threeDS.settings.charge).toMatchObject({ totalAmount: 15800, currency: 'PEN' });
     });
 
     it('reports a failed charge with the gateway message and does not poll', async () => {
@@ -474,7 +489,7 @@ describe('PaymentStep', () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
 
       expect(mock.calls[0]?.path).toBe('/public/payment-links/link-token-1/culqi-charge');
-      expect(mock.calls[0]?.body).toEqual({ token: 'tkn_test_1', email: 'ana@example.com' });
+      expect(mock.calls[0]?.body).toEqual({ token: 'tkn_test_1', email: 'ana@example.com', deviceId: 'device-1' });
     });
   });
 });

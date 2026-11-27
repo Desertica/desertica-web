@@ -81,9 +81,32 @@ export function apiUrlFromEnv(env: Record<string, string | undefined>): string |
   return url || null;
 }
 
-/** Production must know its own origin: without `SITE_URL` canonical, sitemap and robots would be built from the request `Host`, which any client can set. */
+/**
+ * Fails the start in production when a setting is missing that would otherwise fail silently: without `SITE_URL`
+ * canonical, sitemap and robots would be built from the request `Host`, which any client can set; without `TRUST_PROXY`
+ * every visitor behind the proxy shares one IP and the rate limits hit everyone; without `STRAPI_PUBLIC_URL` the
+ * internal CMS address reaches the browser; a short `FORMS_PROXY_SECRET` makes preview links guessable.
+ */
 export function assertProductionConfig(env: Record<string, string | undefined>): void {
-  if (env['NODE_ENV'] === 'production' && !publicConfigFromEnv(env).siteUrl) {
+  if (env['NODE_ENV'] !== 'production') {
+    return;
+  }
+
+  if (!publicConfigFromEnv(env).siteUrl) {
     throw new Error('SITE_URL is required in production (for example https://desertica.pe).');
+  }
+
+  // "0" is an explicit "nothing in front" (local compose); "true" would let a client pick its own IP.
+  if (!/^\d+$/.test(env['TRUST_PROXY'] ?? '')) {
+    throw new Error('TRUST_PROXY must be the number of proxies in production: 1 behind Traefik, 2 with Cloudflare in front.');
+  }
+
+  if (env['STRAPI_URL']?.trim() && !env['STRAPI_PUBLIC_URL']?.trim()) {
+    throw new Error('STRAPI_PUBLIC_URL is required in production when STRAPI_URL is set (STRAPI_URL is the internal address).');
+  }
+
+  const secret = env['FORMS_PROXY_SECRET']?.trim();
+  if (secret && secret.length < 32) {
+    throw new Error('FORMS_PROXY_SECRET must be at least 32 characters (it signs the draft preview links).');
   }
 }

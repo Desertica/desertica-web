@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { DEFAULT_PUBLIC_CONFIG, PUBLIC_CONFIG } from '../config/public-config';
 import { AnalyticsService, asCurrency, centsToMajor } from './analytics';
 import { isCredentialUrl } from './gtm';
-import { ConsentService } from './consent';
+import { CONSENT_POLICY_VERSION, CONSENT_STORAGE_KEY, ConsentService } from './consent';
 import type { DataLayerWindow } from './data-layer';
 
 const layer = (): unknown[] => (window as DataLayerWindow).dataLayer ?? [];
@@ -13,6 +13,7 @@ const gtmScripts = (): HTMLScriptElement[] =>
 describe('AnalyticsService', () => {
   beforeEach(() => {
     delete (window as DataLayerWindow).dataLayer;
+    localStorage.clear();
     for (const script of gtmScripts()) {
       script.remove();
     }
@@ -24,24 +25,61 @@ describe('AnalyticsService', () => {
     expect(gtmScripts()).toHaveLength(0);
   });
 
-  it('loads GTM only after the denied consent default is in the data layer', () => {
+  it('fetches nothing from Google until the visitor accepts, then loads GTM without a reload', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, gtmId: 'GTM-TEST1' } }],
     });
     TestBed.inject(AnalyticsService).start();
+    TestBed.tick();
+    expect(gtmScripts()).toHaveLength(0);
 
-    const first = Array.from(layer()[0] as ArrayLike<unknown>);
-    expect(first.slice(0, 2)).toEqual(['consent', 'default']);
-    expect(layer()[1]).toMatchObject({ event: 'gtm.js' });
+    TestBed.inject(ConsentService).save({ analytics: true, marketing: false });
+    TestBed.tick();
+
+    const commands = layer().map((entry) => Array.from(entry as ArrayLike<unknown>).slice(0, 2));
+    expect(commands[0]).toEqual(['consent', 'default']);
+    expect(commands[1]).toEqual(['consent', 'update']);
+    expect(layer()[2]).toMatchObject({ event: 'gtm.js' });
     expect(gtmScripts().map((script) => script.src)).toEqual([
       'https://www.googletagmanager.com/gtm.js?id=GTM-TEST1',
     ]);
+  });
+
+  it('keeps GTM off when the visitor rejects, and loads it for marketing alone', () => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, gtmId: 'GTM-TEST1' } }],
+    });
+    TestBed.inject(AnalyticsService).start();
+    const consent = TestBed.inject(ConsentService);
+
+    consent.rejectAll();
+    TestBed.tick();
+    expect(gtmScripts()).toHaveLength(0);
+
+    consent.save({ analytics: false, marketing: true });
+    TestBed.tick();
+    expect(gtmScripts()).toHaveLength(1);
+  });
+
+  it('loads GTM on start when an earlier visit already accepted', () => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: PUBLIC_CONFIG, useValue: { ...DEFAULT_PUBLIC_CONFIG, gtmId: 'GTM-TEST1' } }],
+    });
+    localStorage.setItem(
+      CONSENT_STORAGE_KEY,
+      JSON.stringify({ analytics: true, marketing: true, version: CONSENT_POLICY_VERSION, decidedAt: '2026-01-01' }),
+    );
+    TestBed.inject(AnalyticsService).start();
+    TestBed.tick();
+
+    expect(gtmScripts()).toHaveLength(1);
   });
 
   it('keeps the container off pages whose URL carries a credential from an e-mailed link', () => {
     expect(isCredentialUrl({ pathname: '/pay/abc', search: '' })).toBe(true);
     expect(isCredentialUrl({ pathname: '/waiver/abc', search: '' })).toBe(true);
     expect(isCredentialUrl({ pathname: '/booking/DES-1', search: '?token=abc' })).toBe(true);
+    expect(isCredentialUrl({ pathname: '/es/tours/dune-buggy', search: '?preview=1.abc' })).toBe(true);
     expect(isCredentialUrl({ pathname: '/booking/DES-1', search: '' })).toBe(false);
     expect(isCredentialUrl({ pathname: '/tours/dune-buggy', search: '?lang=es' })).toBe(false);
 
@@ -51,6 +89,8 @@ describe('AnalyticsService', () => {
     window.history.pushState({}, '', '/booking/DES-1?token=abc');
     try {
       TestBed.inject(AnalyticsService).start();
+      TestBed.inject(ConsentService).acceptAll();
+      TestBed.tick();
       expect(gtmScripts()).toHaveLength(0);
     } finally {
       window.history.pushState({}, '', '/');

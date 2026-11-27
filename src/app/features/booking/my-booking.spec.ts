@@ -73,7 +73,8 @@ describe('MyBooking', () => {
     expect(root.textContent).toContain('Pending');
     expect(root.textContent).toContain('48 hours before the tour: 100% refund');
     expect(root.textContent).toContain('Ana Perez · Pending signature');
-    expect(root.querySelector('a[href="/waiver/w1"]')).not.toBeNull();
+    // A plain link (full page load), so GTM never sees the waiver token in a router navigation.
+    expect(root.querySelector('a[href="/en/waiver/w1"]')).not.toBeNull();
     expect(root.querySelector('#booking-format')?.textContent).toContain('Shared tour');
     expect(root.textContent).toContain('Ana Quispe');
     expect(root.querySelector('a[href="https://files.example/b.pdf"]')?.textContent).toBe('B001-00000012');
