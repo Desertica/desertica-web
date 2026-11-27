@@ -19,7 +19,7 @@ import { createPageCache, pageCacheKey } from './page-cache';
 import { clientKey, createRateLimiter } from './rate-limit';
 import { legacyRedirects, seoRouter } from './seo-routes';
 import { stripLocale } from './app/core/i18n/catalogs';
-import { cspReportOnly } from './security-headers';
+import { contentSecurityPolicy } from './security-headers';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 /** Angular's `outputHashing: all` names bundles `main-ABCD1234.js`. */
@@ -45,20 +45,23 @@ const assetOrigins = [
   ...publicConfig.imageHosts.map((host) => `https://${host}`),
 ];
 const isHtml = (type: string | null | undefined) => !!type?.includes('text/html');
-const reportCsp = (res: express.Response, html: Buffer | string) =>
-  res.setHeader('Content-Security-Policy-Report-Only', cspReportOnly(String(html), assetOrigins));
+const setCsp = (res: express.Response, html: Buffer | string) => {
+  const policy = contentSecurityPolicy(String(html), assetOrigins);
+  res.setHeader('Content-Security-Policy', policy.enforce);
+  res.setHeader('Content-Security-Policy-Report-Only', policy.reportOnly);
+};
 
 /** Legacy `/experiences/:slug` URLs live on as permanent redirects to the tour page. */
 app.disable('x-powered-by');
 app.use(healthz());
 // HTML, JS, CSS and JSON go out compressed (images are already compressed and skipped); Traefik does not do it for us.
 app.use(compression());
-// Framing is blocked outright (clickjacking on /checkout and /pay). The full policy is report-only for now and is added
-// to each rendered page below, because it carries the hashes of that page's inline scripts.
+// Framing is blocked outright (clickjacking on /checkout and /pay). Rendered pages replace this with the full policy
+// below, because it carries the hashes of that page's inline scripts.
 app.use((_req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
-    'Strict-Transport-Security': 'max-age=31536000',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
     'Content-Security-Policy': "frame-ancestors 'none'",
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
   });
@@ -160,7 +163,7 @@ app.use((req, res, next) => {
   const hit = key ? pageCache.get(key) : undefined;
   if (hit) {
     if (isHtml(hit.type)) {
-      reportCsp(res, hit.body);
+      setCsp(res, hit.body);
     }
 
     res.type(hit.type).send(hit.body);
@@ -179,7 +182,7 @@ app.use((req, res, next) => {
         const page = { type: response.headers.get('content-type') ?? 'text/html', body: Buffer.from(await response.arrayBuffer()) };
         pageCache.set(key, page);
         if (isHtml(page.type)) {
-          reportCsp(res, page.body);
+          setCsp(res, page.body);
         }
 
         res.type(page.type).send(page.body);
@@ -187,7 +190,7 @@ app.use((req, res, next) => {
       }
 
       if (isHtml(response.headers.get('content-type'))) {
-        reportCsp(res, await response.clone().text());
+        setCsp(res, await response.clone().text());
       }
 
       await writeResponseToNodeResponse(response, res);
@@ -203,11 +206,6 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = process.env['PORT'] || 4000;
   if (process.env['NODE_ENV'] === 'production') {
     assertProductionConfig(process.env);
-    if (process.env['TRUST_PROXY'] === 'true') {
-      console.warn('TRUST_PROXY=true trusts the whole X-Forwarded-For header; use the number of proxies (1 behind Traefik).');
-    } else if (!/^[1-9]\d*$/.test(process.env['TRUST_PROXY'] ?? '')) {
-      console.warn('TRUST_PROXY is not set: behind a proxy every visitor shares one IP, so the rate limits hit everyone. Use 1 behind Traefik.');
-    }
   }
 
   app.listen(port, (error) => {

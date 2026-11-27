@@ -6,20 +6,22 @@ import { dataLayerOf } from './data-layer';
 
 /**
  * Pages reached from an e-mailed link carry a credential in the URL (`/pay/:token`,
- * `/waiver/:token`, `?token=`). GA4 and Meta record the page URL, so the container does not load
- * on a visit that starts on one of them; the next full page load is a normal visit.
+ * `/waiver/:token`, `?token=`, the CMS draft `?preview=`). GA4 and Meta record the page URL, so the
+ * container does not load on a visit that starts on one of them; the next full page load is a normal
+ * visit. Links inside the site to such pages must be full page loads, never router links.
  */
 export function isCredentialUrl(location: Pick<Location, 'pathname' | 'search'>): boolean {
   return (
     /^\/(pay|waiver)\//.test(stripLocale(location.pathname)) ||
-    new URLSearchParams(location.search).has('token')
+    ['token', 'preview'].some((name) => new URLSearchParams(location.search).has(name))
   );
 }
 
 /**
- * Loads the Google Tag Manager container. Browser only: `init()` is called after the first render
- * and after the denied Consent Mode default is already in the data layer, so the container starts
- * with every tag blocked until the visitor decides.
+ * Loads the Google Tag Manager container. Browser only, and only once the visitor has accepted
+ * analytics or marketing (see `AnalyticsService.start`): nothing from Google is fetched before that.
+ * The denied Consent Mode default and the visitor's update are already in the data layer, so GTM
+ * starts with exactly the categories the visitor allowed.
  */
 @Injectable({ providedIn: 'root' })
 export class GtmLoader {
