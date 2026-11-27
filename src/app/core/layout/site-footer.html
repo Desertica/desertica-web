@@ -121,14 +121,14 @@
           }}</a>
         }
         @if (contact().tel) {
-          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel">{{
-            contact().phone
-          }}</a>
+          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel"
+            >{{ 'footer.bookings' | translate: i18n.locale() }}: {{ contact().phone }}</a
+          >
         }
         @if (contact().tel2) {
-          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel2">{{
-            contact().phone2
-          }}</a>
+          <a class="text-muted-foreground hover:text-foreground py-0.5" [href]="contact().tel2"
+            >{{ 'footer.support' | translate: i18n.locale() }}: {{ contact().phone2 }}</a
+          >
         }
       </div>
 

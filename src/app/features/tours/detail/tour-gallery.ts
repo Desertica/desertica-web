@@ -67,7 +67,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
           />
           <button
             type="button"
-            class="absolute -top-12 right-0 rounded-full bg-white/15 p-2 text-white"
+            class="absolute -top-12 right-0 inline-flex size-10 items-center justify-center rounded-full bg-white/15 text-white"
             [attr.aria-label]="'tour.galleryClose' | translate: i18n.locale()"
             (click)="viewer.close()"
           >
@@ -76,7 +76,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
           @if (photos().length > 1) {
             <button
               type="button"
-              class="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white"
+              class="absolute top-1/2 left-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
               [attr.aria-label]="'tour.galleryPrev' | translate: i18n.locale()"
               (click)="step(-1)"
             >
@@ -84,7 +84,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
             </button>
             <button
               type="button"
-              class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white"
+              class="absolute top-1/2 right-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
               [attr.aria-label]="'tour.galleryNext' | translate: i18n.locale()"
               (click)="step(1)"
             >
