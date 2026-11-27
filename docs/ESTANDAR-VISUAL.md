@@ -20,6 +20,7 @@ Los colores viven como variables en `src/styles.css` (`:root` para claro, `.dark
 | `border`, `input`, `ring` | Bordes, fondo de campos, foco | `border-border`, `bg-input/50`, `ring-ring/30` |
 | `tierra` (+ `-foreground`) | Acento terracota: ver §1 bis | `text-tierra`, `bg-tierra text-tierra-foreground`, `eyebrow` |
 | `arena` (+ `-foreground`) | Acento de marca | `bg-arena text-arena-foreground` |
+| `brand` (+ `-foreground`) | Solo el logo (`app-brand-mark`) | `bg-brand text-brand-foreground` |
 
 Reglas:
 
@@ -27,6 +28,7 @@ Reglas:
 - Cada fondo va con su pareja de texto: `bg-primary` con `text-primary-foreground`, `bg-card` con `text-card-foreground`, etc.
 - Se permite opacidad sobre un token (`hover:bg-primary/80`, `bg-input/50`, `ring-ring/30`), no inventar tonos nuevos.
 - ¿Hace falta un color nuevo? Se añade como token en `:root` **y** en `.dark` de `src/styles.css`, con su campo en el tema del CMS (ver `CLAUDE.md`, "Everything editable belongs in Strapi").
+- El logo es siempre el colibrí blanco sobre el recuadro verde oliva `#5a6b3e` (`app-brand-mark`, como `public/brand/mark-on-olive.svg`); no se recolorea. Por eso `brand` es igual en claro y oscuro y no se edita desde el tema del CMS.
 - Excepciones conocidas, y ninguna más: el verde de marca de WhatsApp en `core/layout/whatsapp-fab.ts`; el texto blanco y el degradado oscuro **sobre fotos** (ver §9), que deben salir de una sola clase compartida y no copiarse en cada CSS.
 
 ## 1 bis. Color de acento (terracota)
