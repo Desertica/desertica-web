@@ -12,7 +12,8 @@ import { tourItem } from '../../../core/analytics/items';
 import { PUBLIC_CONFIG } from '../../../core/config/public-config';
 import { CatalogService } from '../../../core/catalog/catalog';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideDownload, lucideMessageCircle } from '@ng-icons/lucide';
+import { lucideDownload } from '@ng-icons/lucide';
+import { simpleWhatsapp } from '../../../core/layout/footer-social-icons';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { PublicData, meetingMapUrl } from '../../../core/api/public-data';
 import { tourHasDetails } from '../../../core/catalog/tour-pages';
@@ -58,12 +59,13 @@ import { buildAskWhatsappHref } from './tour-whatsapp';
     NotFound,
   ],
   templateUrl: './tour-detail.html',
-  providers: [provideIcons({ lucideDownload, lucideMessageCircle })],
+  providers: [provideIcons({ lucideDownload })],
 })
 export class TourDetail {
   private readonly seo = inject(SeoService);
   private readonly analytics = inject(AnalyticsService);
   private viewed: string | null = null;
+  protected readonly whatsappIcon = simpleWhatsapp;
 
   readonly id = input.required<string>();
   protected readonly i18n = inject(I18nService);

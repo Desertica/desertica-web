@@ -273,6 +273,7 @@ Antes, en oscuro: `primary` 3,35:1 y `tierra` 3,58:1 (texto claro sobre color me
 | Selector de cantidad | `features/tours/detail/tour-book.ts` |
 | Teléfono con país | `features/contact/phone-country.ts` (selector, dentro del `hlm-input-group-addon` del número) y `features/contact/phone.ts` (validación y formato) |
 | Iconos | `ng-icon` de `@ng-icons/lucide`, a `size-4` dentro de botones (lo pone `hlmBtn`) |
+| Enlaces a WhatsApp | El logo de WhatsApp en monocromo (`simpleWhatsapp` de `core/layout/footer-social-icons.ts`, `currentColor`, `aria-hidden="true"`), nunca un bocadillo genérico. El verde de marca solo en el botón flotante (`whatsapp-fab.ts`) |
 
 Un patrón nuevo se construye con `libs/ui` y, si se repite, se convierte en componente en `core/layout`.
 

@@ -60,7 +60,7 @@
             rel="noopener noreferrer"
             (click)="trackAsk()"
           >
-            <ng-icon name="lucideMessageCircle" />
+            <ng-icon [svg]="whatsappIcon" aria-hidden="true" />
             {{ 'tour.askWhatsapp' | translate: i18n.locale() }}
             <span class="sr-only">{{ 'a11y.newTab' | translate: i18n.locale() }}</span>
           </a>
