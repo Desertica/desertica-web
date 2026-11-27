@@ -1,50 +1,55 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { HlmButton } from '@spartan-ng/helm/button';
-import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import type { Currency } from '../api/booking-api';
 import { CURRENCIES, CurrencyService } from '../currency/currency';
 import { I18nService } from '../i18n/i18n';
 import { TranslatePipe } from '../i18n/translate-pipe';
 
-/** Same shape as the language switcher: the symbol of the chosen currency and its code, with a menu of the two. */
+/** Same shape as the language selector: S/ | $, with the code on very wide screens (the header row has no room for it below 2xl). */
 @Component({
   selector: 'app-currency-switcher',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, HlmDropdownMenuImports, NgTemplateOutlet, TranslatePipe],
+  imports: [HlmToggleGroupImports, TranslatePipe],
+  host: { class: 'contents' },
   template: `
-    <button
-      hlmBtn
-      type="button"
-      variant="ghost"
-      class="shrink-0 gap-1.5 px-2.5 font-medium tracking-wide uppercase lg:px-1.5 xl:px-2.5"
-      [hlmDropdownMenuTrigger]="currencyMenu"
+    <hlm-toggle-group
+      class="shrink-0"
+      type="single"
+      variant="outline"
+      [size]="size()"
+      [nullable]="false"
+      [value]="currency.currency()"
+      (valueChange)="choose($event)"
       [attr.aria-label]="'a11y.chooseCurrency' | translate: i18n.locale()"
     >
-      <ng-container [ngTemplateOutlet]="symbol" [ngTemplateOutletContext]="{ $implicit: currency.currency() }" />
-      <span class="hidden xl:inline">{{ currency.currency() }}</span>
-    </button>
-    <ng-template #currencyMenu>
-      <div hlmDropdownMenu>
-        @for (code of codes; track code) {
-          <button type="button" hlmDropdownMenuItem (triggered)="choose(code)">
-            <ng-container [ngTemplateOutlet]="symbol" [ngTemplateOutletContext]="{ $implicit: code }" />
-            {{ 'currencies.' + code | translate: i18n.locale() }}
-          </button>
-        }
-      </div>
-    </ng-template>
-    <ng-template #symbol let-code>
-      <span class="inline-flex items-center justify-center font-semibold" aria-hidden="true">{{ code === 'USD' ? '$' : 'S/' }}</span>
-    </ng-template>
+      @for (code of codes; track code) {
+        <button
+          hlmToggleGroupItem
+          type="button"
+          [value]="code"
+          class="font-semibold tracking-wide aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary/90 aria-pressed:hover:text-primary-foreground data-[state=on]:bg-primary lg:max-xl:h-7 lg:max-xl:min-w-7 lg:max-xl:text-xs lg:max-xl:tracking-normal lg:max-xl:group-data-[spacing=0]/toggle-group:px-1 gap-1.5"
+          [aria-label]="'currencies.' + code | translate: i18n.locale()"
+        >
+          <span aria-hidden="true">{{ code === 'USD' ? '$' : 'S/' }}</span>
+          <span
+            [class]="size() === 'lg' ? 'font-medium' : 'hidden font-medium 2xl:inline'"
+            aria-hidden="true"
+            >{{ code }}</span
+          >
+        </button>
+      }
+    </hlm-toggle-group>
   `,
 })
 export class CurrencySwitcher {
   protected readonly i18n = inject(I18nService);
   protected readonly currency = inject(CurrencyService);
-  protected readonly codes = CURRENCIES;
+  // Soles first, as the site is Peruvian.
+  protected readonly codes = [...CURRENCIES].reverse();
+  /** `sm` in the header row, `lg` in the mobile menu. */
+  readonly size = input<'sm' | 'lg'>('sm');
 
-  protected choose(code: Currency): void {
-    this.currency.set(code);
+  protected choose(code: Currency | Currency[] | null | undefined): void {
+    if (typeof code === 'string' && code !== this.currency.currency()) this.currency.set(code);
   }
 }
