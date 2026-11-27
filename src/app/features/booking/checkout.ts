@@ -45,6 +45,7 @@ import type { CountryCode } from 'libphonenumber-js/min';
 import { applyPhoneInput, DEFAULT_PHONE_COUNTRY, isValidWhatsapp, type PhoneCountry, phoneCountries, toE164 } from '../contact/phone';
 import { PhoneCountryPicker } from '../contact/phone-country';
 import { type IdDocType, billingDocTypes, isValidIdDocument } from '../../core/forms/id-document';
+import { RequiredNote } from '../../core/forms/required-note';
 import { Turnstile } from '../../core/forms/turnstile';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -107,6 +108,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
     HlmRadioGroupImports,
     HlmSelectImports,
     PhoneCountryPicker,
+    RequiredNote,
     Turnstile,
   ],
   template: `
@@ -155,26 +157,27 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
           </div>
         } @else {
           <form class="flex flex-col gap-8" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <app-required-note />
             <fieldset hlmFieldSet [formGroup]="form.controls.customer">
               <legend hlmFieldLegend>{{ 'checkout.customer' | translate: i18n.locale() }}</legend>
               <div class="grid gap-4 sm:grid-cols-2">
                 <div hlmField>
-                  <label hlmFieldLabel for="c-first">{{ 'checkout.firstName' | translate: i18n.locale() }}</label>
-                  <input hlmInput id="c-first" formControlName="firstName" autocomplete="given-name" maxlength="80" />
+                  <label hlmFieldLabel for="c-first">{{ 'checkout.firstName' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                  <input hlmInput id="c-first" required formControlName="firstName" autocomplete="given-name" maxlength="80" />
                   @if (invalid(form.controls.customer.controls.firstName)) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="c-last">{{ 'checkout.lastName' | translate: i18n.locale() }}</label>
-                  <input hlmInput id="c-last" formControlName="lastName" autocomplete="family-name" maxlength="80" />
+                  <label hlmFieldLabel for="c-last">{{ 'checkout.lastName' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                  <input hlmInput id="c-last" required formControlName="lastName" autocomplete="family-name" maxlength="80" />
                   @if (invalid(form.controls.customer.controls.lastName)) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="c-email">{{ 'checkout.email' | translate: i18n.locale() }}</label>
-                  <input hlmInput id="c-email" type="email" formControlName="email" autocomplete="email" maxlength="254" />
+                  <label hlmFieldLabel for="c-email">{{ 'checkout.email' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                  <input hlmInput id="c-email" required type="email" formControlName="email" autocomplete="email" maxlength="254" />
                   @if (invalid(form.controls.customer.controls.email)) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorEmail' | translate: i18n.locale() }}</hlm-field-error>
                   }
@@ -202,7 +205,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
                   }
                 </div>
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="c-country">{{ 'checkout.country' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="c-country">{{ 'checkout.country' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <hlm-combobox [value]="customerCountry()" [itemToString]="countryLabel" [isItemEqualToValue]="sameCountry" (valueChange)="onCountry($event)">
                     <hlm-combobox-input inputId="c-country" [triggerAriaLabel]="'checkout.country' | translate: i18n.locale()" />
                     <hlm-combobox-content *hlmComboboxPortal>
@@ -224,15 +227,15 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               @for (passenger of form.controls.passengers.controls; track $index) {
                 <div class="grid gap-4 sm:grid-cols-2" [formGroup]="passenger">
                   <div hlmField>
-                    <label hlmFieldLabel [for]="'p-first-' + $index">{{ 'checkout.passenger' | translate: i18n.locale() }} {{ $index + 1 }} · {{ 'checkout.firstName' | translate: i18n.locale() }}</label>
-                    <input hlmInput [id]="'p-first-' + $index" formControlName="firstName" maxlength="80" />
+                    <label hlmFieldLabel [for]="'p-first-' + $index">{{ 'checkout.passenger' | translate: i18n.locale() }} {{ $index + 1 }} · {{ 'checkout.firstName' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                    <input hlmInput [id]="'p-first-' + $index" required formControlName="firstName" maxlength="80" />
                     @if (invalid(passenger.controls.firstName)) {
                       <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                     }
                   </div>
                   <div hlmField>
-                    <label hlmFieldLabel [for]="'p-last-' + $index">{{ 'checkout.passenger' | translate: i18n.locale() }} {{ $index + 1 }} · {{ 'checkout.lastName' | translate: i18n.locale() }}</label>
-                    <input hlmInput [id]="'p-last-' + $index" formControlName="lastName" maxlength="80" />
+                    <label hlmFieldLabel [for]="'p-last-' + $index">{{ 'checkout.passenger' | translate: i18n.locale() }} {{ $index + 1 }} · {{ 'checkout.lastName' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                    <input hlmInput [id]="'p-last-' + $index" required formControlName="lastName" maxlength="80" />
                     @if (invalid(passenger.controls.lastName)) {
                       <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                     }
@@ -256,7 +259,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               </hlm-radio-group>
               <div class="grid gap-4 sm:grid-cols-2">
                 <div hlmField>
-                  <label hlmFieldLabel for="b-type">{{ 'checkout.docType' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="b-type">{{ 'checkout.docType' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <hlm-select formControlName="idDocType" [itemToString]="docLabel">
                     <hlm-select-trigger buttonId="b-type" class="w-full">
                       <hlm-select-value />
@@ -269,22 +272,22 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
                   </hlm-select>
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="b-number">{{ 'checkout.docNumber' | translate: i18n.locale() }}</label>
-                  <input hlmInput id="b-number" formControlName="idDocNumber" maxlength="12" autocomplete="off" />
+                  <label hlmFieldLabel for="b-number">{{ 'checkout.docNumber' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                  <input hlmInput id="b-number" required formControlName="idDocNumber" maxlength="12" autocomplete="off" />
                   @if (submitted() && form.controls.billing.hasError('document')) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorDocument' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="b-name">{{ 'checkout.billingName' | translate: i18n.locale() }}</label>
-                  <input hlmInput id="b-name" formControlName="name" maxlength="200" />
+                  <label hlmFieldLabel for="b-name">{{ 'checkout.billingName' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                  <input hlmInput id="b-name" required formControlName="name" maxlength="200" />
                   @if (invalid(form.controls.billing.controls.name)) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="b-address">{{ (form.controls.billing.controls.docType.value === 'FACTURA' ? 'checkout.address' : 'checkout.addressOptional') | translate: i18n.locale() }}</label>
-                  <input hlmInput id="b-address" formControlName="address" maxlength="200" autocomplete="street-address" />
+                  <label hlmFieldLabel for="b-address">{{ 'checkout.address' | translate: i18n.locale() }}@if (factura()) { <span class="text-tierra" aria-hidden="true">*</span>}</label>
+                  <input hlmInput id="b-address" [required]="factura()" formControlName="address" maxlength="200" autocomplete="street-address" />
                   @if (submitted() && form.controls.billing.hasError('address')) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                   }
@@ -326,12 +329,12 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               @for (kind of legalKinds; track kind) {
                 @let sentence = acceptSentence(kind);
                 <label class="flex items-start gap-3 text-sm" [for]="'accept-' + kind">
-                  <hlm-checkbox class="mt-0.5" [inputId]="'accept-' + kind" [formControl]="form.controls.accept.controls[kind]" />
+                  <hlm-checkbox class="mt-0.5" required [inputId]="'accept-' + kind" [formControl]="form.controls.accept.controls[kind]" />
                   <span>
                     {{ sentence.before }}<a [routerLink]="legalPath[kind]" target="_blank" class="underline underline-offset-4 focus-visible:underline">{{ sentence.link }}</a>{{ sentence.after }}
                     @if (legal()[kind]; as document) {
                       <span class="text-muted-foreground"> {{ versionNote(document.version) }}</span>
-                    }
+                    } <span class="text-tierra" aria-hidden="true">*</span>
                   </span>
                 </label>
                 @if (invalid(form.controls.accept.controls[kind])) {
@@ -427,6 +430,7 @@ export class Checkout {
   });
 
   protected readonly docTypes = signal<readonly IdDocType[]>(billingDocTypes('BOLETA'));
+
   protected readonly tourTitle = computed(() => {
     const slug = this.flow.selection()?.tourSlug;
     const tour = slug ? this.catalog.tourById(slug) : undefined;
@@ -478,6 +482,11 @@ export class Checkout {
         billing.setValue(`${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim(), { emitEvent: false });
       }
     });
+  }
+
+  /** A factura needs an address; a boleta does not. */
+  protected factura(): boolean {
+    return this.form.controls.billing.controls.docType.value === 'FACTURA';
   }
 
   protected invalid(control: AbstractControl): boolean {

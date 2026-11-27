@@ -111,10 +111,15 @@ describe('Checkout', () => {
     expect(root.querySelector('#checkout-tiers')?.textContent).toContain('48 hours or more before the tour: full refund');
     expect(root.querySelector('#checkout-tiers')?.textContent).toContain('Less than 24 hours before: no refund');
     expect(root.textContent?.replace(/\s+/g, ' ')).toContain('2 adults · 1 child');
-    expect(root.querySelector('label[for="accept-PRIVACY"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^I accept the privacy policy \(version \d+\)$/);
+    expect(root.querySelector('label[for="accept-PRIVACY"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^I accept the privacy policy \(version \d+\) ?\*$/);
     expect(root.textContent).toContain('version 2');
     expect(root.textContent).toContain('version 4');
     expect(root.querySelectorAll('select, input[type="checkbox"]')).toHaveLength(0);
+    expect(root.querySelector('app-required-note')).not.toBeNull();
+    expect(root.querySelector('label[for="c-first"] .text-tierra')).not.toBeNull();
+    expect(root.querySelector('label[for="c-phone"] .text-tierra')).toBeNull();
+    expect(root.querySelector('label[for="b-address"] .text-tierra')).toBeNull();
+    expect(root.textContent).not.toContain('(optional)');
   });
 
   it('creates the booking with the legal document versions, billing and an idempotency key', async () => {
@@ -217,6 +222,7 @@ describe('Checkout', () => {
     form.controls.billing.controls.address.setValue('');
     await submit(fixture, fixture);
     expect(mock.calls.some((item) => item.path === '/public/bookings')).toBe(false);
+    expect(fixture.nativeElement.querySelector('label[for="b-address"] .text-tierra')).not.toBeNull();
 
     form.controls.billing.controls.address.setValue('Av. Lima 123');
     await submit(fixture, fixture);

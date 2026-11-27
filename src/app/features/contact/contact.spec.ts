@@ -81,8 +81,9 @@ describe('Contact', () => {
     expect(compiled.querySelector('#contact-email')?.hasAttribute('required')).toBe(true);
     expect(compiled.querySelector('#contact-whatsapp')?.hasAttribute('required')).toBe(true);
     expect(compiled.querySelector('#contact-message')?.hasAttribute('required')).toBe(true);
-    // Every field is required, so no label carries a mark (see docs/ESTANDAR-VISUAL.md §6).
-    expect(compiled.querySelector('form')?.textContent).not.toContain('*');
+    // Every field is required: a terracotta asterisk on each label and one line explaining it.
+    expect(compiled.querySelectorAll('label .text-tierra[aria-hidden="true"]')).toHaveLength(4);
+    expect(compiled.querySelector('app-required-note')).not.toBeNull();
     expect(compiled.querySelector('#contact-message')?.getAttribute('placeholder')).toBe(
       'What did you have in mind?',
     );

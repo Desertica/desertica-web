@@ -23,10 +23,12 @@
       </p>
 
       <form class="mt-8" [formGroup]="form" (ngSubmit)="send()" novalidate>
+        <app-required-note class="mb-6 block" />
         <div hlmFieldGroup>
           <div hlmField>
             <label hlmFieldLabel for="contact-name">
               {{ 'contact.name' | translate: i18n.locale() }}
+              <span class="text-tierra" aria-hidden="true">*</span>
             </label>
             <input
               hlmInput
@@ -48,6 +50,7 @@
             <div hlmField class="min-w-0">
               <label hlmFieldLabel for="contact-email">
                 {{ 'contact.email' | translate: i18n.locale() }}
+                <span class="text-tierra" aria-hidden="true">*</span>
               </label>
               <input
                 hlmInput
@@ -68,6 +71,7 @@
             <div hlmField class="min-w-0">
               <label hlmFieldLabel for="contact-whatsapp">
                 {{ 'contact.whatsapp' | translate: i18n.locale() }}
+                <span class="text-tierra" aria-hidden="true">*</span>
               </label>
               <div hlmInputGroup class="min-w-0">
               <hlm-input-group-addon class="ps-1">
@@ -100,6 +104,7 @@
           <div hlmField>
             <label hlmFieldLabel for="contact-message">
               {{ 'contact.message' | translate: i18n.locale() }}
+              <span class="text-tierra" aria-hidden="true">*</span>
             </label>
             <textarea
               hlmTextarea

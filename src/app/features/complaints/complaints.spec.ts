@@ -100,23 +100,25 @@ describe('ComplaintsBook', () => {
     expect(step(fixture)).toContain('Step 3 / 4');
   });
 
-  it('marks only the optional fields, with "(optional)" and no asterisks, and uses library controls', async () => {
+  it('marks the required fields with a terracotta asterisk, explains it once and uses library controls', async () => {
     const { fixture, form } = await mount();
     const root = fixture.nativeElement as HTMLElement;
     for (const id of ['cp-name', 'cp-doc-type', 'cp-doc-number', 'cp-address', 'cp-email']) {
-      expect(label(fixture, id), id).not.toContain('(optional)');
+      expect(label(fixture, id), id).toContain('*');
     }
-    expect(label(fixture, 'cp-phone')).toContain('(optional)');
-    expect(root.textContent).not.toContain('*');
+    expect(label(fixture, 'cp-phone')).not.toContain('*');
+    expect(root.querySelectorAll('label .text-tierra[aria-hidden="true"]')).toHaveLength(5);
+    expect(root.querySelector('app-required-note')?.textContent).toContain('Fields marked * are required.');
+    expect(root.textContent).not.toContain('(optional)');
     expect(root.querySelectorAll('select, input[type="checkbox"]')).toHaveLength(0);
     expect(root.querySelector('#cp-minor')?.getAttribute('role')).toBe('checkbox');
 
     fill(form);
     await next(fixture);
-    expect(label(fixture, 'cp-description')).not.toContain('(optional)');
-    expect(label(fixture, 'cp-ref')).toContain('(optional)');
-    expect(label(fixture, 'cp-amount')).toContain('(optional)');
-    expect(label(fixture, 'cp-currency')).toContain('(optional)');
+    expect(label(fixture, 'cp-description')).toContain('*');
+    expect(label(fixture, 'cp-ref')).not.toContain('*');
+    expect(label(fixture, 'cp-amount')).not.toContain('*');
+    expect(label(fixture, 'cp-currency')).not.toContain('*');
   });
 
   it('files the complaint through the proxy and shows the correlative number and the deadline', async () => {
@@ -250,7 +252,7 @@ describe('ComplaintsBook', () => {
     fill(form, { isMinor: true });
     await settle(fixture);
     expect(root.querySelector('#cp-guardian')).not.toBeNull();
-    expect(label(fixture, 'cp-guardian')).not.toContain('(optional)');
+    expect(label(fixture, 'cp-guardian')).toContain('*');
 
     await next(fixture);
     expect(step(fixture)).toContain('Step 1');

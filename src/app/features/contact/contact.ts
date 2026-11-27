@@ -28,6 +28,7 @@ import { DEFAULT_FORMS } from '../../core/cms/booking-defaults';
 import { AnalyticsService } from '../../core/analytics/analytics';
 import { FormsApi } from '../../core/cms/forms-api';
 import { PUBLIC_CONFIG } from '../../core/config/public-config';
+import { RequiredNote } from '../../core/forms/required-note';
 import { Turnstile } from '../../core/forms/turnstile';
 import { I18nService } from '../../core/i18n/i18n';
 import { usePageMeta } from '../../core/seo/page-meta';
@@ -59,6 +60,7 @@ export const MESSAGE_MAX = DEFAULT_FORMS.messageMax;
     HlmInputGroupImports,
     HlmTextarea,
     PhoneCountryPicker,
+    RequiredNote,
     Turnstile,
   ],
   templateUrl: './contact.html',

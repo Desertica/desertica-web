@@ -22,6 +22,7 @@ import { limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import { ContentBody } from '../../core/cms/content-body';
 import { isValidIdDocument, type IdDocType } from '../../core/forms/id-document';
+import { RequiredNote } from '../../core/forms/required-note';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { usePageMeta } from '../../core/seo/page-meta';
@@ -51,6 +52,7 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
     HlmInput,
     HlmSelectImports,
     HlmTextarea,
+    RequiredNote,
   ],
   template: `
     <section class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
@@ -97,6 +99,7 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
               </article>
 
               <form class="flex flex-col gap-6" [formGroup]="sign" (ngSubmit)="submit()" novalidate>
+                <app-required-note />
                 <label class="flex items-start gap-3 text-sm" for="w-minor">
                   <hlm-checkbox inputId="w-minor" class="mt-0.5" formControlName="onBehalfOfMinor" aria-describedby="w-minor-hint" />
                   <span>
@@ -107,14 +110,14 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
 
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div hlmField class="sm:col-span-2">
-                    <label hlmFieldLabel for="w-name">{{ 'waiver.signerName' | translate: i18n.locale() }}</label>
-                    <input hlmInput id="w-name" formControlName="signerName" maxlength="160" autocomplete="name" />
+                    <label hlmFieldLabel for="w-name">{{ 'waiver.signerName' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                    <input hlmInput id="w-name" required formControlName="signerName" maxlength="160" autocomplete="name" />
                     @if (invalid('signerName')) {
                       <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                     }
                   </div>
                   <div hlmField>
-                    <label hlmFieldLabel for="w-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }}</label>
+                    <label hlmFieldLabel for="w-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                     <hlm-select formControlName="signerDocType" [itemToString]="docLabel">
                       <hlm-select-trigger buttonId="w-doc-type" class="w-full">
                         <hlm-select-value />
@@ -127,8 +130,8 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
                     </hlm-select>
                   </div>
                   <div hlmField>
-                    <label hlmFieldLabel for="w-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }}</label>
-                    <input hlmInput id="w-doc-number" formControlName="signerDocNumber" maxlength="12" autocomplete="off" />
+                    <label hlmFieldLabel for="w-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
+                    <input hlmInput id="w-doc-number" required formControlName="signerDocNumber" maxlength="12" autocomplete="off" />
                     @if (invalid('signerDocNumber') || documentInvalid()) {
                       <hlm-field-error [forceShow]="true">{{ 'checkout.errorDocument' | translate: i18n.locale() }}</hlm-field-error>
                     }
@@ -148,8 +151,8 @@ type Load = 'loading' | 'ready' | 'missing' | 'error';
                 </div>
 
                 <label class="flex items-start gap-3 text-sm" for="w-accept">
-                  <hlm-checkbox inputId="w-accept" class="mt-0.5" formControlName="accepted" />
-                  <span>{{ 'waiver.accept' | translate: i18n.locale() }}</span>
+                  <hlm-checkbox inputId="w-accept" class="mt-0.5" required formControlName="accepted" />
+                  <span>{{ 'waiver.accept' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></span>
                 </label>
                 @if (invalid('accepted')) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorAccept' | translate: i18n.locale() }}</hlm-field-error>

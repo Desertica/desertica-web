@@ -32,6 +32,7 @@ import { type ComplaintPayload, FormsApi, type ProviderData } from '../../core/c
 import { ContentBody } from '../../core/cms/content-body';
 import { COMPLAINT_LIMITS } from '../../core/forms/complaint-limits';
 import { type IdDocType, ID_DOC_TYPES, isValidIdDocument } from '../../core/forms/id-document';
+import { RequiredNote } from '../../core/forms/required-note';
 import { Turnstile } from '../../core/forms/turnstile';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -122,6 +123,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
     HlmSelectImports,
     HlmTextarea,
     PhoneCountryPicker,
+    RequiredNote,
     Turnstile,
   ],
   template: `
@@ -163,20 +165,23 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
               {{ stepTitles[step() - 1] | translate: i18n.locale() }}
             </p>
           </nav>
+          @if (step() < steps.length) {
+            <app-required-note />
+          }
 
           @if (step() === 1) {
             <fieldset hlmFieldSet>
               <legend hlmFieldLegend>{{ 'complaints.s1' | translate: i18n.locale() }}</legend>
               <div class="grid gap-4 sm:grid-cols-2">
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="cp-name">{{ 'complaints.name' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-name">{{ 'complaints.name' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <input hlmInput id="cp-name" required [formControl]="form.controls.consumerName" autocomplete="name" [attr.maxlength]="limits.name" />
                   @if (invalid(form.controls.consumerName)) {
                     <hlm-field-error [forceShow]="true">{{ nameError(form.controls.consumerName) | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-doc-type">{{ 'checkout.docType' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <hlm-select [formControl]="form.controls.idDocType" [itemToString]="docLabel">
                     <hlm-select-trigger buttonId="cp-doc-type" class="w-full">
                       <hlm-select-value />
@@ -189,7 +194,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
                   </hlm-select>
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-doc-number">{{ 'checkout.docNumber' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <input
                     hlmInput
                     id="cp-doc-number"
@@ -205,21 +210,21 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
                   }
                 </div>
                 <div hlmField class="sm:col-span-2">
-                  <label hlmFieldLabel for="cp-address">{{ 'checkout.address' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-address">{{ 'checkout.address' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <input hlmInput id="cp-address" required [formControl]="form.controls.address" autocomplete="street-address" [attr.maxlength]="limits.address" />
                   @if (invalid(form.controls.address)) {
                     <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-email">{{ 'checkout.email' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-email">{{ 'checkout.email' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <input hlmInput id="cp-email" required type="email" [formControl]="form.controls.email" autocomplete="email" [attr.maxlength]="limits.email" />
                   @if (invalid(form.controls.email)) {
                     <hlm-field-error [forceShow]="true">{{ (form.controls.email.value ? 'checkout.errorEmail' : 'checkout.errorRequired') | translate: i18n.locale() }}</hlm-field-error>
                   }
                 </div>
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-phone">{{ 'complaints.phoneLabel' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-phone">{{ 'complaints.phone' | translate: i18n.locale() }}</label>
                   <div hlmInputGroup class="min-w-0">
                     <hlm-input-group-addon class="ps-1">
                       <app-phone-country buttonId="cp-country" [country]="countryCode()" (countryChange)="onCountryPicked($event)" />
@@ -246,7 +251,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
               </label>
               @if (form.controls.isMinor.value) {
                 <div hlmField>
-                  <label hlmFieldLabel for="cp-guardian">{{ 'complaints.guardian' | translate: i18n.locale() }}</label>
+                  <label hlmFieldLabel for="cp-guardian">{{ 'complaints.guardian' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                   <input hlmInput id="cp-guardian" required [formControl]="form.controls.guardianName" [attr.maxlength]="limits.guardian" autocomplete="off" />
                   @if (form.controls.guardianName.touched && form.hasError('guardian') || submitted() && form.hasError('guardian')) {
                     <hlm-field-error [forceShow]="true">{{ (form.controls.guardianName.value ? 'complaints.errorName' : 'checkout.errorRequired') | translate: i18n.locale() }}</hlm-field-error>
@@ -259,7 +264,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
           @if (step() === 2) {
             <fieldset hlmFieldSet>
               <legend hlmFieldLegend>{{ 'complaints.s2' | translate: i18n.locale() }}</legend>
-              <p class="text-muted-foreground text-sm">{{ 'complaints.goodHelp' | translate: i18n.locale() }}</p>
+              <p class="text-muted-foreground text-sm">{{ 'complaints.goodHelp' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></p>
               <label class="flex items-start gap-3 text-sm" for="good-product">
                 <hlm-checkbox inputId="good-product" class="mt-0.5" [formControl]="form.controls.isProduct" />
                 {{ 'complaints.product' | translate: i18n.locale() }}
@@ -301,7 +306,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
                 </div>
               </div>
               <div hlmField>
-                <label hlmFieldLabel for="cp-description">{{ 'complaints.description' | translate: i18n.locale() }}</label>
+                <label hlmFieldLabel for="cp-description">{{ 'complaints.description' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                 <textarea hlmTextarea id="cp-description" required rows="2" [formControl]="form.controls.description" [attr.maxlength]="limits.description"></textarea>
                 @if (invalid(form.controls.description)) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
@@ -313,7 +318,7 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
           @if (step() === 3) {
             <fieldset hlmFieldSet>
               <legend hlmFieldLegend>{{ 'complaints.s3' | translate: i18n.locale() }}</legend>
-              <p class="text-muted-foreground text-sm">{{ 'complaints.kindHelp' | translate: i18n.locale() }}</p>
+              <p class="text-muted-foreground text-sm">{{ 'complaints.kindHelp' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></p>
               <label class="flex items-start gap-3 text-sm" for="kind-reclamo">
                 <hlm-checkbox inputId="kind-reclamo" class="mt-0.5" [formControl]="form.controls.isReclamo" />
                 <span><strong>{{ 'complaints.reclamo' | translate: i18n.locale() }}</strong> — {{ 'complaints.reclamoHelp' | translate: i18n.locale() }}</span>
@@ -326,14 +331,14 @@ function complaintValidator(group: AbstractControl): ValidationErrors | null {
                 <hlm-field-error [forceShow]="true">{{ 'complaints.errorChoose' | translate: i18n.locale() }}</hlm-field-error>
               }
               <div hlmField>
-                <label hlmFieldLabel for="cp-detail">{{ 'complaints.detail' | translate: i18n.locale() }}</label>
+                <label hlmFieldLabel for="cp-detail">{{ 'complaints.detail' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                 <textarea hlmTextarea id="cp-detail" required rows="5" [formControl]="form.controls.detail" [attr.maxlength]="limits.detail"></textarea>
                 @if (invalid(form.controls.detail)) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
                 }
               </div>
               <div hlmField>
-                <label hlmFieldLabel for="cp-request">{{ 'complaints.request' | translate: i18n.locale() }}</label>
+                <label hlmFieldLabel for="cp-request">{{ 'complaints.request' | translate: i18n.locale() }} <span class="text-tierra" aria-hidden="true">*</span></label>
                 <textarea hlmTextarea id="cp-request" required rows="3" [formControl]="form.controls.request" [attr.maxlength]="limits.request"></textarea>
                 @if (invalid(form.controls.request)) {
                   <hlm-field-error [forceShow]="true">{{ 'checkout.errorRequired' | translate: i18n.locale() }}</hlm-field-error>
