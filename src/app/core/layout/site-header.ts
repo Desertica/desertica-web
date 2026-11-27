@@ -2,7 +2,13 @@ import { ScrollStrategy, ScrollStrategyOptions } from '@angular/cdk/overlay';
 import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronDown, lucideMenu, lucideMoon, lucideShoppingCart, lucideSun } from '@ng-icons/lucide';
+import {
+  lucideChevronDown,
+  lucideMenu,
+  lucideMoon,
+  lucideShoppingCart,
+  lucideSun,
+} from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmNavigationMenuImports } from '@spartan-ng/helm/navigation-menu';
 import { HlmSheetImports } from '@spartan-ng/helm/sheet';
@@ -35,9 +41,13 @@ import { isNavGroup, navItemTrack } from './primary-nav';
     PlanTripHover,
     BrandMark,
   ],
-  providers: [provideIcons({ lucideChevronDown, lucideMenu, lucideMoon, lucideShoppingCart, lucideSun })],
+  providers: [
+    provideIcons({ lucideChevronDown, lucideMenu, lucideMoon, lucideShoppingCart, lucideSun }),
+  ],
   template: `
-    <header class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md">
+    <header
+      class="border-border/60 bg-background/90 fixed inset-x-0 top-0 z-40 border-b backdrop-blur-md"
+    >
       <div
         class="mx-auto flex min-h-14 items-center justify-between gap-3 px-4 sm:min-h-16 sm:px-6 lg:min-h-20 lg:px-6 xl:px-10"
       >
@@ -206,6 +216,10 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                 class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-4 pb-6"
                 [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
               >
+                <div class="mb-4 flex flex-wrap items-center gap-3">
+                  <app-locale-switcher size="lg" />
+                  <app-currency-switcher size="lg" />
+                </div>
                 <a
                   hlmBtn
                   appPlanTripHover
@@ -287,15 +301,14 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                     </div>
                   }
                 }
-                <div class="mt-4 flex items-center gap-1">
-                  <app-locale-switcher />
-                  <app-currency-switcher />
-                </div>
               </nav>
             </hlm-sheet-content>
           </hlm-sheet>
 
-          <span class="hidden lg:contents">
+          <!-- Stacked between lg and xl: side by side they do not fit the row there. -->
+          <span
+            class="hidden shrink-0 lg:flex lg:flex-col lg:items-center lg:gap-1 xl:flex-row xl:gap-4"
+          >
             <app-locale-switcher />
             <app-currency-switcher />
           </span>
