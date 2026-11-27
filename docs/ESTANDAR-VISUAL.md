@@ -27,6 +27,7 @@ Reglas:
 - Cada fondo va con su pareja de texto: `bg-primary` con `text-primary-foreground`, `bg-card` con `text-card-foreground`, etc.
 - Se permite opacidad sobre un token (`hover:bg-primary/80`, `bg-input/50`, `ring-ring/30`), no inventar tonos nuevos.
 - ¿Hace falta un color nuevo? Se añade como token en `:root` **y** en `.dark` de `src/styles.css`, con su campo en el tema del CMS (ver `CLAUDE.md`, "Everything editable belongs in Strapi").
+- El logo de cabecera y pie (`app-brand-mark`) es el horizontal oficial del kit de marca (`logo-horizontal-oscuro.svg`), sin fondo y en el color del texto: no se recolorea ni se redibuja.
 - Excepciones conocidas, y ninguna más: el verde de marca de WhatsApp en `core/layout/whatsapp-fab.ts`; el texto blanco y el degradado oscuro **sobre fotos** (ver §9), que deben salir de una sola clase compartida y no copiarse en cada CSS.
 
 ## 1 bis. Color de acento (terracota)

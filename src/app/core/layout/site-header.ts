@@ -56,7 +56,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
           class="text-foreground flex min-w-0 items-center gap-2 font-heading text-lg tracking-tight sm:gap-2.5 sm:text-xl"
         >
           <app-brand-mark />
-          Desértica
+          <span class="sr-only">Desértica</span>
         </a>
 
         <div class="flex min-w-0 items-center gap-1.5 sm:gap-2 lg:gap-1 xl:gap-4">
