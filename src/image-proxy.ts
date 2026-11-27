@@ -75,7 +75,7 @@ export function imageProxy(options: ImageProxyOptions): Router {
     return Buffer.concat(chunks);
   };
 
-  const render = (url: URL, width: number, webp: boolean): Promise<Entry | null> =>
+  const render = (url: URL, width: number): Promise<Entry | null> =>
     slot(async () => {
       const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(options.timeoutMs ?? 10_000) });
       const type = response.headers.get('content-type') ?? '';
@@ -89,9 +89,7 @@ export function imageProxy(options: ImageProxyOptions): Router {
       }
 
       const pipeline = sharp(original, { limitInputPixels: MAX_PIXELS }).rotate().resize({ width, withoutEnlargement: true });
-      return webp
-        ? { body: await pipeline.webp({ quality: 78 }).toBuffer(), type: 'image/webp' }
-        : { body: await pipeline.jpeg({ quality: 80, mozjpeg: true }).toBuffer(), type: 'image/jpeg' };
+      return { body: await pipeline.webp({ quality: 78 }).toBuffer(), type: 'image/webp' };
     });
 
   router.get('/', async (req, res) => {
@@ -111,8 +109,8 @@ export function imageProxy(options: ImageProxyOptions): Router {
     }
 
     const width = IMAGE_WIDTHS.find((candidate) => candidate >= wanted) ?? IMAGE_WIDTHS[IMAGE_WIDTHS.length - 1];
-    const webp = (req.headers.accept ?? '').includes('image/webp');
-    const key = `${webp ? 'w' : 'j'}|${width}|${url.href}`;
+    // Always WebP, never negotiated by Accept: Cloudflare's free plan ignores Vary and would keep whichever format came first.
+    const key = `${width}|${url.href}`;
 
     try {
       let entry = cache.get(key);
@@ -129,7 +127,7 @@ export function imageProxy(options: ImageProxyOptions): Router {
 
         let pending = inflight.get(key);
         if (!pending) {
-          pending = render(url, width, webp).finally(() => inflight.delete(key));
+          pending = render(url, width).finally(() => inflight.delete(key));
           inflight.set(key, pending);
         }
 
@@ -157,7 +155,7 @@ export function imageProxy(options: ImageProxyOptions): Router {
       }
 
       // Editors' uploads get a new file name when replaced, so the URL identifies the content.
-      res.set({ 'Content-Type': entry.type, 'Cache-Control': 'public, max-age=31536000, immutable', Vary: 'Accept' });
+      res.set({ 'Content-Type': entry.type, 'Cache-Control': 'public, max-age=31536000, immutable' });
       res.send(entry.body);
     } catch {
       res.status(502).end();

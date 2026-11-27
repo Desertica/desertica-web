@@ -41,10 +41,13 @@ describe('imageProxy', () => {
     expect(hits()).toBe(1);
   });
 
-  it('falls back to JPEG when the browser does not accept WebP', async () => {
+  it('serves WebP whatever the Accept header says, without Vary', async () => {
     const { get, src } = await setup();
-    const response = await get(`w=320&u=${src}`, 'image/png,*/*');
-    expect(response.headers.get('content-type')).toBe('image/jpeg');
+    for (const accept of ['image/png,*/*', '*/*', '']) {
+      const response = await get(`w=320&u=${src}`, accept);
+      expect(response.headers.get('content-type')).toBe('image/webp');
+      expect(response.headers.get('vary')).toBeNull();
+    }
   });
 
   it('refuses other hosts, bad widths and non-image files', async () => {
