@@ -39,6 +39,27 @@ describe('LocaleSwitcher', () => {
     expect(es.getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('stays plain text: no filled or outlined pill', async () => {
+    const { el, es, en } = await render();
+
+    expect(el.querySelector('[role="group"]')?.textContent?.replace(/\s/g, '')).toBe('ES/EN');
+    for (const b of [es, en]) {
+      expect(b.className).not.toContain('bg-primary');
+      expect(b.dataset['variant']).not.toBe('outline');
+    }
+    expect(el.textContent).not.toContain('Language');
+  });
+
+  it('shows a visible label in the mobile menu size', async () => {
+    const fixture = TestBed.createComponent(LocaleSwitcher);
+    fixture.componentRef.setInput('size', 'lg');
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('span[aria-hidden="true"]')?.textContent?.trim()).toBe('Language');
+    expect(el.querySelector('button')?.dataset['size']).toBe('lg');
+  });
+
   it('switches language through a full page load', async () => {
     const { fixture, es } = await render();
     const i18n = TestBed.inject(I18nService);

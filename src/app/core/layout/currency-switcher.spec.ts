@@ -34,6 +34,16 @@ describe('CurrencySwitcher', () => {
     expect(pen.getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('shows the currency codes and a visible label in the mobile menu size', async () => {
+    const fixture = TestBed.createComponent(CurrencySwitcher);
+    fixture.componentRef.setInput('size', 'lg');
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('span[aria-hidden="true"]')?.textContent?.trim()).toBe('Currency');
+    expect(el.querySelector('[role="group"]')?.textContent?.replace(/\s/g, '')).toBe('S/PEN/$USD');
+  });
+
   it('sets the currency when the other one is pressed', async () => {
     const { fixture, pen, usd } = await render();
 

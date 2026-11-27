@@ -216,9 +216,9 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                 class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-4 pb-6"
                 [attr.aria-label]="'nav.primary' | translate: i18n.locale()"
               >
-                <div class="mb-4 flex flex-wrap items-center gap-3">
-                  <app-locale-switcher size="lg" />
-                  <app-currency-switcher size="lg" />
+                <div class="mb-4 flex flex-col">
+                  <div class="flex items-center"><app-locale-switcher size="lg" /></div>
+                  <div class="flex items-center"><app-currency-switcher size="lg" /></div>
                 </div>
                 <a
                   hlmBtn
@@ -306,10 +306,9 @@ import { isNavGroup, navItemTrack } from './primary-nav';
           </hlm-sheet>
 
           <!-- Stacked between lg and xl: side by side they do not fit the row there. -->
-          <span
-            class="hidden shrink-0 lg:flex lg:flex-col lg:items-center lg:gap-1 xl:flex-row xl:gap-4"
-          >
+          <span class="hidden shrink-0 lg:flex lg:flex-col lg:items-center xl:flex-row xl:gap-2">
             <app-locale-switcher />
+            <span class="bg-border hidden h-4 w-px xl:block" aria-hidden="true"></span>
             <app-currency-switcher />
           </span>
 
