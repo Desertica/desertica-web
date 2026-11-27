@@ -1,5 +1,14 @@
-import { NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { IMAGE_LOADER, NgOptimizedImage } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideChevronLeft, lucideChevronRight, lucideX } from '@ng-icons/lucide';
 import { I18nService } from '../../../core/i18n/i18n';
@@ -61,13 +70,16 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
       >
         <div class="relative flex items-center justify-center">
           <img
-            [src]="photos()[current()]"
+            [src]="viewerSrc()"
+            [srcset]="viewerSrcset()"
+            sizes="92vw"
+            loading="lazy"
             [alt]="alt(current())"
             class="max-h-[82svh] max-w-[92vw] rounded-lg object-contain"
           />
           <button
             type="button"
-            class="absolute -top-12 right-0 rounded-full bg-white/15 p-2 text-white"
+            class="absolute -top-12 right-0 inline-flex size-10 items-center justify-center rounded-full bg-white/15 text-white"
             [attr.aria-label]="'tour.galleryClose' | translate: i18n.locale()"
             (click)="viewer.close()"
           >
@@ -76,7 +88,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
           @if (photos().length > 1) {
             <button
               type="button"
-              class="absolute top-1/2 left-3 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white"
+              class="absolute top-1/2 left-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
               [attr.aria-label]="'tour.galleryPrev' | translate: i18n.locale()"
               (click)="step(-1)"
             >
@@ -84,13 +96,14 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
             </button>
             <button
               type="button"
-              class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white"
+              class="absolute top-1/2 right-3 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white"
               [attr.aria-label]="'tour.galleryNext' | translate: i18n.locale()"
               (click)="step(1)"
             >
               <ng-icon name="lucideChevronRight" />
             </button>
-            <span class="absolute -bottom-11 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-sm text-white"
+            <span
+              class="absolute -bottom-11 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-sm text-white"
               >{{ current() + 1 }} / {{ photos().length }}</span
             >
           }
@@ -104,6 +117,16 @@ export class TourGallery {
   readonly title = input.required<string>();
   protected readonly i18n = inject(I18nService);
   protected readonly current = signal(0);
+  // The viewer is a plain <img> (its size is unknown), so it asks the same loader as ngSrc: without it, it downloaded the multi-MB originals.
+  private readonly loader = inject(IMAGE_LOADER);
+  protected readonly viewerSrc = computed(() =>
+    this.loader({ src: this.photos()[this.current()], width: 1280 }),
+  );
+  protected readonly viewerSrcset = computed(() =>
+    [768, 1280, 1920]
+      .map((width) => `${this.loader({ src: this.photos()[this.current()], width })} ${width}w`)
+      .join(', '),
+  );
   private readonly viewer = viewChild.required<ElementRef<HTMLDialogElement>>('viewer');
 
   protected open(index: number): void {
