@@ -27,7 +27,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
       >
         <div class="flex max-w-md flex-col items-center gap-4">
           <div class="flex flex-col items-center gap-3">
-            <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+            <span class="bg-tierra block h-px w-8" aria-hidden="true"></span>
             <h2>{{ titleKey() | translate: i18n.locale() }}</h2>
             <p>{{ leadKey() | translate: i18n.locale() }}</p>
           </div>

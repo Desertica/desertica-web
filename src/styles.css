@@ -176,6 +176,11 @@
   }
 }
 
+/* Section eyebrow (antetítulo) above a heading: the terracotta accent, see docs/ESTANDAR-VISUAL.md. */
+@utility eyebrow {
+  @apply text-tierra text-xs font-medium tracking-widest uppercase;
+}
+
 .surface-grain {
   position: relative;
   isolation: isolate;

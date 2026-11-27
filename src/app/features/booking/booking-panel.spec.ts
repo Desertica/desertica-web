@@ -110,6 +110,14 @@ describe('BookingPanel', () => {
     expect(root.querySelector('#booking-format-label')).toBeNull();
   });
 
+  it('marks the seat count in the accent colour only when three or fewer are left', async () => {
+    const { internals } = await mount();
+    const few = internals as unknown as { fewSeats: (d: ReturnType<typeof departure>) => boolean };
+    expect(few.fewSeats(departure(day.startsAt, 3))).toBe(true);
+    expect(few.fewSeats(departure(day.startsAt, 1))).toBe(true);
+    expect(few.fewSeats(departure(day.startsAt, 4))).toBe(false);
+  });
+
   it('keeps working with the built-in limits when the API has no public data', async () => {
     const { fixture, internals } = await mount({}, null);
     const calls = mock.calls.filter((call) => call.path === '/public/tours/dune-buggy/availability');

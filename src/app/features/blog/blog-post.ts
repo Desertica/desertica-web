@@ -25,7 +25,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
           'blog.back' | translate: i18n.locale()
         }}</a>
         @if (data.publishedDate) {
-          <p class="text-muted-foreground mt-6 text-xs tracking-[0.22em] uppercase">
+          <p class="eyebrow mt-6">
             {{ data.publishedDate | date: 'mediumDate' : undefined : i18n.locale() }}
           </p>
         }

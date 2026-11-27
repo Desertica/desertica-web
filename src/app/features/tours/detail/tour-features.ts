@@ -22,7 +22,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
         <div class="mt-6 grid gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
           @for (item of items(); track item.titleKey) {
             <article class="flex gap-4">
-              <ng-icon class="mt-1 size-5 shrink-0" [name]="item.icon" />
+              <ng-icon class="text-tierra mt-1 size-5 shrink-0" [name]="item.icon" />
               <div>
                 <h3 class="font-medium">{{ item.titleKey | translate: i18n.locale() }}</h3>
                 <p class="text-muted-foreground mt-1 text-sm sm:text-base">

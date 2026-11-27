@@ -18,7 +18,8 @@ Los colores viven como variables en `src/styles.css` (`:root` para claro, `.dark
 | `muted-foreground` | Texto secundario (notas, bajadas, metadatos) | `text-muted-foreground` |
 | `destructive` | Errores y acciones de borrar | `text-destructive`, `variant="destructive"` |
 | `border`, `input`, `ring` | Bordes, fondo de campos, foco | `border-border`, `bg-input/50`, `ring-ring/30` |
-| `tierra`, `arena` (+ `-foreground`) | Acentos de marca | `bg-tierra text-tierra-foreground`, `bg-arena text-arena-foreground` |
+| `tierra` (+ `-foreground`) | Acento terracota: ver §1 bis | `text-tierra`, `bg-tierra text-tierra-foreground`, `eyebrow` |
+| `arena` (+ `-foreground`) | Acento de marca | `bg-arena text-arena-foreground` |
 
 Reglas:
 
@@ -27,6 +28,43 @@ Reglas:
 - Se permite opacidad sobre un token (`hover:bg-primary/80`, `bg-input/50`, `ring-ring/30`), no inventar tonos nuevos.
 - ¿Hace falta un color nuevo? Se añade como token en `:root` **y** en `.dark` de `src/styles.css`, con su campo en el tema del CMS (ver `CLAUDE.md`, "Everything editable belongs in Strapi").
 - Excepciones conocidas, y ninguna más: el verde de marca de WhatsApp en `core/layout/whatsapp-fab.ts`; el texto blanco y el degradado oscuro **sobre fotos** (ver §9), que deben salir de una sola clase compartida y no copiarse en cada CSS.
+
+## 1 bis. Color de acento (terracota)
+
+El terracota (`tierra`) da carácter a la página: unos toques cálidos que acompañan al verde y al crema. Es un acento, no un color de trabajo: si se quita, la página se sigue entendiendo igual.
+
+**Proporción**: alrededor del 10 % de lo que se ve en pantalla, en piezas pequeñas (números, rayas, iconos, palabras sueltas). Nunca un bloque de fondo grande.
+
+**Sí, para:**
+
+| Uso | Clases | Dónde |
+|---|---|---|
+| Antetítulo sobre un título de sección | `eyebrow` (utilidad de `styles.css`: `text-tierra text-xs font-medium tracking-widest uppercase`) | portada, nosotros, ficha (destino sobre el `h1`), fecha del blog |
+| Números del itinerario y la línea que los une | `text-tierra`, línea `bg-tierra/40` | `tour-timeline.ts` |
+| Iconos informativos | `text-tierra` en el `ng-icon` | "Cómo se corre" (`tour-features.ts`), garantías del panel (`tour-assurances.ts`), viñetas de "Qué incluye" (`marker:text-tierra`) |
+| Dato que pide atención sin ser error | `text-tierra font-medium` | "N cupos disponibles" cuando quedan 3 o menos (`booking-panel.ts`, `FEW_SEATS`); con más, gris |
+| Lo elegido o la página actual en barras de texto | `text-tierra` + raya `bg-tierra` debajo (o `underline decoration-2`) | idioma y moneda, enlace del menú de la página actual (escritorio y móvil) |
+| Etiquetas de tarjeta ("Más vendido", "Nuevo", "Últimos cupos") | `hlmBadge variant="tierra"` | solo con dato real del CMS o la API; hoy no hay ninguno, así que no se muestra ninguna |
+| Detalles decorativos | `bg-tierra` (rayas cortas `h-px w-8`), `stroke-tierra` (onda del pie), borde y comillas de citas (`content-body.css`) | tarjetas, cabeceras con foto, pie, blog |
+
+**No, para:**
+
+- Botones y acciones: siguen en `primary` (verde). Un enlace o botón terracota compite con el CTA.
+- Errores y avisos de fallo: siguen en `destructive`. El terracota y el rojo de error tienen una luminosidad parecida (contraste entre ellos 1,1-1,3:1), así que en formularios el terracota se limita al `*` de obligatorio (§6) y nunca va junto a un mensaje de error; se distinguen por el tono (marrón anaranjado frente a rojo vivo) y porque el error siempre va con su texto y su borde en el campo.
+- Textos largos (párrafos, bajadas, descripciones): se leen en `foreground` o `muted-foreground`.
+- Fondos grandes o secciones enteras.
+- Texto sobre fotos (ahí manda §9); sí se permite la raya decorativa `bg-tierra`.
+
+**Contraste comprobado** (WCAG, texto pequeño necesita 4,5:1):
+
+| Pareja | Claro | Oscuro |
+|---|---|---|
+| `text-tierra` sobre `background` | 5,3 | 6,0 |
+| `text-tierra` sobre `card` | 5,6 | 5,3 |
+| `text-tierra` sobre `muted` | 4,9 | 4,5 |
+| `text-tierra-foreground` sobre `bg-tierra` | 5,3 | 6,0 |
+
+Los valores de oscuro (terracota claro con texto oscuro) y su copia en el tema del CMS están en §8.
 
 ## 2. Tipografía
 
@@ -41,14 +79,15 @@ Una sola familia, Radio Canada (`font-sans`; `font-heading` es la misma en peso 
 | Bajada bajo un título | `text-lg text-muted-foreground` |
 | Texto corrido | `text-base` (por defecto) |
 | Interfaz: etiquetas, botones, campos, notas, pie | `text-sm` |
-| Antetítulo o dato corto (horas, "Desde") | `text-xs font-medium tracking-wide uppercase` |
+| Antetítulo sobre un título | `eyebrow` (terracota, ver §1 bis) |
+| Dato corto (horas, "Desde") | `text-xs font-medium tracking-wide uppercase` |
 
 Reglas:
 
 - Solo esos tamaños. Nada de `text-[13px]`, `text-[0.65rem]` ni `font-size: clamp(...)` en CSS.
 - Pesos: normal, `font-medium` (etiquetas, botones, enlaces de navegación) y `font-heading` (títulos). Nada de `font-bold` o `font-semibold` sueltos.
 - Mayúsculas siempre con la clase `uppercase`, nunca escritas en el texto traducido ("DESDE" debe ser "Desde" + `uppercase`).
-- Espaciado de letras: `tracking-wide` o `tracking-tight`; nada de `tracking-[0.22em]`.
+- Espaciado de letras: `tracking-wide` o `tracking-tight` (el antetítulo `eyebrow` trae `tracking-widest`); nada de `tracking-[0.22em]`.
 - Un solo `h1` por página y títulos en orden (`h1` → `h2` → `h3`).
 
 ## 3. Espaciado y maquetación
@@ -242,6 +281,7 @@ Un patrón nuevo se construye con `libs/ui` y, si se repite, se convierte en com
 Pásala antes de subir (commit y push) cualquier cambio visible.
 
 - [ ] Sin colores sueltos: solo clases de tokens (§1).
+- [ ] Terracota solo como acento (§1 bis): nunca en botones, errores ni textos largos.
 - [ ] Tamaños de letra, espaciados y radios de las tablas (§2-§4); nada entre corchetes salvo las excepciones.
 - [ ] Botones con `hlmBtn`, una sola acción principal por bloque, botones de icono con `size="icon*"` y `aria-label` (§5).
 - [ ] Controles de `libs/ui`, ninguno nativo; lo que parece elegible se puede elegir (§6).

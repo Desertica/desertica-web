@@ -22,7 +22,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
             class="bg-background flex size-9 shrink-0 items-center justify-center rounded-full"
             aria-hidden="true"
           >
-            <ng-icon class="size-4" [name]="item.icon" />
+            <ng-icon class="text-tierra size-4" [name]="item.icon" />
           </span>
           <p class="pt-1.5 text-sm">
             <span class="font-medium">{{ item.titleKey | translate: i18n.locale() }}</span>

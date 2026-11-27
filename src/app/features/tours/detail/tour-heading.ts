@@ -37,7 +37,8 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
       </ol>
     </nav>
 
-    <h1 class="font-heading mt-6 text-4xl text-balance sm:text-5xl">
+    <p class="eyebrow mt-6">{{ destination().titleKey | translate: i18n.locale() }}</p>
+    <h1 class="font-heading mt-2 text-4xl text-balance sm:text-5xl">
       {{ tour().titleKey | translate: i18n.locale() }}
     </h1>
 

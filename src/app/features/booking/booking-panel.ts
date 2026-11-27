@@ -44,6 +44,9 @@ import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 
 
+/** At or below this many seats left, the count is shown in the accent colour. */
+const FEW_SEATS = 3;
+
 /**
  * Online booking on the tour page (shown instead of the WhatsApp form while the booking engine is
  * on): availability and prices per currency, a quote for the group, and the seat hold that starts
@@ -142,7 +145,10 @@ import { TranslatePipe } from '../../core/i18n/translate-pipe';
         }
         @if (departure(); as chosen) {
           <p class="text-muted-foreground -mt-3 text-sm">
-            {{ time(chosen) }} · {{ seatsLabel(chosen) }}
+            {{ time(chosen) }} ·
+            <span [class.text-tierra]="fewSeats(chosen)" [class.font-medium]="fewSeats(chosen)">{{
+              seatsLabel(chosen)
+            }}</span>
             @if (chosen.meetingPoint) {
               · {{ chosen.meetingPoint }}
             }
@@ -494,6 +500,11 @@ export class BookingPanel {
     const suffix = price.unit === 'PER_GROUP' ? 'booking.perGroup' : 'booking.perPerson';
     const amount = price.unit === 'PER_GROUP' ? (price.groupCents ?? price.adultCents) : price.adultCents;
     return `${this.money(amount, price.currency)} ${this.i18n.t(suffix)}`;
+  }
+
+  /** Few seats left: the count turns to the terracotta accent to nudge the visitor, never red (it is not an error). */
+  protected fewSeats(departure: AvailableDeparture): boolean {
+    return departure.seatsLeft <= FEW_SEATS;
   }
 
   protected seatsLabel(departure: AvailableDeparture): string {

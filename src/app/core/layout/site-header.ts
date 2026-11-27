@@ -159,6 +159,7 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                   } @else {
                     <a
                       hlmNavigationMenuLink
+                      class="data-[active=true]:text-tierra relative after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-tierra after:opacity-0 data-[active=true]:bg-transparent data-[active=true]:after:opacity-100"
                       [routerLink]="item.path"
                       routerLinkActive
                       #rla="routerLinkActive"
@@ -233,7 +234,8 @@ import { isNavGroup, navItemTrack } from './primary-nav';
                   @if (!isGroup(item)) {
                     <a
                       [routerLink]="item.path"
-                      routerLinkActive="bg-muted text-foreground"
+                      routerLinkActive="text-tierra hover:text-tierra underline decoration-2 underline-offset-8"
+                      ariaCurrentWhenActive="page"
                       class="text-muted-foreground hover:bg-muted hover:text-foreground rounded-3xl px-3 py-2 text-sm font-medium transition-colors"
                       (click)="closeMobileNav(mobileNav)"
                     >

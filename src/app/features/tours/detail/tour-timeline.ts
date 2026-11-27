@@ -19,7 +19,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
       <ol class="mt-6 divide-y divide-border">
         @for (stop of stops(); track stop.titleKey; let i = $index) {
           <li
-            class="grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-4 py-3 sm:grid-cols-[9rem_2.5rem_minmax(0,1fr)] sm:gap-x-6 sm:py-4"
+            class="group grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-4 py-3 sm:grid-cols-[9rem_2.5rem_minmax(0,1fr)] sm:gap-x-6 sm:py-4"
           >
             <div class="relative aspect-[4/3] w-full overflow-hidden">
               <img
@@ -30,8 +30,9 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
                 class="rounded-none object-cover"
               />
             </div>
+            <!-- The path: a thin line above and below each number, over the row padding, joins the stops; it starts at the first and ends at the last. -->
             <span
-              class="text-muted-foreground hidden pt-1 text-sm tabular-nums sm:block"
+              class="text-tierra hidden flex-col items-center gap-2 self-stretch text-sm font-medium tabular-nums before:w-px before:flex-1 before:bg-tierra/40 after:w-px after:flex-1 after:bg-tierra/40 group-first:before:invisible group-last:after:invisible sm:-my-4 sm:flex"
               aria-hidden="true"
             >
               {{ step(i) }}
@@ -39,7 +40,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
             <div class="min-w-0">
               <h3 class="font-heading text-lg text-balance sm:text-xl">
                 <span
-                  class="text-muted-foreground me-3 inline-block text-sm tabular-nums sm:hidden"
+                  class="text-tierra me-3 inline-block text-sm tabular-nums sm:hidden"
                   aria-hidden="true"
                 >
                   {{ step(i) }}

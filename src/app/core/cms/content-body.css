@@ -45,8 +45,17 @@
 }
 
 .content-body blockquote {
-  border-left: 2px solid var(--color-border);
+  border-left: 2px solid var(--color-tierra);
   padding-left: 1rem;
+}
+
+.content-body blockquote::before {
+  content: '\201C';
+  display: block;
+  color: var(--color-tierra);
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  line-height: 1;
 }
 
 .content-body img {

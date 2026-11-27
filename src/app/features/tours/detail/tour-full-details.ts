@@ -67,7 +67,7 @@ import { TranslatePipe } from '../../../core/i18n/translate-pipe';
             <hlm-accordion-content>
               @if (page().includedKeys.length) {
                 <p class="font-medium">{{ 'tour.included' | translate: i18n.locale() }}</p>
-                <ul class="mt-2 list-disc ps-4">
+                <ul class="marker:text-tierra mt-2 list-disc ps-4">
                   @for (key of page().includedKeys; track key) {
                     <li>{{ key | translate: i18n.locale() }}</li>
                   }

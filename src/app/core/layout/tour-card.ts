@@ -36,7 +36,7 @@ import { TranslatePipe } from '../i18n/translate-pipe';
             <p class="text-xs font-medium tracking-[0.22em] uppercase">
               {{ hours }} {{ 'gallery.hours' | translate: i18n.locale() }}
             </p>
-            <span class="block h-px w-8 bg-current" aria-hidden="true"></span>
+            <span class="bg-tierra block h-px w-8" aria-hidden="true"></span>
           }
           <h3 hlmCardTitle>
             {{ tour().titleKey | translate: i18n.locale() }}
