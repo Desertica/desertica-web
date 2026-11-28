@@ -39,6 +39,12 @@ export function limaDateLong(iso: string, locale: AppLocale): string {
   return lima(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }, NUMBER_LOCALE[locale]);
 }
 
+/** `mar 15 dic` / `Tue, Dec 15` for the departure cards (no trailing dots). */
+export function limaCardDay(iso: string, locale: AppLocale): string {
+  const text = lima(iso, { weekday: 'short', day: 'numeric', month: 'short' }, NUMBER_LOCALE[locale]);
+  return locale === 'es' ? text.replace(/[.,]/g, '') : text;
+}
+
 /** `YYYY-MM-DD` of a picker date, read in the visitor's local calendar. */
 export function localDayKey(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');

@@ -6,6 +6,7 @@ import { BookingFlow } from '../../core/booking/booking-flow';
 import { CartService } from '../../core/booking/cart';
 import { CatalogService } from '../../core/catalog/catalog';
 import { CurrencyService } from '../../core/currency/currency';
+import { FloatingUi } from '../../core/layout/floating-ui';
 import { DEPARTURE_ID, QUOTE, departure, tomorrowDeparture } from '../../testing/booking-fixtures';
 import { stubMatchMedia } from '../../testing/match-media';
 import { mockApi } from '../../testing/mock-api';
@@ -251,6 +252,55 @@ describe('BookingPanel', () => {
       before,
     );
     expect(TestBed.inject(BookingFlow).hold()).toBeNull();
+  });
+
+  it('offers the next departures as one-tap cards, with the few-seats note only when it applies', async () => {
+    const { fixture } = await mount({
+      'GET /public/tours/*/availability': (call) => ({
+        body: { data: call.query.get('month') === day.month ? [departure(day.startsAt, 2)] : [] },
+      }),
+    });
+    const root = fixture.nativeElement as HTMLElement;
+    const cards = root.querySelectorAll<HTMLLabelElement>('#booking-departures label');
+    expect(cards).toHaveLength(1);
+    expect(text(cards[0]!)).toContain('09:00');
+    expect(cards[0]!.querySelector('.text-tierra')?.textContent).toBe('2 left');
+    expect(text(root.querySelector('#booking-date')!)).toContain('See more dates');
+
+    cards[0]!.click();
+    await settle(fixture);
+    expect(mock.calls.find((call) => call.path === '/public/quotes')?.body).toMatchObject({ departureId: DEPARTURE_ID });
+    expect(root.querySelector('#booking-total')).not.toBeNull();
+  });
+
+  it('shows the party counters without opening anything', async () => {
+    const { fixture } = await mount();
+    const root = fixture.nativeElement as HTMLElement;
+    const plus = root.querySelector('#booking-children')!.nextElementSibling as HTMLButtonElement;
+    plus.click();
+    await settle(fixture);
+    expect(root.querySelector('#booking-children')?.textContent?.trim()).toBe('1');
+  });
+
+  it('puts a bottom bar with the total on the button in <body> for phones, and takes it away on leave', async () => {
+    const { fixture, internals } = await mount();
+    const floating = TestBed.inject(FloatingUi);
+    expect(floating.bottomBar()).toBe(true);
+    expect(document.querySelector('#booking-bar #booking-bar-summary')).toBeNull();
+
+    internals.onDate(day.date);
+    await settle(fixture);
+    expect(document.querySelector('#booking-bar')?.closest('app-booking-panel')).toBeNull();
+    expect(document.querySelector('#booking-bar-summary')).not.toBeNull();
+    expect(text(document.querySelector('#booking-bar-book')!)).toContain('Book $USD 158');
+
+    (document.querySelector('#booking-bar-book') as HTMLButtonElement).click();
+    await settle(fixture);
+    expect(TestBed.inject(Router).url).toBe('/checkout');
+
+    fixture.destroy();
+    expect(document.querySelector('#booking-bar')).toBeNull();
+    expect(floating.bottomBar()).toBe(false);
   });
 
   it('says so when nothing is available and when the API is down', async () => {

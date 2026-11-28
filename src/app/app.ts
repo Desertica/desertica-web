@@ -62,7 +62,7 @@ export class App {
   // Instantiated here so its effect writes the SEO tags for every route, including pages with no own meta.
   private readonly seo = inject(SeoService);
   private readonly router = inject(Router);
-  private readonly floating = inject(FloatingUi);
+  protected readonly floating = inject(FloatingUi);
   private readonly path = toSignal(
     this.router.events.pipe(
       filter((event) => event instanceof NavigationEnd),

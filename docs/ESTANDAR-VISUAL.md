@@ -171,7 +171,8 @@ Qué control usar:
 | Lista larga que conviene buscar (países) | `hlm-combobox` |
 | Activar/desactivar algo que se aplica al momento (preferencias) | `hlm-switch` |
 | Aceptar condiciones o marcar varias cosas | `hlm-checkbox` |
-| Fecha | `hlm-calendar` en popover, con el idioma de la página |
+| Fecha de una salida | las próximas (hasta 4) como tarjetas de un toque (`hlm-radio-group`, la tarjeta entera es el radio, la elegida con `border-primary` y ✓; "Quedan N" en terracota si quedan 3 o menos) y "Ver más fechas" abre el calendario (`booking-panel.ts`) |
+| Fecha | `hlm-calendar` en popover, con el idioma de la página; los días sin salida van desactivados (la disponibilidad nunca se marca con colores) |
 | Cantidad (personas) | botones `size="icon-sm" variant="outline"` con el número en medio (patrón de `tour-book.ts`) |
 
 Reglas:
@@ -260,6 +261,7 @@ Antes, en oscuro: `primary` 3,35:1 y `tierra` 3,58:1 (texto claro sobre color me
 - Zona de toque mínima de 36 px (botón `default`) para acciones; 24 px absoluto para cualquier cosa que se toque.
 - Acción principal de formularios y paneles a todo el ancho en móvil.
 - Lo flotante (WhatsApp, aviso de cookies) no tapa acciones ni texto: la página deja espacio abajo y el aviso de cookies no pasa de un tercio de la pantalla.
+- Barra fija abajo (patrón de la ficha y del checkout): `fixed inset-x-0 bottom-0 z-30 bg-background/95 border-t backdrop-blur-md`, con `pb-[max(0.75rem,env(safe-area-inset-bottom))]`, solo bajo `md`. Va en `<body>` (el `transform` del ScrollSmoother rompe `fixed` dentro de la página) y activa `FloatingUi.bottomBar`: la página reserva `h-20` al final y el botón de WhatsApp sube por encima. En la ficha muestra "Desde $45 [Reservar]" y, con la salida elegida, "(Resumen ˄) [Reservar $90]"; se oculta mientras el panel se ve.
 
 ## 13. Piezas que ya existen (reusar antes de crear)
 

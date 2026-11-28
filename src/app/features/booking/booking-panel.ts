@@ -16,11 +16,14 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCheck, lucideChevronDown } from '@ng-icons/lucide';
+import { lucideCheck, lucideChevronDown, lucideChevronUp } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCalendar } from '@spartan-ng/helm/calendar';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
+import { HlmSheetImports } from '@spartan-ng/helm/sheet';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
 import { HlmSkeleton } from '@spartan-ng/helm/skeleton';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
@@ -36,7 +39,7 @@ import { CartService } from '../../core/booking/cart';
 import { formatPickerDate } from '../tours/detail/tour-whatsapp';
 import { Turnstile } from '../../core/forms/turnstile';
 import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
-import { limaDay, limaTime, localDayKey, monthKey, formatMoney, depositText } from '../../core/booking/format';
+import { limaCardDay, limaDay, limaTime, localDayKey, monthKey, formatMoney, depositText } from '../../core/booking/format';
 import { PublicData } from '../../core/api/public-data';
 import { CatalogService } from '../../core/catalog/catalog';
 import type { CatalogTour } from '../../core/catalog/tours';
@@ -44,10 +47,13 @@ import { provideCalendarI18n } from '../../core/i18n/calendar-i18n';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
 import { FloatingUi } from '../../core/layout/floating-ui';
+import { SmoothScroll } from '../../core/animation/smooth-scroll';
 
 
 /** At or below this many seats left, the count is shown in the accent colour. */
 const FEW_SEATS = 3;
+/** How many of the next departures are shown as one-tap cards; the rest are in the calendar. */
+const DEPARTURE_CARDS = 4;
 
 /**
  * Online booking on the tour page (shown instead of the WhatsApp form while the booking engine is
@@ -68,11 +74,14 @@ const FEW_SEATS = 3;
     HlmSkeleton,
     HlmToggleGroupImports,
     HlmPopoverImports,
+    HlmLabel,
+    HlmRadioGroupImports,
+    HlmSheetImports,
     NgIcon,
     Turnstile,
   ],
   // Here, not in app.config: the Spartan calendar would otherwise join the initial bundle.
-  providers: [provideIcons({ lucideCheck, lucideChevronDown }), provideCalendarI18n()],
+  providers: [provideIcons({ lucideCheck, lucideChevronDown, lucideChevronUp }), provideCalendarI18n()],
   host: { class: 'block w-full' },
   template: `
     <section hlmCard class="@container">
@@ -83,9 +92,9 @@ const FEW_SEATS = 3;
       </div>
       <div hlmCardContent class="flex flex-col gap-6">
         <div hlmField>
-          <span hlmFieldLabel id="booking-date-label">{{ 'tour.date' | translate: i18n.locale() }}</span>
+          <span hlmFieldLabel id="booking-date-label">{{ 'booking.dateTime' | translate: i18n.locale() }}</span>
           @if (loading()) {
-            <hlm-skeleton class="h-9 w-full" />
+            <hlm-skeleton class="h-32 w-full" />
           } @else if (loadFailed()) {
             <p class="text-destructive text-sm" role="alert">
               {{ 'booking.loadError' | translate: i18n.locale() }}
@@ -94,15 +103,43 @@ const FEW_SEATS = 3;
               {{ 'booking.retry' | translate: i18n.locale() }}
             </button>
           } @else {
+            @if (upcoming().length) {
+              <!-- The next departures, one tap each; the calendar stays behind "See more dates". -->
+              <hlm-radio-group
+                id="booking-departures"
+                class="grid grid-cols-2 gap-2"
+                name="booking-departure"
+                aria-labelledby="booking-date-label"
+                [value]="departureId()"
+                (valueChange)="pickDeparture($event)"
+              >
+                @for (item of upcoming(); track item.departureId) {
+                  <label hlmLabel [class]="cardClass" [for]="'booking-dep-' + item.departureId">
+                    <hlm-radio [value]="item.departureId" [inputId]="'booking-dep-' + item.departureId" class="sr-only" />
+                    <span class="flex w-full items-start justify-between gap-1">
+                      <span class="text-sm font-medium first-letter:uppercase">{{ cardDay(item) }}</span>
+                      @if (item.departureId === departureId()) {
+                        <ng-icon name="lucideCheck" class="text-primary shrink-0" aria-hidden="true" />
+                      }
+                    </span>
+                    <span class="text-muted-foreground text-sm font-normal tabular-nums">
+                      {{ time(item) }}
+                      @if (fewSeats(item)) {
+                        · <span class="text-tierra font-medium">{{ fewLabel(item) }}</span>
+                      }
+                    </span>
+                  </label>
+                }
+              </hlm-radio-group>
+            }
             <hlm-popover align="start" sideOffset="5">
               <button
                 type="button"
                 id="booking-date"
                 hlmPopoverTrigger
                 [class]="selectClass"
-                aria-labelledby="booking-date-label"
               >
-                <span class="truncate" [class.text-muted-foreground]="!date()">{{ dateLabel() }}</span>
+                <span class="truncate">{{ moreDatesLabel() }}</span>
                 <ng-icon name="lucideChevronDown" class="text-muted-foreground ms-auto" />
               </button>
               <hlm-popover-content class="w-auto p-2" *hlmPopoverPortal="let ctx">
@@ -204,32 +241,24 @@ const FEW_SEATS = 3;
 
         <div hlmField>
           <span hlmFieldLabel id="booking-people-label">{{ 'tour.people' | translate: i18n.locale() }}</span>
-          <hlm-popover align="start" sideOffset="5">
-            <button type="button" id="booking-people" hlmPopoverTrigger [class]="selectClass" aria-labelledby="booking-people-label">
-              <span class="truncate">{{ peopleSummary() }}</span>
-              <ng-icon name="lucideChevronDown" class="text-muted-foreground ms-auto" />
-            </button>
-            <hlm-popover-content class="w-80" *hlmPopoverPortal="let ctx">
-              <div class="flex flex-col gap-4">
-                <div class="flex items-center justify-between gap-3">
-                  <span>{{ 'tour.adultsAge' | translate: i18n.locale() }}</span>
-                  <div class="flex items-center gap-2">
-                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="adults() <= rules.adultsMin" (click)="bump('adults', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
-                    <span class="w-6 text-center tabular-nums" id="booking-adults">{{ adults() }}</span>
-                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('adults', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
-                  </div>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                  <span>{{ 'tour.childrenAge' | translate: i18n.locale() }}</span>
-                  <div class="flex items-center gap-2">
-                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="children() <= rules.childrenMin" (click)="bump('children', -1)" [attr.aria-label]="'booking.fewer' | translate: i18n.locale()">−</button>
-                    <span class="w-6 text-center tabular-nums" id="booking-children">{{ children() }}</span>
-                    <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('children', 1)" [attr.aria-label]="'booking.more' | translate: i18n.locale()">+</button>
-                  </div>
-                </div>
+          <div class="flex flex-col gap-2" role="group" aria-labelledby="booking-people-label">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm" id="booking-adults-label">{{ 'tour.adultsAge' | translate: i18n.locale() }}</span>
+              <div class="flex items-center gap-2">
+                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="adults() <= rules.adultsMin" (click)="bump('adults', -1)" [attr.aria-label]="('booking.fewer' | translate: i18n.locale()) + ': ' + ('tour.adultsAge' | translate: i18n.locale())">−</button>
+                <span class="w-6 text-center tabular-nums" id="booking-adults" aria-live="polite">{{ adults() }}</span>
+                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('adults', 1)" [attr.aria-label]="('booking.more' | translate: i18n.locale()) + ': ' + ('tour.adultsAge' | translate: i18n.locale())">+</button>
               </div>
-            </hlm-popover-content>
-          </hlm-popover>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm" id="booking-children-label">{{ 'tour.childrenAge' | translate: i18n.locale() }}</span>
+              <div class="flex items-center gap-2">
+                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="children() <= rules.childrenMin" (click)="bump('children', -1)" [attr.aria-label]="('booking.fewer' | translate: i18n.locale()) + ': ' + ('tour.childrenAge' | translate: i18n.locale())">−</button>
+                <span class="w-6 text-center tabular-nums" id="booking-children" aria-live="polite">{{ children() }}</span>
+                <button type="button" hlmBtn size="icon-sm" variant="outline" [disabled]="!canAdd()" (click)="bump('children', 1)" [attr.aria-label]="('booking.more' | translate: i18n.locale()) + ': ' + ('tour.childrenAge' | translate: i18n.locale())">+</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         @if (quote(); as current) {
@@ -301,6 +330,62 @@ const FEW_SEATS = 3;
         }
       </div>
     </section>
+
+    <!-- Phones: moved to <body> once in the browser (the smooth scroller's transform breaks "fixed"); shown while the panel is off screen. -->
+    <div #bar class="md:hidden">
+      @if (barReady() && !panelInView() && hasAvailability()) {
+        <div
+          id="booking-bar"
+          class="bg-background/95 border-border fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md"
+        >
+          @if (quote(); as current) {
+            <hlm-sheet side="bottom" #summary="hlmSheet">
+              <button hlmBtn hlmSheetTrigger side="bottom" type="button" variant="outline" size="lg" id="booking-bar-summary">
+                {{ 'booking.summary' | translate: i18n.locale() }}
+                <ng-icon name="lucideChevronUp" aria-hidden="true" />
+              </button>
+              <hlm-sheet-content *hlmSheetPortal class="rounded-t-3xl" [closeLabel]="'a11y.closeSummary' | translate: i18n.locale()">
+                <hlm-sheet-header>
+                  <h2 hlmSheetTitle>{{ 'booking.summaryTitle' | translate: i18n.locale() }}</h2>
+                  <p hlmSheetDescription class="sr-only">{{ tour().titleKey | translate: i18n.locale() }}</p>
+                </hlm-sheet-header>
+                <div class="flex flex-col gap-4 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]" id="booking-summary">
+                  <div class="flex items-center gap-3">
+                    <img [ngSrc]="tour().image" alt="" width="64" height="64" class="size-16 shrink-0 rounded-2xl object-cover" />
+                    <div class="flex min-w-0 flex-col gap-0.5 text-sm">
+                      <p class="font-medium">{{ tour().titleKey | translate: i18n.locale() }}</p>
+                      <p class="text-muted-foreground">{{ addedLine() }}</p>
+                    </div>
+                  </div>
+                  @if (current.depositCents > 0) {
+                    <p class="text-muted-foreground text-sm">{{ deposit('booking.depositOption', current) }}</p>
+                  }
+                  <p class="text-muted-foreground text-xs">{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button hlmBtn type="button" variant="outline" size="lg" (click)="summary.close(); showPanel()">
+                      {{ 'booking.change' | translate: i18n.locale() }}
+                    </button>
+                    <button hlmBtn type="button" size="lg" [disabled]="holding()" (click)="summary.close(); barReserve()">
+                      {{ 'tour.book' | translate: i18n.locale() }}
+                    </button>
+                  </div>
+                </div>
+              </hlm-sheet-content>
+            </hlm-sheet>
+            <button hlmBtn type="button" size="lg" class="flex-1" id="booking-bar-book" [disabled]="holding()" (click)="barReserve()">
+              {{ holding() ? ('booking.holding' | translate: i18n.locale()) : ('tour.book' | translate: i18n.locale()) + ' ' + short(current.totalCents, current.currency) }}
+            </button>
+          } @else {
+            <p class="font-heading min-w-0 flex-1 truncate text-lg tracking-wide uppercase">
+              {{ 'gallery.from' | translate: i18n.locale() }} {{ fromLabel() }}
+            </p>
+            <button hlmBtn type="button" size="lg" id="booking-bar-book" (click)="showPanel()">
+              {{ 'tour.book' | translate: i18n.locale() }}
+            </button>
+          }
+        </div>
+      }
+    </div>
   `,
 })
 export class BookingPanel {
@@ -388,6 +473,20 @@ export class BookingPanel {
     return party < Math.min(this.rules.peopleMax, seats);
   });
 
+  /** The next departures, soonest first, as cards. */
+  protected readonly upcoming = computed(() =>
+    [...this.departures()].sort((a, b) => a.startsAt.localeCompare(b.startsAt)).slice(0, DEPARTURE_CARDS),
+  );
+  /** A departure card: the whole card is the radio; the picked one gets the primary border and a check. */
+  protected readonly cardClass =
+    'border-border hover:bg-muted flex cursor-pointer flex-col items-start gap-0.5 rounded-3xl border px-4 py-3 [&:has([data-checked=true])]:border-primary [&:has([data-checked=true])]:bg-primary/10 [&:has(:focus-visible)]:ring-3 [&:has(:focus-visible)]:ring-ring/30';
+  /** The mobile bar waits for the browser (it lives in <body>) and hides while the panel itself is on screen. */
+  protected readonly barReady = signal(false);
+  protected readonly panelInView = signal(false);
+  private readonly bar = viewChild.required<ElementRef<HTMLElement>>('bar');
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly smooth = inject(SmoothScroll);
+
   protected readonly isUnavailable = (date: Date): boolean => !this.byDay().has(localDayKey(date));
 
   constructor() {
@@ -424,21 +523,75 @@ export class BookingPanel {
   /** On phones the floating WhatsApp button would sit on top of the panel's buttons, so it steps aside while the panel is on screen. */
   private hideWhatsappWhileVisible(): void {
     const floating = inject(FloatingUi);
-    const host = inject(ElementRef<HTMLElement>);
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
+      const bar = this.bar().nativeElement;
+      document.body.appendChild(bar);
+      floating.bottomBar.set(true);
+      this.barReady.set(true);
+      destroyRef.onDestroy(() => {
+        bar.remove();
+        floating.bottomBar.set(false);
+      });
       if (typeof IntersectionObserver === 'undefined') {
         return;
       }
 
+      const panel = this.host.nativeElement.querySelector('section') ?? this.host.nativeElement;
       const phone = window.matchMedia('(max-width: 767px)');
-      const observer = new IntersectionObserver(([entry]) => floating.whatsappHidden.set(!!entry?.isIntersecting && phone.matches));
-      observer.observe(host.nativeElement);
+      const observer = new IntersectionObserver(([entry]) => {
+        const visible = !!entry?.isIntersecting;
+        this.panelInView.set(visible);
+        floating.whatsappHidden.set(visible && phone.matches);
+      });
+      observer.observe(panel);
       destroyRef.onDestroy(() => {
         observer.disconnect();
         floating.whatsappHidden.set(false);
       });
     });
+  }
+
+  protected showPanel(): void {
+    this.smooth.scrollToElement(this.host.nativeElement);
+  }
+
+  /** The bar's button books straight away; when the panel still needs something (captcha, an error to read), it goes there instead. */
+  protected async barReserve(): Promise<void> {
+    if (!this.quote() || (this.captchaRequired() && !this.captcha())) {
+      this.showPanel();
+      return;
+    }
+
+    await this.reserve();
+    if (this.reserveError()) {
+      this.showPanel();
+    }
+  }
+
+  protected pickDeparture(value: unknown): void {
+    const picked = this.departures().find((item) => item.departureId === value);
+    if (picked) {
+      const [year, month, day] = limaDay(picked.startsAt).split('-').map(Number);
+      this.date.set(new Date(year!, month! - 1, day!));
+      this.onDeparture(picked.departureId);
+    }
+  }
+
+  /** `mar 15 dic` in the business time zone. */
+  protected cardDay(departure: AvailableDeparture): string {
+    return limaCardDay(departure.startsAt, this.i18n.locale());
+  }
+
+  protected fewLabel(departure: AvailableDeparture): string {
+    return this.i18n.t('booking.fewLeft').replace('{count}', String(departure.seatsLeft));
+  }
+
+  /** The calendar button names the day picked there, unless that departure already shows as a card. */
+  protected moreDatesLabel(): string {
+    const id = this.departureId();
+    const onCard = id !== null && this.upcoming().some((item) => item.departureId === id);
+    return this.date() && !onCard ? this.dateLabel() : this.i18n.t('booking.moreDates');
   }
 
   protected reload(): void {
