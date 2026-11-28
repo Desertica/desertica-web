@@ -27,6 +27,8 @@ export class SmoothScroll {
     this.resolveReady = resolve;
   });
   private marked = false;
+  private suspended = false;
+  private elements: { wrapper: HTMLElement; content: HTMLElement } | null = null;
 
   constructor() {
     this.destroyRef.onDestroy(() => this.instance?.kill());
@@ -72,11 +74,30 @@ export class SmoothScroll {
     this.resolveReady();
   }
 
+  /**
+   * Turns the smoother off (checkout and payment) or back on. Its transform breaks `position: fixed`
+   * and `sticky`, which the order summary and the pay bar need.
+   */
+  suspend(off: boolean): void {
+    if (off === this.suspended) {
+      return;
+    }
+
+    this.suspended = off;
+    if (off) {
+      this.instance?.kill();
+      this.instance = null;
+    } else if (this.elements) {
+      void this.create(this.elements.wrapper, this.elements.content);
+    }
+  }
+
   start(wrapper: HTMLElement, content: HTMLElement): void {
     if (this.started) {
       return;
     }
     this.started = true;
+    this.elements = { wrapper, content };
 
     if (!isPlatformBrowser(this.platformId)) {
       this.markReady();
@@ -181,10 +202,18 @@ export class SmoothScroll {
         return;
       }
 
+      if (this.suspended) {
+        return;
+      }
+
       const { default: gsap } = await import('gsap');
       const { default: ScrollTrigger } = await import('gsap/ScrollTrigger');
       const { default: ScrollSmoother } = await import('gsap/ScrollSmoother');
       gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+      // Suspended while the plugins loaded, or already running.
+      if (this.suspended || this.instance) {
+        return;
+      }
 
       this.instance = ScrollSmoother.create({
         wrapper,

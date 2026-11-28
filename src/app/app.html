@@ -14,7 +14,11 @@
     {{ 'preview.banner' | translate: i18n.locale() }}
   </div>
 }
-<app-site-header [inert]="intro.showOverlay()" />
+@if (focused()) {
+  <app-checkout-header [inert]="intro.showOverlay()" />
+} @else {
+  <app-site-header [inert]="intro.showOverlay()" />
+}
 <div id="smooth-wrapper" [inert]="intro.showOverlay()">
   <div id="smooth-content">
     <main #main id="main-content" tabindex="-1" class="flex-1 outline-none">
@@ -23,7 +27,9 @@
     <app-site-footer />
   </div>
 </div>
-<app-whatsapp-fab [inert]="intro.showOverlay()"></app-whatsapp-fab>
+@if (showWhatsapp()) {
+  <app-whatsapp-fab [inert]="intro.showOverlay()"></app-whatsapp-fab>
+}
 <app-cookie-banner [inert]="intro.showOverlay()" />
 <hlm-toaster [theme]="theme()" [inert]="intro.showOverlay()" />
 @if (intro.showOverlay()) {

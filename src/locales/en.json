@@ -41,6 +41,7 @@
     "home": "Home"
   },
   "forms": { "requiredNote": "Fields marked * are required." },
+  "checkoutHeader": { "back": "Back", "secure": "Secure payment", "help": "Questions? WhatsApp" },
   "a11y": {
     "toggleTheme": "Toggle color theme",
     "openMenu": "Open menu",
@@ -379,10 +380,12 @@
     "open": "Open cart",
     "priceChanged": "The price changed. Check the new total and reserve again.",
     "unavailable": "This departure is no longer available. Remove it and pick another date.",
-    "openWithCount": "Open cart, {count} people",
-    "added": "Added to your cart.",
+    "openWithCount": "Open cart ({count})",
+    "added": "Added to your trip",
     "view": "View cart",
-    "add": "Add to cart"
+    "add": "Add to cart",
+    "keepBrowsing": "Keep browsing tours",
+    "changeDate": "Change date"
   },
   "calendar": { "previousMonth": "Go to the previous month", "nextMonth": "Go to the next month", "previousYear": "Go to the previous year", "nextYear": "Go to the next year", "previousYears": "Go to the previous years", "nextYears": "Go to the next years" },
   "booking": {
@@ -455,7 +458,13 @@
     "legalError": "We could not load the current legal documents. Please reload the page.",
     "complaints": "Complaints book",
     "submit": "Create my booking",
-    "sending": "Creating your booking…",
+    "sending": "Preparing your payment…",
+    "pay": "Pay {amount}",
+    "payNow": "Pay {amount} now",
+    "bankNote": "Payment processed by Culqi. Your bank may ask you for a code: keep this window open.",
+    "unpaid": "You have an unpaid booking:",
+    "unpaidPay": "Go to payment",
+    "summary": { "heading": "Booking summary", "today": "You pay today", "rest": "Left to pay", "details": "See details" },
     "errorRequired": "This field is required.",
     "errorEmail": "Enter a valid email.",
     "errorDocument": "The document number does not match the type.",
@@ -496,7 +505,9 @@
     "linkMissing": "This payment link is not valid. Please check the link in your email.",
     "linkGone": "This payment link has expired or was already used. You can open your booking to see its state.",
     "linkError": "We could not load this payment link. Please try again.",
-    "threeDsReturn": "Completing the verification with your bank…"
+    "threeDsReturn": "Completing the verification with your bank…",
+    "retryHelp": "Your details are still here: you can try again or",
+    "whatsappHelp": "message us on WhatsApp."
   },
   "myBooking": {
     "title": "My booking",

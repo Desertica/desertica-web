@@ -41,6 +41,7 @@
     "home": "Inicio"
   },
   "forms": { "requiredNote": "Los campos con * son obligatorios." },
+  "checkoutHeader": { "back": "Volver", "secure": "Pago seguro", "help": "¿Dudas? WhatsApp" },
   "a11y": {
     "toggleTheme": "Cambiar tema de color",
     "openMenu": "Abrir menú",
@@ -379,10 +380,12 @@
     "open": "Abrir carrito",
     "priceChanged": "El precio cambió. Revisa el nuevo total y vuelve a reservar.",
     "unavailable": "Esta salida ya no está disponible. Quítala y elige otra fecha.",
-    "openWithCount": "Abrir carrito, {count} personas",
-    "added": "Agregado al carrito.",
+    "openWithCount": "Abrir carrito ({count})",
+    "added": "Agregado a tu viaje",
     "view": "Ver carrito",
-    "add": "Agregar al carrito"
+    "add": "Agregar al carrito",
+    "keepBrowsing": "Seguir viendo tours",
+    "changeDate": "Cambiar fecha"
   },
   "calendar": { "previousMonth": "Ir al mes anterior", "nextMonth": "Ir al mes siguiente", "previousYear": "Ir al año anterior", "nextYear": "Ir al año siguiente", "previousYears": "Ir a los años anteriores", "nextYears": "Ir a los años siguientes" },
   "booking": {
@@ -455,7 +458,13 @@
     "legalError": "No pudimos cargar los documentos legales vigentes. Recarga la página.",
     "complaints": "Libro de Reclamaciones",
     "submit": "Crear mi reserva",
-    "sending": "Creando tu reserva…",
+    "sending": "Preparando tu pago…",
+    "pay": "Pagar {amount}",
+    "payNow": "Pagar {amount} ahora",
+    "bankNote": "Pago procesado por Culqi. Tu banco puede pedirte un código: no cierres esta ventana.",
+    "unpaid": "Tienes una reserva sin pagar:",
+    "unpaidPay": "Ir al pago",
+    "summary": { "heading": "Resumen de tu reserva", "today": "Hoy pagas", "rest": "Lo que falta", "details": "Ver detalle" },
     "errorRequired": "Este campo es obligatorio.",
     "errorEmail": "Ingresa un correo válido.",
     "errorDocument": "El número no corresponde al tipo de documento.",
@@ -496,7 +505,9 @@
     "linkMissing": "Este enlace de pago no es válido. Revisa el enlace de tu correo.",
     "linkGone": "Este enlace de pago venció o ya se usó. Puedes abrir tu reserva para ver su estado.",
     "linkError": "No pudimos cargar este enlace de pago. Inténtalo de nuevo.",
-    "threeDsReturn": "Completando la verificación con tu banco…"
+    "threeDsReturn": "Completando la verificación con tu banco…",
+    "retryHelp": "Tus datos siguen aquí: puedes intentarlo de nuevo o",
+    "whatsappHelp": "escribirnos por WhatsApp."
   },
   "myBooking": {
     "title": "Mi reserva",
