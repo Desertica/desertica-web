@@ -199,44 +199,35 @@ describe('BookingPanel', () => {
     expect(TestBed.inject(Router).url).toBe('/checkout');
   });
 
-  it('starts with the full payment and carries the deposit choice to the checkout', async () => {
+  it('shows the total and leaves the full-or-deposit choice to the checkout', async () => {
     const { fixture, internals } = await mount();
     internals.onDate(day.date);
     await settle(fixture);
     const root = fixture.nativeElement as HTMLElement;
-    const full = root.querySelector('#booking-pay-full') as HTMLInputElement;
-    const deposit = root.querySelector('#booking-pay-deposit') as HTMLInputElement;
-    expect(full.checked).toBe(true);
-    expect(deposit.checked).toBe(false);
-    expect(root.querySelector('#booking-deposit')?.textContent).toContain('$USD 31.60');
-    expect(root.querySelector('label[for="booking-pay-deposit"]')?.textContent).toContain('Book with 20% today');
-    expect(root.querySelector('#booking-deposit-rest')?.textContent).toContain('The rest ($USD 126.40) is paid later.');
-    // Tax footnote: hidden asterisk on each price, the note described by both radios.
-    expect(root.querySelector('#booking-deposit [aria-hidden="true"]')?.textContent).toBe('*');
-    expect(full.getAttribute('aria-describedby')).toBe('booking-tax-note');
-    expect(deposit.getAttribute('aria-describedby')).toBe('booking-tax-note');
-    expect(root.querySelector('#booking-tax-note')?.textContent).toContain('(*)');
 
-    deposit.click();
-    await settle(fixture);
-    expect(deposit.checked).toBe(true);
+    expect(root.querySelector('#booking-total [aria-hidden="true"]')?.textContent).toBe('*');
+    expect(root.querySelector('#booking-tax-note')?.textContent).toContain('(*)');
+    expect(root.querySelector('#booking-pay-full')).toBeNull();
+    expect(root.querySelector('#booking-pay-deposit')).toBeNull();
+    expect(root.querySelector('#booking-deposit-note')?.textContent).toContain('20%');
     (root.querySelector('#booking-continue') as HTMLButtonElement).click();
     await settle(fixture);
 
-    expect(TestBed.inject(BookingFlow).selection()?.paymentKind).toBe('DEPOSIT');
+    expect(TestBed.inject(BookingFlow).selection()?.paymentKind).toBeUndefined();
   });
 
-  it('offers only the full payment when the quote has no deposit', async () => {
-    const { fixture, internals } = await mount({ 'POST /public/quotes': () => ({ body: { ...QUOTE, depositCents: 0 } }) });
+  it('shows the added tour with its photo, date, party and total', async () => {
+    const { fixture, internals } = await mount();
     internals.onDate(day.date);
     await settle(fixture);
-    const root = fixture.nativeElement as HTMLElement;
-
-    expect((root.querySelector('#booking-pay-full') as HTMLInputElement).checked).toBe(true);
-    expect(root.querySelector('#booking-pay-deposit')).toBeNull();
-    (root.querySelector('#booking-continue') as HTMLButtonElement).click();
+    (fixture.nativeElement.querySelector('#booking-add') as HTMLButtonElement).click();
     await settle(fixture);
-    expect(TestBed.inject(BookingFlow).selection()?.paymentKind).toBe('FULL');
+
+    const added = fixture.nativeElement.querySelector('#booking-added') as HTMLElement;
+    expect(added.querySelector('img')).not.toBeNull();
+    expect(text(added)).toContain('Added to your trip');
+    expect(text(added)).toContain('09:00 · 1 adult · $USD 158');
+    expect(added.querySelector('a[href$="/cart"]')).not.toBeNull();
   });
 
   it('explains a full departure and refreshes availability', async () => {

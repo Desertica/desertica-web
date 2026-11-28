@@ -41,12 +41,12 @@
       <div class="flex flex-col gap-4 md:col-start-3 md:row-start-1 md:row-span-2">
         @if (bookingEngine) {
           <app-booking-panel
-            class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
+            class="md:sticky md:top-[calc(var(--header-h)+1.5rem)] md:max-h-[calc(100dvh-var(--header-h)-3rem)] md:overflow-y-auto md:overscroll-contain md:rounded-3xl"
             [tour]="data.tour"
           />
         } @else {
           <app-tour-book
-            class="md:sticky md:top-[calc(var(--header-h)+1.5rem)]"
+            class="md:sticky md:top-[calc(var(--header-h)+1.5rem)] md:max-h-[calc(100dvh-var(--header-h)-3rem)] md:overflow-y-auto md:overscroll-contain md:rounded-3xl"
             [tour]="data.tour"
           />
         }

@@ -1,8 +1,11 @@
-import { isPlatformBrowser } from '@angular/common';
+import { NgOptimizedImage, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
+  ElementRef,
   PLATFORM_ID,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -13,14 +16,12 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronDown } from '@ng-icons/lucide';
+import { lucideCheck, lucideChevronDown } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCalendar } from '@spartan-ng/helm/calendar';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmFieldImports } from '@spartan-ng/helm/field';
-import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmPopoverImports } from '@spartan-ng/helm/popover';
-import { HlmRadioGroupImports } from '@spartan-ng/helm/radio-group';
 import { HlmSkeleton } from '@spartan-ng/helm/skeleton';
 import { HlmToggleGroupImports } from '@spartan-ng/helm/toggle-group';
 import {
@@ -42,6 +43,7 @@ import type { CatalogTour } from '../../core/catalog/tours';
 import { provideCalendarI18n } from '../../core/i18n/calendar-i18n';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
+import { FloatingUi } from '../../core/layout/floating-ui';
 
 
 /** At or below this many seats left, the count is shown in the accent colour. */
@@ -56,6 +58,7 @@ const FEW_SEATS = 3;
   selector: 'app-booking-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    NgOptimizedImage,
     RouterLink,
     TranslatePipe,
     HlmButton,
@@ -65,16 +68,14 @@ const FEW_SEATS = 3;
     HlmSkeleton,
     HlmToggleGroupImports,
     HlmPopoverImports,
-    HlmLabel,
-    HlmRadioGroupImports,
     NgIcon,
     Turnstile,
   ],
   // Here, not in app.config: the Spartan calendar would otherwise join the initial bundle.
-  providers: [provideIcons({ lucideChevronDown }), provideCalendarI18n()],
+  providers: [provideIcons({ lucideCheck, lucideChevronDown }), provideCalendarI18n()],
   host: { class: 'block w-full' },
   template: `
-    <section hlmCard>
+    <section hlmCard class="@container">
       <div hlmCardHeader>
         <p id="booking-from" class="font-heading text-2xl tracking-wide uppercase">
           {{ 'gallery.from' | translate: i18n.locale() }} {{ fromLabel() }}
@@ -155,15 +156,16 @@ const FEW_SEATS = 3;
           </p>
         }
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid gap-3 @sm:grid-cols-2">
           @if (languages().length) {
-            <div hlmField [class.col-span-2]="!showFormat()">
+            <div hlmField [style.grid-column]="showFormat() ? null : '1 / -1'">
               <span hlmFieldLabel id="booking-language-label">{{
                 'tour.language' | translate: i18n.locale()
               }}</span>
               <hlm-toggle-group
                 type="single"
                 variant="outline"
+                class="flex-wrap"
                 [value]="language()"
                 (valueChange)="onLanguage($event)"
                 aria-labelledby="booking-language-label"
@@ -184,6 +186,7 @@ const FEW_SEATS = 3;
               <hlm-toggle-group
                 type="single"
                 variant="outline"
+                class="flex-wrap"
                 [value]="format()"
                 (valueChange)="onFormat($event)"
                 aria-labelledby="booking-format-label"
@@ -230,32 +233,15 @@ const FEW_SEATS = 3;
         </div>
 
         @if (quote(); as current) {
-          <div class="flex flex-col gap-3" id="booking-quote">
-            <hlm-radio-group
-              class="w-full gap-3"
-              name="booking-payment"
-              [value]="chosenKind()"
-              (valueChange)="onPaymentKind($event)"
-              [attr.aria-label]="'checkout.payment' | translate: i18n.locale()"
-            >
-              <label hlmLabel [class]="payOptionClass" for="booking-pay-full">
-                <hlm-radio value="FULL" inputId="booking-pay-full" aria-describedby="booking-tax-note"><hlm-radio-indicator indicator /></hlm-radio>
-                <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
-                  <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payFull' | translate: i18n.locale() }}</span>
-                  <span id="booking-total">{{ short(current.totalCents, current.currency) }}<span class="text-muted-foreground" aria-hidden="true">*</span></span>
-                </span>
-              </label>
-              @if (current.depositCents > 0) {
-                <label hlmLabel [class]="payOptionClass" for="booking-pay-deposit">
-                  <hlm-radio value="DEPOSIT" inputId="booking-pay-deposit" aria-describedby="booking-tax-note"><hlm-radio-indicator indicator /></hlm-radio>
-                  <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
-                    <span class="text-sm font-medium tracking-wide uppercase">{{ deposit('booking.depositTitle', current) }}</span>
-                    <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}<span class="text-muted-foreground" aria-hidden="true">*</span></span>
-                    <span class="text-muted-foreground text-xs" id="booking-deposit-rest">{{ deposit('booking.depositRest', current) }}</span>
-                  </span>
-                </label>
-              }
-            </hlm-radio-group>
+          <div class="flex flex-col gap-1" id="booking-quote">
+            <p class="flex items-baseline justify-between gap-3" aria-describedby="booking-tax-note">
+              <span class="font-medium">{{ 'booking.total' | translate: i18n.locale() }}</span>
+              <span id="booking-total" class="font-heading text-2xl tabular-nums">{{ short(current.totalCents, current.currency) }}<span class="text-muted-foreground" aria-hidden="true">*</span></span>
+            </p>
+            @if (current.depositCents > 0) {
+              <!-- Only announced here; the visitor picks full or deposit once, in the checkout. -->
+              <p class="text-muted-foreground text-sm" id="booking-deposit-note">{{ deposit('booking.depositOption', current) }}</p>
+            }
             <p class="text-muted-foreground text-xs" id="booking-tax-note"><span aria-hidden="true">(*) </span>{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
           </div>
         } @else if (quoting()) {
@@ -295,10 +281,23 @@ const FEW_SEATS = 3;
           {{ 'cart.add' | translate: i18n.locale() }}
         </button>
         @if (added()) {
-          <p class="text-sm" role="status" id="booking-added">
-            {{ 'cart.added' | translate: i18n.locale() }}
-            <a routerLink="/cart" class="underline underline-offset-2">{{ 'cart.view' | translate: i18n.locale() }}</a>
-          </p>
+          <div class="border-border flex flex-col gap-3 rounded-3xl border p-4" role="status" id="booking-added">
+            <div class="flex items-center gap-3">
+              <img [ngSrc]="tour().image" alt="" width="64" height="64" class="size-16 shrink-0 rounded-2xl object-cover" />
+              <div class="flex min-w-0 flex-col gap-0.5 text-sm">
+                <p class="font-medium">{{ tour().titleKey | translate: i18n.locale() }}</p>
+                <p class="text-muted-foreground">{{ addedLine() }}</p>
+              </div>
+            </div>
+            <p class="flex items-center gap-2 text-sm font-medium">
+              <ng-icon name="lucideCheck" class="text-tierra" aria-hidden="true" />
+              {{ 'cart.added' | translate: i18n.locale() }}
+            </p>
+            <div class="grid gap-2 @sm:grid-cols-2">
+              <a hlmBtn variant="outline" size="sm" routerLink="/tours">{{ 'cart.keepBrowsing' | translate: i18n.locale() }}</a>
+              <a hlmBtn size="sm" routerLink="/cart" id="booking-view-cart">{{ 'cart.view' | translate: i18n.locale() }}</a>
+            </div>
+          </div>
         }
       </div>
     </section>
@@ -346,11 +345,6 @@ export class BookingPanel {
   /** Same look as the WhatsApp booking form: soft field buttons and amount cards. */
   protected readonly selectClass =
     'bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 inline-flex h-9 w-full items-center justify-between gap-1.5 rounded-3xl border border-transparent px-3 text-sm font-normal outline-none focus-visible:ring-3';
-  protected readonly payOptionClass =
-    'border-transparent bg-input/50 hover:bg-input/80 flex w-full cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 [&:has([data-checked=true])]:border-primary';
-  /** Full payment unless the visitor picks the deposit; a quote without a deposit is always full. */
-  protected readonly paymentKind = signal<'FULL' | 'DEPOSIT'>('FULL');
-  protected readonly chosenKind = computed(() => ((this.quote()?.depositCents ?? 0) > 0 ? this.paymentKind() : 'FULL'));
   /** Lowest adult price among the loaded departures, as on the tour cards (\$USD 45). */
   protected readonly fromLabel = computed(() => {
     const prices = this.departures().map((d) => d.price.adultCents);
@@ -397,6 +391,8 @@ export class BookingPanel {
   protected readonly isUnavailable = (date: Date): boolean => !this.byDay().has(localDayKey(date));
 
   constructor() {
+    this.hideWhatsappWhileVisible();
+
     effect(() => {
       const locale = this.i18n.locale();
       const options = this.languages();
@@ -425,6 +421,26 @@ export class BookingPanel {
     });
   }
 
+  /** On phones the floating WhatsApp button would sit on top of the panel's buttons, so it steps aside while the panel is on screen. */
+  private hideWhatsappWhileVisible(): void {
+    const floating = inject(FloatingUi);
+    const host = inject(ElementRef<HTMLElement>);
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      if (typeof IntersectionObserver === 'undefined') {
+        return;
+      }
+
+      const phone = window.matchMedia('(max-width: 767px)');
+      const observer = new IntersectionObserver(([entry]) => floating.whatsappHidden.set(!!entry?.isIntersecting && phone.matches));
+      observer.observe(host.nativeElement);
+      destroyRef.onDestroy(() => {
+        observer.disconnect();
+        floating.whatsappHidden.set(false);
+      });
+    });
+  }
+
   protected reload(): void {
     void this.loadAvailability(this.tour().id, this.currency(), this.format(), this.language());
   }
@@ -438,12 +454,6 @@ export class BookingPanel {
   protected onFormat(value: unknown): void {
     if (value === 'SHARED' || value === 'PRIVATE') {
       this.format.set(value);
-    }
-  }
-
-  protected onPaymentKind(value: unknown): void {
-    if (value === 'FULL' || value === 'DEPOSIT') {
-      this.paymentKind.set(value);
     }
   }
 
@@ -536,13 +546,21 @@ export class BookingPanel {
       adults: this.adults(),
       children: this.children(),
       quote,
-      paymentKind: this.chosenKind(),
     };
   }
 
   private selectionKey(): string | null {
     const s = this.selection();
     return s ? `${s.departureId}|${s.adults}|${s.children}|${s.currency}` : null;
+  }
+
+  /** `15/12/2026 · 09:00 · 2 adultos · $USD 90` under the photo of the "added" notice. */
+  protected addedLine(): string {
+    const departure = this.departure();
+    const quote = this.quote();
+    return departure && quote
+      ? [this.dateLabel(), this.time(departure), this.peopleSummary(), this.short(quote.totalCents, quote.currency)].join(' · ')
+      : '';
   }
 
   protected addToCart(): void {

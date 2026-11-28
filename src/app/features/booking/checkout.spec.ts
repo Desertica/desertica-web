@@ -111,7 +111,10 @@ describe('Checkout', () => {
     expect(form.controls.passengers.length).toBe(3);
     expect(root.querySelector('#checkout-cancellation')?.textContent).toContain('No refunds if you cancel');
     expect(root.querySelector('#checkout-cancellation a')?.getAttribute('href')).toBe('/cancellation');
-    expect(root.querySelector('label[for="k-deposit"]')?.textContent).toContain('Book with 20% today ($31.60) and pay the rest ($126.40) later');
+    const deposit = root.querySelector('label[for="k-deposit"]')?.textContent?.replace(/\s+/g, ' ');
+    expect(deposit).toContain('Book with 20% today');
+    expect(deposit).toContain('$31.60');
+    expect(deposit).toContain('The rest ($126.40) is paid later.');
     expect(root.querySelector('label[for="accept-CANCELLATION"] a')?.getAttribute('href')).toBe('/cancellation');
     expect(root.textContent?.replace(/\s+/g, ' ')).toContain('2 adults · 1 child');
     expect(root.querySelector('label[for="accept-PRIVACY"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^I accept the privacy policy \(version \d+\) ?\*$/);

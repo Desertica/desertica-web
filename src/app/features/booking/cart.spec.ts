@@ -92,6 +92,20 @@ describe('Cart page', () => {
     expect(mock.calls.some((call) => call.path === '/public/holds')).toBe(false);
   });
 
+  it('shows the photo, format and language, and changes the party with a new quote', async () => {
+    const { fixture, cart, el } = await mount([selection()], { 'POST /public/quotes': () => ({ body: { ...QUOTE, totalCents: 23700 } }) });
+
+    expect(el.querySelector('li img')).not.toBeNull();
+    expect(el.textContent).toContain('Group · Español');
+    expect(el.querySelector('a[href$="/tours/dune-buggy"]')).not.toBeNull();
+    const more = [...el.querySelectorAll('button')].find((b) => /More people/.test(b.getAttribute('aria-label') ?? '')) as HTMLButtonElement;
+    more.click();
+    await settle(fixture);
+
+    expect(mock.calls.find((call) => call.path === '/public/quotes')?.body).toMatchObject({ adults: 3, children: 0 });
+    expect(cart.items()[0]).toMatchObject({ adults: 3, quote: { totalCents: 23700 } });
+  });
+
   it('offers one reserve button per tour and no single pay button when there are several', async () => {
     const other = { ...selection(), departureId: 'other-departure' };
     const { el } = await mount([selection(), other]);

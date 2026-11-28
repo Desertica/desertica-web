@@ -18,13 +18,13 @@ const item = (departureId: string, totalCents: number, adults = 2, currency: 'US
 describe('CartService', () => {
   beforeEach(() => sessionStorage.clear());
 
-  it('counts people and totals per currency', () => {
+  it('counts tours (not people) and totals per currency', () => {
     const cart = TestBed.inject(CartService);
     cart.add(item('a', 15800, 2));
     cart.add(item('b', 60000, 3, 'PEN'));
     cart.add(item('c', 5000, 1));
 
-    expect(cart.count()).toBe(6);
+    expect(cart.count()).toBe(3);
     expect(cart.totals()).toEqual([
       { currency: 'USD', cents: 20800 },
       { currency: 'PEN', cents: 60000 },

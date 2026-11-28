@@ -33,8 +33,8 @@ export class CartService {
   /** `false` until the saved cart has been read after hydration, so the page does not flash an empty cart. */
   readonly ready = signal(false);
 
-  /** People in the cart, shown on the header badge. */
-  readonly count = computed(() => this.items().reduce((sum, item) => sum + item.adults + item.children, 0));
+  /** Tours in the cart, shown on the header badge. */
+  readonly count = computed(() => this.items().length);
   /** One total per currency: items chosen in another currency are not converted. */
   readonly totals = computed(() => {
     const byCurrency = new Map<Currency, number>();
@@ -56,9 +56,14 @@ export class CartService {
     });
   }
 
-  /** Adding a departure that is already in the cart replaces it, so changing the group does not duplicate it. */
+  /** Adding a departure that is already in the cart replaces it in place, so changing the group does not duplicate or reorder it. */
   add(selection: BookingSelection): void {
-    this.set([...this.items().filter((item) => item.departureId !== selection.departureId), selection]);
+    const items = this.items();
+    this.set(
+      items.some((item) => item.departureId === selection.departureId)
+        ? items.map((item) => (item.departureId === selection.departureId ? selection : item))
+        : [...items, selection],
+    );
   }
 
   remove(departureId: string): void {
