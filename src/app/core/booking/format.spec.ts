@@ -6,7 +6,7 @@ const money = (cents: number): string => `$${cents / 100}`;
 describe('depositText', () => {
   it('says the percent, what is paid today and what is left, from the API amounts', () => {
     expect(depositText(es.booking.depositOption, 9000, 2700, money)).toBe(
-      'Reserva con el 30 % hoy ($27) y paga el resto ($63) después',
+      'Reserva con el 30 % hoy ($27) y paga el resto ($63) el día del tour',
     );
   });
 

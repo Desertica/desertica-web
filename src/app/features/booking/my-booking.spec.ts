@@ -72,6 +72,7 @@ describe('MyBooking', () => {
     expect(root.textContent).toContain('Plaza de Armas, Ica');
     expect(root.textContent).toContain('Pending');
     expect(root.querySelector('#my-booking-cancellation')?.textContent).toContain('No refunds if you cancel');
+    expect(root.querySelector('#booking-balance-due')?.textContent).toBe('Pay the rest ($126.40) on the day of the tour: Tuesday, December 1, 2026.');
     expect(root.textContent).toContain('Ana Perez · Pending signature');
     // A plain link (full page load), so GTM never sees the waiver token in a router navigation.
     expect(root.querySelector('a[href="/en/waiver/w1"]')).not.toBeNull();

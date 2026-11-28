@@ -72,6 +72,9 @@ type Load = 'loading' | 'ready' | 'gone' | 'missing' | 'error';
                   {{ 'payment.kind.' + current.kind | translate: i18n.locale() }}:
                   <span id="pay-amount">{{ money(current.amountCents) }}</span>
                 </p>
+                @if (current.kind === 'DEPOSIT') {
+                  <p class="text-muted-foreground" id="pay-rest">{{ 'payment.restOnTourDay' | translate: i18n.locale() }}</p>
+                }
               </div>
             </section>
 

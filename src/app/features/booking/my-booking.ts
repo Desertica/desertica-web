@@ -70,6 +70,9 @@ import { usePageMeta } from '../../core/seo/page-meta';
               <div class="flex justify-between"><dt>{{ 'myBooking.paid' | translate: i18n.locale() }}</dt><dd id="booking-paid">{{ money(current.paidCents) }}</dd></div>
               <div class="flex justify-between font-medium"><dt>{{ 'myBooking.pending' | translate: i18n.locale() }}</dt><dd>{{ money(current.pendingCents) }}</dd></div>
             </dl>
+            @if (current.pendingCents > 0 && current.paidCents > 0) {
+              <p class="text-sm" id="booking-balance-due">{{ balanceDue(current.pendingCents) }}</p>
+            }
             @if (current.status === 'PENDING_PAYMENT' && canPay()) {
               <a hlmBtn class="w-fit" [routerLink]="['/checkout/payment', current.reference]">{{ 'myBooking.pay' | translate: i18n.locale() }}</a>
             }
@@ -180,6 +183,10 @@ export class MyBooking {
     const at = this.booking()?.startsAt;
     return at ? limaDateLong(at, this.i18n.locale()) : '';
   });
+  /** The rest of a deposit booking is due on the day of the tour (owner's rule); the date is the departure's. */
+  protected balanceDue(pendingCents: number): string {
+    return this.i18n.t('myBooking.balanceDue').replace('{balance}', this.money(pendingCents)).replace('{date}', this.date());
+  }
   protected readonly time = computed(() => {
     const at = this.booking()?.startsAt;
     return at ? limaTime(at, this.i18n.locale()) : '';

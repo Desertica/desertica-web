@@ -45,6 +45,12 @@ describe('PayLink', () => {
     return fixture.nativeElement as HTMLElement;
   };
 
+  it('says when the rest is due on a deposit link', async () => {
+    const root = await mount({ 'GET /public/payment-links/*': () => ({ body: { ...INFO, kind: 'DEPOSIT' } }) });
+
+    expect(root.querySelector('#pay-rest')?.textContent).toContain('The rest is paid on the day of the tour.');
+  });
+
   it('shows the amount the link was issued for and lets the visitor pick only the gateway', async () => {
     const root = await mount({ 'GET /public/payment-links/*': () => ({ body: INFO }) });
 
@@ -56,6 +62,7 @@ describe('PayLink', () => {
     expect(root.textContent).toContain('Card (Culqi)');
     // One kind only, so there is no deposit/full choice.
     expect(root.querySelector('[name="payment-kind"]')).toBeNull();
+    expect(root.querySelector('#pay-rest')).toBeNull();
   });
 
   it('explains an expired link and an unknown one', async () => {

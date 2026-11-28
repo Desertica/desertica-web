@@ -356,9 +356,12 @@ export class TourBook {
       ? null
       : tourDuePrice(unit, 'deposit', this.partySize(), rate);
   });
-  protected readonly depositTitle = computed(() =>
-    this.i18n.t('booking.depositTitle').replace('{percent}', String(Math.round((this.booking.depositRate ?? 0) * 100))),
-  );
+  protected readonly depositTitle = computed(() => {
+    const rate = this.booking.depositRate;
+    return rate === null
+      ? this.i18n.t('booking.deposit')
+      : this.i18n.t('booking.depositTitle').replace('{percent}', String(Math.round(rate * 100)));
+  });
   protected readonly duePrice = computed(() =>
     this.payment() === 'deposit' ? this.depositPrice() : this.fullPrice(),
   );

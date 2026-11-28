@@ -83,7 +83,7 @@ describe('TourDetail', () => {
     );
     expect(compiled.querySelector('app-tour-portraits')).toBeNull();
     expect(compiled.querySelector('a[href="/tours"]')).not.toBeNull();
-    expect(compiled.textContent).toContain('Pay part today and the rest later');
+    expect(compiled.textContent).toContain('Pay part today and the rest on the day of the tour');
     expect(compiled.textContent).toContain('Free date change');
     expect(compiled.textContent).toContain('Final prices');
     const download = compiled.querySelector('a[href="/tours/dune-buggy-itinerary.pdf"]');
