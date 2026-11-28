@@ -405,7 +405,7 @@
     "depositTitle": "Book with {percent}% today",
     "depositRest": "The rest ({balance}) is paid later.",
     "depositOption": "Book with {percent}% today ({deposit}) and pay the rest ({balance}) later",
-    "cancellationShort": "No refunds if you cancel, including the deposit. You can change the date for free up to 24 h before the tour. If the tour can’t run because of the weather, an order from the authorities or the operator, you get a 100% refund or a new date. [Read the full policy]",
+    "cancellationShort": "No refunds if you cancel, including the deposit. You can change the date for free up to 24 h before the tour; after that, no changes. If the tour can’t run because of the weather, an order from the authorities or the operator, you get a 100% refund or a new date. [Read the full policy]",
     "quoteError": "We could not price this group. Please try again.",
     "continue": "Continue to checkout",
     "holding": "Holding your seats…",

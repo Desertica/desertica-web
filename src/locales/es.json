@@ -405,7 +405,7 @@
     "depositTitle": "Reserva con el {percent} % hoy",
     "depositRest": "El resto ({balance}) se paga después.",
     "depositOption": "Reserva con el {percent} % hoy ({deposit}) y paga el resto ({balance}) después",
-    "cancellationShort": "Sin reembolsos si cancelas, tampoco del adelanto. Puedes cambiar la fecha gratis hasta 24 h antes del tour. Si el tour no sale por clima, orden de una autoridad o causa del operador, te devolvemos el 100 % o te damos otra fecha. [Ver la política completa]",
+    "cancellationShort": "Sin reembolsos si cancelas, tampoco del adelanto. Puedes cambiar la fecha gratis hasta 24 h antes del tour; después ya no hay cambios. Si el tour no sale por clima, orden de una autoridad o causa del operador, te devolvemos el 100 % o te damos otra fecha. [Ver la política completa]",
     "quoteError": "No pudimos cotizar este grupo. Inténtalo de nuevo.",
     "continue": "Continuar al pago",
     "holding": "Guardando tus cupos…",
