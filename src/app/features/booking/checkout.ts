@@ -35,9 +35,16 @@ import { AnalyticsService, centsToMajor } from '../../core/analytics/analytics';
 import { tourItem } from '../../core/analytics/items';
 import { AttributionService } from '../../core/analytics/attribution';
 import { ConsentService } from '../../core/analytics/consent';
-import { BookingApi, type CreatePublicBooking, type LegalDocument } from '../../core/api/booking-api';
+import { BookingApi, type CreatePublicBooking, type LegalDocument, type PayTarget, type PublicBooking } from '../../core/api/booking-api';
+import { PurchaseTracker } from '../../core/analytics/purchase';
+import { PUBLIC_CONFIG } from '../../core/config/public-config';
+import { CulqiLoader } from '../../core/payments/culqi-loader';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideChevronDown, lucideLock } from '@ng-icons/lucide';
+import { PaymentStep, type PaymentOutcome } from '../payment/payment-step';
+import { CheckoutSummary, amountToday } from './checkout-summary';
 import { CartService } from '../../core/booking/cart';
-import { BookingFlow } from '../../core/booking/booking-flow';
+import { BookingFlow, type BookingSelection } from '../../core/booking/booking-flow';
 import { CancellationNote } from './cancellation-note';
 import { clock, depositText, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
@@ -85,10 +92,15 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
   return Object.keys(errors).length ? errors : null;
 }
 
+/** The booking this checkout created, kept so the summary and the pay button work after the hold is gone. */
+type Booked = { booking: PublicBooking; accessToken: string; selection: BookingSelection; kind: 'FULL' | 'DEPOSIT' };
+
 /**
  * Checkout (booking engine only): countdown on the seat hold, customer, passengers, billing
- * document, the legal documents with the versions the API publishes, and the booking itself. Payment
- * is the next step (`CheckoutPayment`).
+ * document, the legal documents with the versions the API publishes, and the payment. "Pay $X"
+ * creates the booking and opens Culqi on this same page; if the payment fails or the window is
+ * closed, the data stays and the same button tries again. `/checkout/payment/:ref` remains for
+ * links and reloads.
  */
 @Component({
   selector: 'app-checkout',
@@ -112,45 +124,61 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
     PhoneCountryPicker,
     RequiredNote,
     Turnstile,
+    NgIcon,
+    PaymentStep,
+    CheckoutSummary,
   ],
+  providers: [provideIcons({ lucideChevronDown, lucideLock })],
   template: `
-    <section class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
-      <h1 class="font-heading text-3xl">{{ 'checkout.title' | translate: i18n.locale() }}</h1>
-
-      @if (!flow.selection() || !flow.hold()) {
-        <p id="checkout-empty">{{ 'checkout.empty' | translate: i18n.locale() }}</p>
-        <a hlmBtn routerLink="/tours" class="w-fit">{{ 'nav.tours' | translate: i18n.locale() }}</a>
+    <section class="mx-auto max-w-6xl px-4 pt-6 pb-44 sm:px-6 lg:pt-10 lg:pb-16">
+      @if (!summary() || (!flow.hold() && !booked())) {
+        <div class="mx-auto flex max-w-3xl flex-col gap-6">
+          <h1 class="font-heading text-3xl">{{ 'checkout.title' | translate: i18n.locale() }}</h1>
+          @if (unpaid(); as reference) {
+            <p id="checkout-unpaid">{{ 'checkout.unpaid' | translate: i18n.locale() }} <strong>{{ reference }}</strong></p>
+            <a hlmBtn class="w-fit" [routerLink]="['/checkout/payment', reference]">{{ 'checkout.unpaidPay' | translate: i18n.locale() }}</a>
+          } @else {
+            <p id="checkout-empty">{{ 'checkout.empty' | translate: i18n.locale() }}</p>
+            <a hlmBtn routerLink="/tours" class="w-fit">{{ 'nav.tours' | translate: i18n.locale() }}</a>
+          }
+        </div>
       } @else {
-        @let selection = flow.selection()!;
-        <section hlmCard>
-          <div hlmCardContent class="flex flex-col gap-2 text-sm">
-            <p class="font-medium" id="checkout-tour">{{ tourTitle() }}</p>
-            <p>{{ date() }} · {{ time() }}</p>
-            @if (selection.meetingPoint) {
-              <p class="text-muted-foreground">{{ selection.meetingPoint }}</p>
-            }
-            <p>
-              {{ selection.adults }} {{ (selection.adults === 1 ? 'tour.adult' : 'tour.adults') | translate: i18n.locale() }}
-              @if (selection.children) {
-                · {{ selection.children }} {{ (selection.children === 1 ? 'tour.child' : 'tour.children') | translate: i18n.locale() }}
+        @let selection = summary()!;
+        <!-- Phones: the summary folds into a bar under the header; desktop has it in the right column. -->
+        <details class="bg-background border-border sticky top-[var(--header-h)] z-30 -mx-4 -mt-6 mb-6 border-b px-4 py-3 sm:-mx-6 sm:px-6 lg:hidden" id="checkout-summary-bar">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+            <span class="flex min-w-0 flex-col">
+              <span class="truncate text-sm font-medium">{{ tourTitle() }}</span>
+              <span class="text-muted-foreground inline-flex items-center gap-1 text-xs">
+                {{ 'checkout.summary.details' | translate: i18n.locale() }}
+                <ng-icon name="lucideChevronDown" class="in-[details[open]]:rotate-180" aria-hidden="true" />
+              </span>
+            </span>
+            <span class="flex shrink-0 flex-col items-end">
+              <span class="font-medium tabular-nums">{{ money(today()) }}</span>
+              @if (!booked()) {
+                <span class="text-muted-foreground text-xs tabular-nums" aria-hidden="true">{{ countdown() }}</span>
               }
-            </p>
-            <p class="font-medium">
-              {{ 'booking.total' | translate: i18n.locale() }}:
-              <span id="checkout-total">{{ money(selection.quote.totalCents) }}</span>
-            </p>
-            <p
-              id="checkout-timer"
-              role="timer"
-              [class]="flow.secondsLeft() <= 60 ? 'text-destructive font-medium' : 'text-muted-foreground'"
-            >
-              {{ 'checkout.holdLeft' | translate: i18n.locale() }}
-              {{ countdown() }}
-            </p>
-          </div>
-        </section>
+            </span>
+          </summary>
+          <app-checkout-summary class="pt-4" [selection]="selection" [kind]="kind()" />
+        </details>
 
-        @if (flow.expired()) {
+        <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-10">
+          <div class="flex min-w-0 flex-col gap-6">
+            <h1 class="font-heading text-3xl">{{ 'checkout.title' | translate: i18n.locale() }}</h1>
+            @if (!booked()) {
+              <p
+                id="checkout-timer"
+                role="timer"
+                [class]="flow.secondsLeft() <= 60 ? 'text-destructive text-sm font-medium' : 'text-muted-foreground text-sm'"
+              >
+                {{ 'checkout.holdLeft' | translate: i18n.locale() }}
+                {{ countdown() }}
+              </p>
+            }
+
+        @if (flow.expired() && !booked()) {
           <div role="alert" class="flex flex-col gap-3" id="checkout-expired">
             <p class="text-destructive">{{ 'checkout.expired' | translate: i18n.locale() }}</p>
             <button hlmBtn type="button" class="w-fit" (click)="startOver()">
@@ -158,6 +186,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
             </button>
           </div>
         } @else {
+          @if (!paid()) {
           <form class="flex flex-col gap-8" [formGroup]="form" (ngSubmit)="submit()" novalidate>
             <app-required-note />
             <fieldset hlmFieldSet [formGroup]="form.controls.customer">
@@ -299,15 +328,24 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
 
             <fieldset hlmFieldSet>
               <legend hlmFieldLegend>{{ 'checkout.payment' | translate: i18n.locale() }}</legend>
-              <hlm-radio-group class="w-full" name="paymentKind" [value]="form.controls.paymentKind.value" (valueChange)="onPaymentKind($event)">
-                <label hlmLabel class="flex items-center gap-3" for="k-full">
+              <hlm-radio-group class="grid w-full gap-3 sm:grid-cols-2" name="paymentKind" [value]="form.controls.paymentKind.value" (valueChange)="onPaymentKind($event)">
+                <label hlmLabel [class]="payOptionClass" for="k-full">
                   <hlm-radio value="FULL" inputId="k-full"><hlm-radio-indicator indicator /></hlm-radio>
-                  {{ 'tour.payFull' | translate: i18n.locale() }} · {{ money(selection.quote.totalCents) }}
+                  <span class="flex min-w-0 flex-col gap-0.5">
+                    <span>{{ 'tour.payFull' | translate: i18n.locale() }}</span>
+                    <span class="font-heading text-lg tabular-nums">{{ money(selection.quote.totalCents) }}</span>
+                  </span>
                 </label>
-                <label hlmLabel class="flex items-center gap-3" for="k-deposit">
-                  <hlm-radio value="DEPOSIT" inputId="k-deposit"><hlm-radio-indicator indicator /></hlm-radio>
-                  {{ depositOption(selection.quote) }}
-                </label>
+                @if (selection.quote.depositCents > 0) {
+                  <label hlmLabel [class]="payOptionClass" for="k-deposit">
+                    <hlm-radio value="DEPOSIT" inputId="k-deposit"><hlm-radio-indicator indicator /></hlm-radio>
+                    <span class="flex min-w-0 flex-col gap-0.5">
+                      <span>{{ depositLine('booking.depositTitle', selection.quote) }}</span>
+                      <span class="font-heading text-lg tabular-nums">{{ money(selection.quote.depositCents) }}</span>
+                      <span class="text-muted-foreground text-xs">{{ depositLine('booking.depositRest', selection.quote) }}</span>
+                    </span>
+                  </label>
+                }
               </hlm-radio-group>
             </fieldset>
 
@@ -351,16 +389,45 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               <p class="text-destructive text-sm" role="alert" id="checkout-error">{{ key | translate: i18n.locale() }}</p>
             }
 
-            <div class="flex flex-col gap-3 sm:flex-row">
-              <button hlmBtn type="submit" size="lg" id="checkout-submit" class="w-full sm:w-auto" [disabled]="sending()">
-                {{ (sending() ? 'checkout.sending' : 'checkout.submit') | translate: i18n.locale() }}
+            <!-- Phones: the pay button stays at the bottom of the screen. -->
+            <div class="bg-background/95 border-border fixed inset-x-0 bottom-0 z-30 flex flex-col gap-1.5 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+              <button hlmBtn type="submit" size="lg" id="checkout-submit" class="w-full lg:w-auto lg:self-start" [disabled]="payDisabled()">
+                {{ submitLabel() }}
               </button>
-              <button hlmBtn type="button" variant="outline" size="lg" class="w-full sm:w-auto" (click)="startOver()">
-                {{ 'checkout.chooseAgain' | translate: i18n.locale() }}
-              </button>
+              <p class="text-muted-foreground inline-flex items-center gap-1.5 text-xs" id="checkout-bank-note">
+                <ng-icon name="lucideLock" class="text-tierra shrink-0" aria-hidden="true" />
+                {{ 'checkout.bankNote' | translate: i18n.locale() }}
+              </p>
             </div>
           </form>
+          }
+
+          @if (booked(); as current) {
+            <app-payment-step
+              [target]="payTarget()!"
+              [currency]="current.booking.currency"
+              [options]="current.booking.paymentOptions"
+              [amounts]="payAmounts()"
+              [reference]="current.booking.reference"
+              [preset]="current.kind"
+              [autoStart]="true"
+              (settled)="onSettled($event)"
+            />
+            <a hlmBtn variant="outline" class="w-fit" id="checkout-view-booking" [routerLink]="['/booking', current.booking.reference]">
+              {{ 'payment.viewBooking' | translate: i18n.locale() }}
+            </a>
+          } @else {
+            <button hlmBtn type="button" variant="outline" class="w-fit" (click)="startOver()">
+              {{ 'checkout.chooseAgain' | translate: i18n.locale() }}
+            </button>
+          }
         }
+          </div>
+
+          <aside class="hidden lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:block">
+            <app-checkout-summary [selection]="selection" [kind]="kind()" [primary]="true" />
+          </aside>
+        </div>
       }
     </section>
   `,
@@ -375,6 +442,10 @@ export class Checkout {
   private readonly consent = inject(ConsentService);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly turnstile = viewChild(Turnstile);
+  private readonly paymentStep = viewChild(PaymentStep);
+  private readonly purchases = inject(PurchaseTracker);
+  private readonly culqiLoader = inject(CulqiLoader);
+  private readonly culqiKey = inject(PUBLIC_CONFIG).culqiPublicKey;
   /** Re-sent when a submission is retried after a network failure, so the API does not double-book. */
   private idempotencyKey: string | null = null;
 
@@ -426,9 +497,43 @@ export class Checkout {
   });
 
   protected readonly docTypes = signal<readonly IdDocType[]>(billingDocTypes('BOLETA'));
+  protected readonly payOptionClass =
+    'border-transparent bg-input/50 hover:bg-input/80 flex w-full cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3.5 [&:has([data-checked=true])]:border-primary';
+
+  protected readonly booked = signal<Booked | null>(null);
+  protected readonly paid = signal(false);
+  protected readonly unpaid = signal<string | null>(null);
+  protected readonly kind = toSignal(this.form.controls.paymentKind.valueChanges, { initialValue: this.form.controls.paymentKind.value });
+  /** The selection on screen: the held one, or the one already booked. */
+  protected readonly summary = computed(() => this.booked()?.selection ?? this.flow.selection());
+  protected readonly today = computed(() => {
+    const selection = this.summary();
+    return selection ? amountToday(selection, this.booked()?.kind ?? this.kind()) : 0;
+  });
+  protected readonly payTarget = computed<PayTarget | null>(() => {
+    const booked = this.booked();
+    return booked ? { type: 'booking', reference: booked.booking.reference, accessToken: booked.accessToken } : null;
+  });
+  protected readonly payAmounts = computed(() => {
+    const booking = this.booked()?.booking;
+    return booking ? { FULL: booking.totalCents, DEPOSIT: booking.depositCents ?? undefined, BALANCE: booking.pendingCents } : {};
+  });
+  protected readonly payDisabled = computed(() => {
+    const step = this.paymentStep();
+    return this.sending() || (this.booked() !== null && (!step?.canContinue() || step.active()));
+  });
+  /** "Pay $90", or "Pay $27 now" with the deposit. */
+  protected readonly submitLabel = computed(() => {
+    if (this.sending() || this.paymentStep()?.active()) {
+      return this.i18n.t('checkout.sending');
+    }
+
+    const deposit = this.today() !== this.summary()?.quote.totalCents;
+    return this.i18n.t(deposit ? 'checkout.payNow' : 'checkout.pay').replace('{amount}', this.money(this.today()));
+  });
 
   protected readonly tourTitle = computed(() => {
-    const slug = this.flow.selection()?.tourSlug;
+    const slug = this.summary()?.tourSlug;
     const tour = slug ? this.catalog.tourById(slug) : undefined;
     return tour ? this.i18n.t(tour.titleKey) : (slug ?? '');
   });
@@ -452,9 +557,15 @@ export class Checkout {
 
     afterNextRender(() => {
       this.flow.restore();
+      this.unpaid.set(this.flow.unpaid());
       const selection = this.flow.selection();
       if (!selection) {
         return;
+      }
+
+      // Load the gateway while the visitor types, so "Pay" opens it at once.
+      if (this.culqiKey) {
+        this.culqiLoader.load().catch(() => undefined);
       }
 
       this.form.controls.paymentKind.setValue(selection.paymentKind ?? 'FULL');
@@ -490,11 +601,12 @@ export class Checkout {
   }
 
   protected money(cents: number): string {
-    return formatMoney(cents, this.flow.selection()?.currency ?? 'USD', this.i18n.locale());
+    return formatMoney(cents, this.summary()?.currency ?? 'USD', this.i18n.locale());
   }
 
-  protected depositOption(quote: { totalCents: number; depositCents: number }): string {
-    return depositText(this.i18n.t('booking.depositOption'), quote.totalCents, quote.depositCents, (cents) => this.money(cents));
+  /** A deposit sentence (`booking.depositTitle`, `booking.depositRest`) with its percent and amounts. */
+  protected depositLine(key: string, quote: { totalCents: number; depositCents: number }): string {
+    return depositText(this.i18n.t(key), quote.totalCents, quote.depositCents, (cents) => this.money(cents));
   }
 
   /** The whole sentence is one key per document; the part in brackets becomes the link. */
@@ -563,7 +675,21 @@ export class Checkout {
     await this.router.navigateByUrl(slug ? `/tours/${slug}` : '/tours');
   }
 
+  protected onSettled(outcome: PaymentOutcome): void {
+    this.paid.set(true);
+    this.flow.markUnpaid(null);
+    if (outcome.status === 'confirmed') {
+      this.purchases.record(outcome.booking);
+    }
+  }
+
   protected async submit(): Promise<void> {
+    // The booking exists already: the button only opens the payment again.
+    if (this.booked()) {
+      await this.paymentStep()?.start();
+      return;
+    }
+
     this.submitted.set(true);
     this.form.markAllAsTouched();
     const selection = this.flow.selection();
@@ -610,6 +736,7 @@ export class Checkout {
 
     const { booking, accessToken } = result.data;
     this.flow.remember(booking.reference, { accessToken });
+    this.flow.markUnpaid(booking.reference);
     this.cart.remove(selection.departureId);
     const tour = this.catalog.tourById(selection.tourSlug);
     this.analytics.track('begin_checkout', {
@@ -618,8 +745,10 @@ export class Checkout {
       items: tour ? [{ ...tourItem(tour, this.i18n.t(tour.titleKey), selection.format, this.prices.amount(tour.id, selection.currency)), quantity: selection.adults + selection.children }] : [],
       event_id: booking.reference,
     });
+    // The hold became the booking; the form stays on screen (read-only) and the payment opens here.
+    this.booked.set({ booking, accessToken, selection, kind: this.form.controls.paymentKind.value });
+    this.form.disable();
     this.flow.clear();
-    await this.router.navigateByUrl(`/checkout/payment/${encodeURIComponent(booking.reference)}`);
   }
 
   private payload(

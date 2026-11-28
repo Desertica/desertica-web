@@ -81,6 +81,8 @@ describe('PaymentStep', () => {
       currency?: 'USD' | 'PEN';
       options?: PaymentOption[];
       paidBefore?: number;
+      preset?: PaymentKind;
+      autoStart?: boolean;
     } = {},
   ) => {
     const fixture = TestBed.createComponent(PaymentStep);
@@ -92,6 +94,8 @@ describe('PaymentStep', () => {
     fixture.componentRef.setInput('amounts', AMOUNTS);
     fixture.componentRef.setInput('reference', 'DES-2026-0001');
     fixture.componentRef.setInput('paidBefore', options.paidBefore ?? 0);
+    fixture.componentRef.setInput('preset', options.preset ?? null);
+    fixture.componentRef.setInput('autoStart', options.autoStart ?? false);
     await settle(fixture);
     const root = fixture.nativeElement as HTMLElement;
     const click = async (selector: string) => {
@@ -124,6 +128,34 @@ describe('PaymentStep', () => {
       await setup({ culqiPublicKey: null });
       const { root } = await mount({ options: [] });
       expect(root.querySelector('#payment-no-options')).not.toBeNull();
+    });
+  });
+
+  describe('inside the checkout (preset amount)', () => {
+    it('opens Culqi at once for the chosen amount, with no choice of its own', async () => {
+      await setup();
+      const { root } = await mount({ preset: 'DEPOSIT', autoStart: true });
+
+      expect(culqi.checkout.open).toHaveBeenCalledTimes(1);
+      expect(culqi.checkout.settings).toHaveBeenCalledWith(expect.objectContaining({ amount: 3160 }));
+      expect(root.querySelector('#payment-continue')).toBeNull();
+      expect(root.querySelector('[name="payment-kind"]')).toBeNull();
+    });
+
+    it('keeps a way out when the payment fails: try again or WhatsApp', async () => {
+      await setup();
+      mock = mockApi({
+        'POST /public/bookings/*/payments/culqi-charge': () => ({ status: 201, body: { paymentId: '6f9619ff-8b86-4011-b42d-00c04fc964ff', status: 'FAILED' } }),
+      });
+      const { fixture, root } = await mount({ preset: 'FULL', autoStart: true });
+      culqi.emitToken();
+      await settle(fixture, 10);
+
+      expect(root.querySelector('#payment-error')).not.toBeNull();
+      expect(root.querySelector('#payment-help')?.textContent).toContain('try again');
+      expect(fixture.componentInstance.active()).toBe(false);
+      await fixture.componentInstance.start();
+      expect(culqi.checkout.open).toHaveBeenCalledTimes(2);
     });
   });
 

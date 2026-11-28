@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,6 +29,7 @@ import {
   type PublicBooking,
 } from '../../core/api/booking-api';
 import { formatMoney } from '../../core/booking/format';
+import { CatalogService } from '../../core/catalog/catalog';
 import { PUBLIC_CONFIG } from '../../core/config/public-config';
 import { I18nService } from '../../core/i18n/i18n';
 import { TranslatePipe } from '../../core/i18n/translate-pipe';
@@ -65,7 +66,7 @@ const SITE_TITLE = 'Desértica';
 @Component({
   selector: 'app-payment-step',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, HlmButton, HlmLabel, HlmRadioGroupImports],
+  imports: [NgTemplateOutlet, TranslatePipe, HlmButton, HlmLabel, HlmRadioGroupImports],
   template: `
     @if (phase() === 'success' || phase() === 'pending') {
       <div
@@ -90,6 +91,25 @@ const SITE_TITLE = 'Desértica';
       </div>
     } @else if (!shown().length) {
       <p id="payment-no-options">{{ 'payment.noOptions' | translate: i18n.locale() }}</p>
+      <ng-container *ngTemplateOutlet="help" />
+    } @else if (preset()) {
+      <!-- Compact: the amount was chosen in the checkout and its own button pays; only progress and errors show here. -->
+      @if (error(); as message) {
+        <div class="border-destructive/40 flex flex-col gap-2 rounded-3xl border p-4" role="alert" id="payment-error">
+          <p class="text-destructive text-sm font-medium">
+            {{ message | translate: i18n.locale() }}
+            @if (detail()) {
+              <span> {{ detail() }}</span>
+            }
+          </p>
+          <ng-container *ngTemplateOutlet="help" />
+        </div>
+      }
+      @if (phase() === 'processing' || phase() === 'confirming') {
+        <p role="status" id="payment-working" class="text-sm">
+          {{ (phase() === 'processing' ? 'payment.processing' : 'payment.confirming') | translate: i18n.locale() }}
+        </p>
+      }
     } @else {
       <p class="text-sm">
         {{ 'booking.currency' | translate: i18n.locale() }}:
@@ -177,7 +197,19 @@ const SITE_TITLE = 'Desértica';
           · {{ money(amountOf(kind())) }}
         }
       </button>
+      @if (error()) {
+        <ng-container *ngTemplateOutlet="help" />
+      }
     }
+
+    <ng-template #help>
+      <p class="text-muted-foreground text-sm" id="payment-help">
+        {{ 'payment.retryHelp' | translate: i18n.locale() }}
+        @if (whatsapp(); as href) {
+          <a class="text-foreground underline underline-offset-4" [href]="href" target="_blank" rel="noopener noreferrer">{{ 'payment.whatsappHelp' | translate: i18n.locale() }}</a>
+        }
+      </p>
+    </ng-template>
   `,
 })
 export class PaymentStep {
@@ -198,6 +230,10 @@ export class PaymentStep {
   readonly reference = input.required<string>();
   /** `paidCents` before this payment; the API must report more than this. */
   readonly paidBefore = input(0);
+  /** Kind already chosen (the checkout): no gateway or amount choice is shown, and the parent's button calls `start()`. */
+  readonly preset = input<PaymentKind | null>(null);
+  /** Opens the gateway as soon as it has loaded (the checkout, right after the booking is created). */
+  readonly autoStart = input(false);
   readonly settled = output<PaymentOutcome>();
 
   protected readonly i18n = inject(I18nService);
@@ -207,7 +243,12 @@ export class PaymentStep {
   protected readonly error = signal<string | null>(null);
   protected readonly detail = signal<string | null>(null);
   private readonly culqiReady = signal(false);
-  protected readonly busy = computed(() => ['processing', 'confirming'].includes(this.phase()));
+  readonly busy = computed(() => ['processing', 'confirming'].includes(this.phase()));
+  /** Charging, or already paid: the parent's pay button should wait. (Closing Culqi's window sends no event, so 'ready' does not count.) */
+  readonly active = computed(() => this.phase() !== 'choose' && this.phase() !== 'ready');
+  private readonly catalog = inject(CatalogService);
+  protected readonly whatsapp = computed(() => this.catalog.contact().whatsapp);
+  private autoStarted = false;
 
   /** Culqi needs its public key to be configured. */
   protected readonly shown = computed(() =>
@@ -216,7 +257,7 @@ export class PaymentStep {
   protected readonly kinds = computed(
     () => this.shown().find((option) => option.provider === this.provider())?.kinds ?? [],
   );
-  protected readonly canContinue = computed(
+  readonly canContinue = computed(
     () => !!this.provider() && !!this.kind() && (this.provider() !== 'CULQI' || this.culqiReady()),
   );
 
@@ -236,10 +277,17 @@ export class PaymentStep {
       untracked(() => {
         if (!this.shown().some((option) => option.provider === this.provider())) {
           this.provider.set(first?.provider ?? '');
-          this.kind.set(first?.kinds[0] ?? '');
+          this.kind.set(this.firstKind(first?.kinds ?? []));
           void this.prepare();
         }
       });
+    });
+
+    effect(() => {
+      if (this.autoStart() && this.canContinue() && !this.autoStarted) {
+        this.autoStarted = true;
+        untracked(() => void this.start());
+      }
     });
 
     effect(() => {
@@ -268,7 +316,7 @@ export class PaymentStep {
     if (value === 'CULQI' && !this.busy()) {
       this.reset();
       this.provider.set(value);
-      this.kind.set(this.kinds()[0] ?? '');
+      this.kind.set(this.firstKind(this.kinds()));
       void this.prepare();
     }
   }
@@ -279,6 +327,17 @@ export class PaymentStep {
       this.reset();
       this.kind.set(value);
     }
+  }
+
+  /** The preset kind when the gateway offers it, else its first one. */
+  private firstKind(kinds: readonly PaymentKind[]): PaymentKind | '' {
+    const preset = this.preset();
+    return preset && kinds.includes(preset) ? preset : (kinds[0] ?? '');
+  }
+
+  /** Opens the gateway for the chosen amount (the parent's button in compact mode). */
+  start(): Promise<void> {
+    return this.continue();
   }
 
   protected async continue(): Promise<void> {

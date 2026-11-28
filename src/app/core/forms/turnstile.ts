@@ -18,6 +18,7 @@ type TurnstileApi = {
     options: {
       sitekey: string;
       theme: 'auto';
+      appearance: 'interaction-only';
       language: string;
       callback: (token: string) => void;
       'expired-callback': () => void;
@@ -85,6 +86,8 @@ export class Turnstile {
     this.widgetId = api.render(element, {
       sitekey: siteKey,
       theme: 'auto',
+      // Invisible unless Cloudflare needs the visitor to click; with a managed or invisible key most people never see it.
+      appearance: 'interaction-only',
       language: this.i18n.locale(),
       callback: (token) => this.tokenChange.emit(token),
       'expired-callback': () => this.tokenChange.emit(null),

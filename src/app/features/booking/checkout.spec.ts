@@ -31,6 +31,7 @@ describe('Checkout', () => {
   const track = vi.fn();
 
   beforeEach(async () => {
+    sessionStorage.clear();
     track.mockReset();
     stubMatchMedia(() => false);
     await TestBed.configureTestingModule({
@@ -149,15 +150,43 @@ describe('Checkout', () => {
     expect(call?.body).not.toHaveProperty('anonymousId');
     expect(call?.body).not.toHaveProperty('turnstileToken');
 
-    expect(router.url).toBe('/checkout/payment/DES-2026-0001');
+    // Payment opens on this same page: no navigation, the data stays (read-only) and the button keeps paying.
+    expect(router.url).not.toContain('/checkout/payment');
+    expect(fixture.nativeElement.querySelector('app-payment-step')).not.toBeNull();
+    expect(form.controls.customer.disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('#checkout-tour')?.textContent).toContain('Dune buggy');
+    expect(fixture.nativeElement.querySelector('#checkout-view-booking')?.getAttribute('href')).toContain('/booking/DES-2026-0001');
     expect(flow.hold()).toBeNull();
     expect(flow.remembered('DES-2026-0001')).toEqual({ accessToken: 'access-1' });
+    expect(flow.unpaid()).toBe('DES-2026-0001');
+    expect(mock.calls.filter((item) => item.path === '/public/bookings')).toHaveLength(1);
     expect(track).toHaveBeenCalledWith('begin_checkout', {
       currency: 'USD',
       value: 158,
       items: [expect.objectContaining({ item_id: 'dune-buggy', item_variant: 'PRIVATE', quantity: 3 })],
       event_id: 'DES-2026-0001',
     });
+  });
+
+  it('labels the button with the amount paid today', async () => {
+    const { fixture, form } = await mount();
+    const button = () => (fixture.nativeElement.querySelector('#checkout-submit') as HTMLElement).textContent?.trim();
+    expect(button()).toBe('Pay $158.00');
+
+    form.controls.paymentKind.setValue('DEPOSIT');
+    await settle(fixture);
+    expect(button()).toBe('Pay $31.60 now');
+    expect(fixture.nativeElement.querySelector('#checkout-today')?.textContent).toContain('$31.60');
+  });
+
+  it('leads a reload back to the payment of the booking it created', async () => {
+    const flow = TestBed.inject(BookingFlow);
+    flow.remember('DES-2026-0001', { accessToken: 'access-1' });
+    flow.markUnpaid('DES-2026-0001');
+    const { fixture } = await mount({}, false);
+
+    expect(fixture.nativeElement.querySelector('#checkout-unpaid')?.textContent).toContain('DES-2026-0001');
+    expect(fixture.nativeElement.querySelector('a[href$="/checkout/payment/DES-2026-0001"]')).not.toBeNull();
   });
 
   it('uses the singular for a party of one adult', async () => {

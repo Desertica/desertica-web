@@ -34,6 +34,8 @@ export type RememberedBooking = { accessToken: string };
 
 const CHECKOUT_KEY = 'desertica-checkout';
 const BOOKING_KEY = 'desertica-booking:';
+/** The booking created in this tab and not paid yet, so a reload of the checkout can lead back to its payment. */
+const UNPAID_KEY = 'desertica-unpaid';
 
 type StoredCheckout = { selection: BookingSelection; hold: Hold };
 
@@ -119,6 +121,17 @@ export class BookingFlow {
 
   remember(reference: string, booking: RememberedBooking): void {
     this.write(BOOKING_KEY + reference, booking);
+  }
+
+  /** Marks `reference` as created but not paid (`null` once it is paid). */
+  markUnpaid(reference: string | null): void {
+    this.write(UNPAID_KEY, reference);
+  }
+
+  /** The unpaid booking of this tab, if its access token is still known. */
+  unpaid(): string | null {
+    const reference = this.read<string>(UNPAID_KEY);
+    return reference && this.remembered(reference) ? reference : null;
   }
 
   remembered(reference: string): RememberedBooking | null {
