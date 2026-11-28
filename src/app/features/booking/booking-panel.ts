@@ -35,7 +35,7 @@ import { CartService } from '../../core/booking/cart';
 import { formatPickerDate } from '../tours/detail/tour-whatsapp';
 import { Turnstile } from '../../core/forms/turnstile';
 import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
-import { limaDay, limaTime, localDayKey, monthKey, formatMoney } from '../../core/booking/format';
+import { limaDay, limaTime, localDayKey, monthKey, formatMoney, depositText } from '../../core/booking/format';
 import { PublicData } from '../../core/api/public-data';
 import { CatalogService } from '../../core/catalog/catalog';
 import type { CatalogTour } from '../../core/catalog/tours';
@@ -249,8 +249,9 @@ const FEW_SEATS = 3;
                 <label hlmLabel [class]="payOptionClass" for="booking-pay-deposit">
                   <hlm-radio value="DEPOSIT" inputId="booking-pay-deposit" aria-describedby="booking-tax-note"><hlm-radio-indicator indicator /></hlm-radio>
                   <span class="flex min-w-0 flex-1 flex-col gap-0.5 text-start">
-                    <span class="text-sm font-medium tracking-wide uppercase">{{ 'tour.payLater' | translate: i18n.locale() }}</span>
+                    <span class="text-sm font-medium tracking-wide uppercase">{{ deposit('booking.depositTitle', current) }}</span>
                     <span id="booking-deposit">{{ short(current.depositCents, current.currency) }}<span class="text-muted-foreground" aria-hidden="true">*</span></span>
+                    <span class="text-muted-foreground text-xs" id="booking-deposit-rest">{{ deposit('booking.depositRest', current) }}</span>
                   </span>
                 </label>
               }
@@ -474,6 +475,11 @@ export class BookingPanel {
   }
 
   /** `$USD 45` / `S/PEN 165`, the format of the tour cards and of the WhatsApp form. */
+  /** A deposit sentence of `quote`, with its percent, today's amount and the rest. */
+  protected deposit(key: string, quote: { totalCents: number; depositCents: number; currency: string }): string {
+    return depositText(this.i18n.t(key), quote.totalCents, quote.depositCents, (cents) => this.short(cents, quote.currency));
+  }
+
   protected short(cents: number, currency: string): string {
     const amount = cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
     return `${currency === 'PEN' ? 'S/PEN' : '$USD'} ${amount}`;

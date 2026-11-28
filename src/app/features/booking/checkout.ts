@@ -38,7 +38,8 @@ import { ConsentService } from '../../core/analytics/consent';
 import { BookingApi, type CreatePublicBooking, type LegalDocument } from '../../core/api/booking-api';
 import { CartService } from '../../core/booking/cart';
 import { BookingFlow } from '../../core/booking/booking-flow';
-import { cancellationTierLines, clock, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
+import { CancellationNote } from './cancellation-note';
+import { clock, depositText, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import { TourPrices } from '../../core/catalog/tour-prices';
 import type { CountryCode } from 'libphonenumber-js/min';
@@ -56,7 +57,7 @@ const LEGAL_KINDS: readonly LegalKind[] = ['TERMS', 'PRIVACY', 'CANCELLATION'];
 const LEGAL_PATH: Record<LegalKind, string> = {
   TERMS: '/terms',
   PRIVACY: '/privacy',
-  CANCELLATION: '/terms',
+  CANCELLATION: '/cancellation',
 };
 
 const text = (max: number, required = true) =>
@@ -93,6 +94,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
   selector: 'app-checkout',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CancellationNote,
     ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
@@ -304,7 +306,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
                 </label>
                 <label hlmLabel class="flex items-center gap-3" for="k-deposit">
                   <hlm-radio value="DEPOSIT" inputId="k-deposit"><hlm-radio-indicator indicator /></hlm-radio>
-                  {{ 'checkout.payDeposit' | translate: i18n.locale() }} · {{ money(selection.quote.depositCents) }}
+                  {{ depositOption(selection.quote) }}
                 </label>
               </hlm-radio-group>
             </fieldset>
@@ -319,13 +321,7 @@ function billingValidator(group: AbstractControl): ValidationErrors | null {
               @if (legalFailed()) {
                 <p class="text-destructive text-sm" role="alert" id="checkout-legal-error">{{ 'checkout.legalError' | translate: i18n.locale() }}</p>
               }
-              @if (selection.quote.cancellationTiers?.length) {
-                <ul class="text-muted-foreground list-disc ps-5 text-sm" id="checkout-tiers">
-                  @for (line of tierLines(selection.quote.cancellationTiers); track $index) {
-                    <li>{{ line }}</li>
-                  }
-                </ul>
-              }
+              <app-cancellation-note id="checkout-cancellation" />
               @for (kind of legalKinds; track kind) {
                 @let sentence = acceptSentence(kind);
                 <label class="flex items-start gap-3 text-sm" [for]="'accept-' + kind">
@@ -497,8 +493,8 @@ export class Checkout {
     return formatMoney(cents, this.flow.selection()?.currency ?? 'USD', this.i18n.locale());
   }
 
-  protected tierLines(tiers: Parameters<typeof cancellationTierLines>[0]): string[] {
-    return cancellationTierLines(tiers, (key) => this.i18n.t(key));
+  protected depositOption(quote: { totalCents: number; depositCents: number }): string {
+    return depositText(this.i18n.t('booking.depositOption'), quote.totalCents, quote.depositCents, (cents) => this.money(cents));
   }
 
   /** The whole sentence is one key per document; the part in brackets becomes the link. */

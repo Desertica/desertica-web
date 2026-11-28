@@ -16,7 +16,8 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { PurchaseTracker } from '../../core/analytics/purchase';
 import { BookingApi, type PublicBooking } from '../../core/api/booking-api';
 import { BookingFlow } from '../../core/booking/booking-flow';
-import { cancellationTierLines, formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
+import { CancellationNote } from './cancellation-note';
+import { formatMoney, limaDateLong, limaTime } from '../../core/booking/format';
 import { CatalogService } from '../../core/catalog/catalog';
 import { withLocale } from '../../core/i18n/catalogs';
 import { I18nService } from '../../core/i18n/i18n';
@@ -32,7 +33,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
 @Component({
   selector: 'app-my-booking',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, HlmButton, HlmCardImports, HlmFieldImports, HlmInput],
+  imports: [CancellationNote, ReactiveFormsModule, RouterLink, TranslatePipe, HlmButton, HlmCardImports, HlmFieldImports, HlmInput],
   template: `
     <section class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
       <h1 class="font-heading text-3xl">{{ 'myBooking.title' | translate: i18n.locale() }}</h1>
@@ -75,16 +76,10 @@ import { usePageMeta } from '../../core/seo/page-meta';
           </div>
         </section>
 
-        @if (current.cancellationTiers?.length) {
-          <section class="flex flex-col gap-2">
-            <h2 class="font-heading text-xl">{{ 'myBooking.cancellation' | translate: i18n.locale() }}</h2>
-            <ul class="text-muted-foreground list-disc ps-5 text-sm">
-              @for (line of tierLines(current.cancellationTiers); track $index) {
-                <li>{{ line }}</li>
-              }
-            </ul>
-          </section>
-        }
+        <section class="flex flex-col gap-2">
+          <h2 class="font-heading text-xl">{{ 'myBooking.cancellation' | translate: i18n.locale() }}</h2>
+          <app-cancellation-note id="my-booking-cancellation" />
+        </section>
 
         @if (current.waivers?.length) {
           <section class="flex flex-col gap-2">
@@ -210,10 +205,6 @@ export class MyBooking {
 
   protected money(cents: number): string {
     return formatMoney(cents, this.booking()?.currency ?? 'USD', this.i18n.locale());
-  }
-
-  protected tierLines(tiers: Parameters<typeof cancellationTierLines>[0]): string[] {
-    return cancellationTierLines(tiers, (key) => this.i18n.t(key));
   }
 
   protected async requestAccess(): Promise<void> {

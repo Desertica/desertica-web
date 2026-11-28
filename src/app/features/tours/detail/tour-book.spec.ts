@@ -105,7 +105,7 @@ describe('TourBook', () => {
     expect(compiled.querySelector('#tour-pay-full')).not.toBeNull();
     expect(compiled.querySelector('#tour-pay-deposit')).not.toBeNull();
     expect(compiled.textContent).toContain('Pay full price');
-    expect(compiled.textContent).toContain('Book now, pay later');
+    expect(compiled.textContent).toContain('Book with 20% today');
     expect(compiled.querySelector('button[type=submit]')?.textContent?.trim()).toBe('Book');
     expect(compiled.textContent).not.toContain('WhatsApp');
   });
@@ -200,7 +200,7 @@ describe('TourBook', () => {
     expect(text).not.toContain('People: 4');
     expect(text).toContain('Group');
     expect(text).not.toContain('Ana');
-    expect(text).toContain('Book now, pay later');
+    expect(text).toContain('Book with 20% today');
     expect(text).toContain(`$USD ${tourDuePrice(PRICE, 'deposit', 4, 0.2)}`);
   });
 

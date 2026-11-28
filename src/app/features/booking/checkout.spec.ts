@@ -108,8 +108,10 @@ describe('Checkout', () => {
     expect(root.querySelector('#checkout-total')?.textContent).toContain('$158.00');
     expect(root.querySelector('#checkout-timer')?.textContent).toMatch(/\d\d:\d\d/);
     expect(form.controls.passengers.length).toBe(3);
-    expect(root.querySelector('#checkout-tiers')?.textContent).toContain('48 hours or more before the tour: full refund');
-    expect(root.querySelector('#checkout-tiers')?.textContent).toContain('Less than 24 hours before: no refund');
+    expect(root.querySelector('#checkout-cancellation')?.textContent).toContain('No refunds if you cancel');
+    expect(root.querySelector('#checkout-cancellation a')?.getAttribute('href')).toBe('/cancellation');
+    expect(root.querySelector('label[for="k-deposit"]')?.textContent).toContain('Book with 20% today ($31.60) and pay the rest ($126.40) later');
+    expect(root.querySelector('label[for="accept-CANCELLATION"] a')?.getAttribute('href')).toBe('/cancellation');
     expect(root.textContent?.replace(/\s+/g, ' ')).toContain('2 adults · 1 child');
     expect(root.querySelector('label[for="accept-PRIVACY"]')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^I accept the privacy policy \(version \d+\) ?\*$/);
     expect(root.textContent).toContain('version 2');

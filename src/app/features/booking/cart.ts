@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild
 import { Router, RouterLink } from '@angular/router';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { CancellationNote } from './cancellation-note';
 import { BookingApi } from '../../core/api/booking-api';
 import { BookingFlow, holdErrorKey, type BookingSelection } from '../../core/booking/booking-flow';
 import { CartService } from '../../core/booking/cart';
@@ -19,7 +20,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
 @Component({
   selector: 'app-cart',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe, HlmButton, HlmCardImports, Turnstile],
+  imports: [CancellationNote, RouterLink, TranslatePipe, HlmButton, HlmCardImports, Turnstile],
   template: `
     <section class="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-12 sm:px-6">
       <h1 class="font-heading text-3xl">{{ 'cart.title' | translate: i18n.locale() }}</h1>
@@ -69,6 +70,7 @@ import { usePageMeta } from '../../core/seo/page-meta';
               </p>
             }
             <p class="text-muted-foreground text-xs" id="cart-tax-note"><span aria-hidden="true">(*) </span>{{ 'booking.taxIncluded' | translate: i18n.locale() }}</p>
+            <app-cancellation-note id="cart-cancellation" />
             <app-turnstile (tokenChange)="captcha.set($event)" />
             @if (cart.items().length === 1) {
               <button hlmBtn type="button" class="w-full" [disabled]="blocked()" (click)="reserve(cart.items()[0]!)">

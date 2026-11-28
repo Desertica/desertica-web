@@ -305,9 +305,7 @@ function partyMaxValidator(max: number): ValidatorFn {
                 <hlm-radio-indicator indicator />
               </hlm-radio>
               <span class="flex min-w-0 flex-1 flex-col text-start">
-                <span class="text-sm font-medium tracking-wide uppercase">{{
-                  'tour.payLater' | translate: i18n.locale()
-                }}</span>
+                <span class="text-sm font-medium tracking-wide uppercase">{{ depositTitle() }}</span>
                 @if (depositPrice() !== null) {
                   <span id="tour-pay-deposit-amount">
                     {{ 'gallery.currency' | translate: i18n.locale() }}
@@ -358,6 +356,9 @@ export class TourBook {
       ? null
       : tourDuePrice(unit, 'deposit', this.partySize(), rate);
   });
+  protected readonly depositTitle = computed(() =>
+    this.i18n.t('booking.depositTitle').replace('{percent}', String(Math.round((this.booking.depositRate ?? 0) * 100))),
+  );
   protected readonly duePrice = computed(() =>
     this.payment() === 'deposit' ? this.depositPrice() : this.fullPrice(),
   );
@@ -536,7 +537,7 @@ export class TourBook {
       adults: String(this.form.controls.adults.value),
       children: String(this.form.controls.children.value),
       format: format ? this.i18n.t(`tour.${format}`) : '',
-      payment: this.i18n.t(payment === 'deposit' ? 'tour.payLater' : 'tour.payFull'),
+      payment: payment === 'deposit' ? this.depositTitle() : this.i18n.t('tour.payFull'),
       amount: amount === null ? '' : String(amount),
     });
   }

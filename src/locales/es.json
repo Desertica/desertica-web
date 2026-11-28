@@ -229,7 +229,6 @@
     "format": "Formato",
     "payment": "Pago",
     "payFull": "Pagar precio completo",
-    "payLater": "Reserva ahora, paga después",
     "shared": "Grupo",
     "private": "Privada",
     "both": "Grupo o privada",
@@ -248,9 +247,9 @@
     "galleryNext": "Foto siguiente",
     "downloadItinerary": "Descargar itinerario",
     "assure": {
-      "payLater": "Reserva ahora, paga después:",
-      "payLaterBody": "Asegura tu lugar",
-      "cancel": "Cancelación gratis:",
+      "payLater": "Reserva con un adelanto:",
+      "payLaterBody": "Paga una parte hoy y el resto después",
+      "cancel": "Cambio de fecha gratis:",
       "cancelBody": "Hasta 24 horas antes del tour",
       "price": "Precio final:",
       "priceBody": "Impuestos y cargos de reserva incluidos"
@@ -401,8 +400,12 @@
     "fewer": "Menos personas",
     "more": "Más personas",
     "total": "Total",
-    "deposit": "Depósito",
+    "deposit": "Adelanto",
     "taxIncluded": "Los precios incluyen impuestos.",
+    "depositTitle": "Reserva con el {percent} % hoy",
+    "depositRest": "El resto ({balance}) se paga después.",
+    "depositOption": "Reserva con el {percent} % hoy ({deposit}) y paga el resto ({balance}) después",
+    "cancellationShort": "Sin reembolsos si cancelas, tampoco del adelanto. Puedes cambiar la fecha gratis hasta 24 h antes del tour. Si el tour no sale por clima, orden de una autoridad o causa del operador, te devolvemos el 100 % o te damos otra fecha. [Ver la política completa]",
     "quoteError": "No pudimos cotizar este grupo. Inténtalo de nuevo.",
     "continue": "Continuar al pago",
     "holding": "Guardando tus cupos…",
@@ -441,7 +444,6 @@
       "RUC": "RUC"
     },
     "payment": "¿Cuánto quieres pagar ahora?",
-    "payDeposit": "Reserva ahora, paga después",
     "notes": "Notas",
     "legal": "Condiciones",
     "acceptDoc": {
@@ -451,12 +453,6 @@
     },
     "versionNote": "(versión {version})",
     "legalError": "No pudimos cargar los documentos legales vigentes. Recarga la página.",
-    "tierFrom": "Con {hours} horas o más de anticipación: {refund}",
-    "tierUnder": "Menos de {hours} horas antes: {refund}",
-    "tierAny": "Hasta el inicio del tour: {refund}",
-    "refundFull": "reembolso total",
-    "refundNone": "sin reembolso",
-    "refundPart": "reembolso del {percent}%",
     "complaints": "Libro de Reclamaciones",
     "submit": "Crear mi reserva",
     "sending": "Creando tu reserva…",
@@ -477,8 +473,8 @@
     },
     "kind": {
       "FULL": "Monto total",
-      "DEPOSIT": "Depósito",
-      "BALANCE": "Saldo pendiente"
+      "DEPOSIT": "Adelanto",
+      "BALANCE": "Resto por pagar"
     },
     "continue": "Continuar al pago",
     "noOptions": "Aún no hay medios de pago disponibles para esta reserva.",

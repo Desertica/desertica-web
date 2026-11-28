@@ -230,8 +230,8 @@ const LABEL_OVERRIDES = {
   'home.whyKicker': 'Home — Why section kicker',
   'home.whyHeadline': 'Home — Why headline',
   'home.pitchHeadline': 'Home — Pitch headline',
-  'tour.payLater': 'Tour booking form — "Pay later" payment option',
-  'tour.assure.payLater': 'Tour booking assurance — Pay later (title)',
+  'tour.assure.payLater': 'Tour booking assurance — Deposit (title)',
+  'booking.cancellationShort': 'Booking — Cancellation summary (same rule as the legal policy; the [link] opens it)',
   'meta.title': 'Site-wide default page title (SEO)',
   'meta.description': 'Site-wide default meta description (SEO)',
 };

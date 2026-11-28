@@ -126,7 +126,9 @@ describe('i18n catalogs', () => {
     expect(translate('tour.book', 'es')).toBe('Reservar');
     expect(translate('tour.book', 'en')).toBe('Book');
     expect(translate('tour.book', 'es')).not.toContain('WhatsApp');
-    expect(translate('tour.payLater', 'es')).toContain('paga después');
+    expect(translate('booking.depositTitle', 'es')).toBe('Reserva con el {percent} % hoy');
+    expect(translate('booking.cancellationShort', 'es')).toContain('Sin reembolsos');
+    expect(translate('booking.cancellationShort', 'en')).toContain('No refunds');
     expect(translate('tour.detailsLabel', 'en')).toBe('Details');
     expect(translate('tours.duneBuggy.lead', 'es')).toContain('tubular');
     expect(translate('tours.duneBuggy.lead', 'en')).toContain('tubular');
